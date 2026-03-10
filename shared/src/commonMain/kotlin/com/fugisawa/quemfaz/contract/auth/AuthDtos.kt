@@ -25,7 +25,8 @@ data class VerifyOtpResponse(
     val success: Boolean,
     val userId: String,
     val isNewUser: Boolean,
-    val requiresProfileCompletion: Boolean
+    val requiresProfileCompletion: Boolean,
+    val token: String? = null
 )
 
 @Serializable

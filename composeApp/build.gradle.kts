@@ -10,11 +10,7 @@ plugins {
 }
 
 kotlin {
-    androidTarget {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
-        }
-    }
+    androidTarget()
 
     listOf(
         iosArm64(),
@@ -31,12 +27,6 @@ kotlin {
         binaries.executable()
     }
 
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-        binaries.executable()
-    }
-
     sourceSets {
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -47,7 +37,31 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            // implementation(libs.compose.materialIconsExtended)
             implementation(projects.shared)
+
+            // Ktor client
+            implementation("io.ktor:ktor-client-core:2.3.12")
+            implementation("io.ktor:ktor-client-content-negotiation:2.3.12")
+            implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.12")
+            implementation("io.ktor:ktor-client-auth:2.3.12")
+            implementation("io.ktor:ktor-client-logging:2.3.12")
+
+            // Koin
+            implementation("io.insert-koin:koin-core:4.0.2")
+            implementation("io.insert-koin:koin-compose:4.0.2")
+
+            // Multiplatform Settings
+            implementation("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
+        }
+        androidMain.dependencies {
+            implementation("io.ktor:ktor-client-okhttp:2.3.12")
+        }
+        iosMain.dependencies {
+            implementation("io.ktor:ktor-client-darwin:2.3.12")
+        }
+        jsMain.dependencies {
+            implementation("io.ktor:ktor-client-js:2.3.12")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
