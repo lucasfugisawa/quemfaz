@@ -7,6 +7,7 @@ interface UserRepository {
     fun create(user: User): User
     fun findById(id: UserId): User?
     fun updateProfile(id: UserId, name: String, photoUrl: String?): User?
+    fun updateStatus(id: UserId, status: UserStatus): Boolean
 }
 
 interface UserPhoneAuthIdentityRepository {

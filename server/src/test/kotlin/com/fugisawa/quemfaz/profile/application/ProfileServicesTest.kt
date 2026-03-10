@@ -1,14 +1,10 @@
 package com.fugisawa.quemfaz.profile.application
 
-import com.fugisawa.quemfaz.auth.domain.User
-import com.fugisawa.quemfaz.auth.domain.UserRepository
-import com.fugisawa.quemfaz.auth.domain.UserStatus
+import com.fugisawa.quemfaz.auth.domain.*
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
 import com.fugisawa.quemfaz.core.id.UserId
-import com.fugisawa.quemfaz.profile.domain.ProfessionalProfile
-import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
-import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
+import com.fugisawa.quemfaz.profile.domain.*
 import org.junit.Test
 import java.time.Instant
 import kotlin.test.assertEquals
@@ -25,6 +21,11 @@ class ProfileServicesTest {
             return profile
         }
         override fun listPublishedByCity(cityName: String) = profiles.values.filter { it.cityName == cityName }
+        override fun updateStatus(id: ProfessionalProfileId, status: ProfessionalProfileStatus): Boolean {
+            val p = profiles[id.value] ?: return false
+            profiles[id.value] = p.copy(status = status)
+            return true
+        }
     }
 
     private class FakeUserRepository : UserRepository {
@@ -32,6 +33,11 @@ class ProfileServicesTest {
         override fun create(user: User) = user.also { users[it.id.value] = it }
         override fun findById(id: UserId) = users[id.value]
         override fun updateProfile(id: UserId, name: String, photoUrl: String?) = null
+        override fun updateStatus(id: UserId, status: UserStatus): Boolean {
+            val u = users[id.value] ?: return false
+            users[id.value] = u.copy(status = status)
+            return true
+        }
     }
 
     @Test

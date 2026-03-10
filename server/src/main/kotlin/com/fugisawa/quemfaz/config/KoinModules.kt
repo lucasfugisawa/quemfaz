@@ -32,6 +32,15 @@ import com.fugisawa.quemfaz.search.infrastructure.persistence.ExposedSearchQuery
 import com.fugisawa.quemfaz.search.interpretation.MockSearchQueryInterpreter
 import com.fugisawa.quemfaz.search.interpretation.SearchQueryInterpreter
 import com.fugisawa.quemfaz.search.ranking.ProfessionalSearchRankingService
+import com.fugisawa.quemfaz.favorites.application.*
+import com.fugisawa.quemfaz.favorites.domain.FavoriteRepository
+import com.fugisawa.quemfaz.favorites.infrastructure.ExposedFavoriteRepository
+import com.fugisawa.quemfaz.engagement.application.*
+import com.fugisawa.quemfaz.engagement.domain.ContactClickEventRepository
+import com.fugisawa.quemfaz.engagement.infrastructure.ExposedContactClickEventRepository
+import com.fugisawa.quemfaz.moderation.application.*
+import com.fugisawa.quemfaz.moderation.domain.ReportRepository
+import com.fugisawa.quemfaz.moderation.infrastructure.ExposedReportRepository
 import io.ktor.server.config.*
 import org.koin.dsl.module
 import org.slf4j.LoggerFactory
@@ -116,4 +125,19 @@ val infrastructureModule = module {
 
     // Search Services
     single { SearchProfessionalsService(get(), get(), get(), get(), get()) }
+
+    // Favorites
+    single<FavoriteRepository> { ExposedFavoriteRepository() }
+    single { AddFavoriteService(get(), get()) }
+    single { RemoveFavoriteService(get()) }
+    single { ListFavoritesService(get(), get(), get()) }
+
+    // Engagement
+    single<ContactClickEventRepository> { ExposedContactClickEventRepository() }
+    single { TrackContactClickService(get(), get()) }
+
+    // Moderation
+    single<ReportRepository> { ExposedReportRepository() }
+    single { CreateProfileReportService(get(), get()) }
+    single { ModerationService(get(), get(), get()) }
 }

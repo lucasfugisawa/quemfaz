@@ -8,6 +8,11 @@ data class AppConfig(
     val sms: SmsConfig,
     val otp: OtpConfig,
     val jwt: JwtConfig,
+    val admin: AdminConfig,
+)
+
+data class AdminConfig(
+    val adminUserIds: List<String>
 )
 
 data class JwtConfig(

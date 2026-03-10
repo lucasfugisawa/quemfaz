@@ -51,4 +51,5 @@ interface ProfessionalProfileRepository {
     fun findById(id: ProfessionalProfileId): ProfessionalProfile?
     fun save(profile: ProfessionalProfile): ProfessionalProfile
     fun listPublishedByCity(cityName: String): List<ProfessionalProfile>
+    fun updateStatus(id: ProfessionalProfileId, status: ProfessionalProfileStatus): Boolean
 }

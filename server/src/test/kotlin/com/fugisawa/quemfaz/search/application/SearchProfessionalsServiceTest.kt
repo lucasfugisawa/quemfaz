@@ -34,12 +34,14 @@ class SearchProfessionalsServiceTest {
         override fun findById(id: ProfessionalProfileId): ProfessionalProfile? = null
         override fun save(profile: ProfessionalProfile): ProfessionalProfile = profile
         override fun listPublishedByCity(cityName: String): List<ProfessionalProfile> = profiles.filter { it.cityName == cityName && it.status == ProfessionalProfileStatus.PUBLISHED }
+        override fun updateStatus(id: ProfessionalProfileId, status: ProfessionalProfileStatus): Boolean = false
     }
 
     private class FakeUserRepository : UserRepository {
         override fun create(user: User): User = user
         override fun findById(id: UserId): User? = User(id, "User ${id.value}", null, UserStatus.ACTIVE, Instant.now(), Instant.now())
         override fun updateProfile(id: UserId, name: String, photoUrl: String?): User? = null
+        override fun updateStatus(id: UserId, status: UserStatus): Boolean = false
     }
 
     private class FakeInterpreter : SearchQueryInterpreter {

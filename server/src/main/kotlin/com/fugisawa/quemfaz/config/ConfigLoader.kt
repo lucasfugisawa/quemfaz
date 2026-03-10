@@ -47,6 +47,9 @@ object ConfigLoader {
                 issuer = ktorConfig.propertyOrNull("jwt.issuer")?.getString() ?: "quemfaz",
                 audience = ktorConfig.propertyOrNull("jwt.audience")?.getString() ?: "quemfaz-audience",
                 expiresInMs = ktorConfig.propertyOrNull("jwt.expiresInMs")?.getString()?.toLong() ?: 3600000L
+            ),
+            admin = AdminConfig(
+                adminUserIds = ktorConfig.propertyOrNull("admin.userIds")?.getList() ?: emptyList()
             )
         )
     }

@@ -79,6 +79,13 @@ class ExposedUserRepository : UserRepository {
         if (updated > 0) findById(id) else null
     }
 
+    override fun updateStatus(id: UserId, status: UserStatus): Boolean = transaction {
+        UsersTable.update({ UsersTable.id eq id.value }) {
+            it[UsersTable.status] = status
+            it[updatedAt] = Instant.now()
+        } > 0
+    }
+
     private fun mapUser(it: ResultRow) = User(
         id = UserId(it[UsersTable.id]),
         name = it[UsersTable.name],

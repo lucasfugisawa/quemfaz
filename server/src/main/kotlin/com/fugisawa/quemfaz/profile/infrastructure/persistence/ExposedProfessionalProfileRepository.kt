@@ -134,6 +134,13 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
             .map { mapProfile(it) }
     }
 
+    override fun updateStatus(id: ProfessionalProfileId, status: ProfessionalProfileStatus): Boolean = transaction {
+        ProfessionalProfilesTable.update({ ProfessionalProfilesTable.id eq id.value }) {
+            it[ProfessionalProfilesTable.status] = status
+            it[updatedAt] = Instant.now()
+        } > 0
+    }
+
     private fun mapProfile(row: ResultRow): ProfessionalProfile {
         val profileId = row[ProfessionalProfilesTable.id]
         val neighborhoods = ProfessionalProfileNeighborhoodsTable.selectAll()
