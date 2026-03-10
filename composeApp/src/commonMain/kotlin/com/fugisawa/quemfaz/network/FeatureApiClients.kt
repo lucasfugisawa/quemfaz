@@ -17,72 +17,72 @@ class FeatureApiClients(private val apiClient: ApiClient) {
 
     // Auth
     suspend fun startOtp(request: StartOtpRequest): StartOtpResponse =
-        apiClient.client.post("/api/auth/otp/start") {
+        apiClient.client.post("/auth/start-otp") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
 
     suspend fun verifyOtp(request: VerifyOtpRequest): VerifyOtpResponse =
-        apiClient.client.post("/api/auth/otp/verify") {
+        apiClient.client.post("/auth/verify-otp") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
 
     suspend fun completeProfile(request: CompleteUserProfileRequest): UserProfileResponse =
-        apiClient.client.post("/api/auth/profile/complete") {
+        apiClient.client.post("/auth/profile") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
 
     suspend fun getCurrentProfile(): UserProfileResponse =
-        apiClient.client.get("/api/auth/profile").body()
+        apiClient.client.get("/auth/me").body()
 
     // Search
     suspend fun search(request: SearchProfessionalsRequest): SearchProfessionalsResponse =
-        apiClient.client.post("/api/search") {
+        apiClient.client.post("/search/professionals") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
 
     // Professional Profile
     suspend fun getProfessionalProfile(id: String): ProfessionalProfileResponse =
-        apiClient.client.get("/api/profiles/$id").body()
+        apiClient.client.get("/professional-profile/$id").body()
 
     suspend fun getMyProfessionalProfile(): ProfessionalProfileResponse =
-        apiClient.client.get("/api/profiles/my").body()
+        apiClient.client.get("/professional-profile/me").body()
 
     suspend fun createDraft(request: CreateProfessionalProfileDraftRequest): CreateProfessionalProfileDraftResponse =
-        apiClient.client.post("/api/profiles/draft") {
+        apiClient.client.post("/professional-profile/draft") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
 
     suspend fun confirmProfile(request: ConfirmProfessionalProfileRequest): ProfessionalProfileResponse =
-        apiClient.client.post("/api/profiles/confirm") {
+        apiClient.client.post("/professional-profile/confirm") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
 
     // Favorites
     suspend fun getFavorites(): FavoritesListResponse =
-        apiClient.client.get("/api/favorites").body()
+        apiClient.client.get("/favorites").body()
 
     suspend fun addFavorite(profileId: String): SimpleSuccessResponse =
-        apiClient.client.post("/api/favorites/$profileId").body()
+        apiClient.client.post("/favorites/$profileId").body()
 
     suspend fun removeFavorite(profileId: String): SimpleSuccessResponse =
-        apiClient.client.delete("/api/favorites/$profileId").body()
+        apiClient.client.delete("/favorites/$profileId").body()
 
     // Engagement
     suspend fun trackContactClick(request: TrackContactClickRequest): SimpleSuccessResponse =
-        apiClient.client.post("/api/engagement/contact-click") {
+        apiClient.client.post("/engagement/contact-click") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
 
     // Reporting
     suspend fun report(request: CreateReportRequest): SimpleSuccessResponse =
-        apiClient.client.post("/api/moderation/reports") {
+        apiClient.client.post("/reports/professional-profile") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
