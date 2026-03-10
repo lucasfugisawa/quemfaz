@@ -36,4 +36,4 @@ CREATE TABLE otp_challenges (
 );
 
 CREATE INDEX idx_otp_challenges_phone_number ON otp_challenges(phone_number);
-CREATE INDEX idx_otp_challenges_active ON otp_challenges(phone_number) WHERE consumed_at IS NULL AND expires_at > CURRENT_TIMESTAMP;
+CREATE INDEX idx_otp_challenges_active ON otp_challenges(phone_number) WHERE consumed_at IS NULL;

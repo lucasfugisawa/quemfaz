@@ -23,6 +23,7 @@ CREATE TABLE contact_click_events (
 );
 
 CREATE INDEX idx_contact_click_profile_id ON contact_click_events(professional_profile_id);
+CREATE INDEX idx_contact_click_user_id ON contact_click_events(user_id);
 CREATE INDEX idx_contact_click_created_at ON contact_click_events(created_at);
 
 CREATE TYPE report_status AS ENUM ('OPEN', 'DISMISSED', 'RESOLVED');
@@ -43,5 +44,6 @@ CREATE TABLE reports (
 );
 
 CREATE INDEX idx_reports_status ON reports(status);
+CREATE INDEX idx_reports_reporter_user_id ON reports(reporter_user_id);
 CREATE INDEX idx_reports_target ON reports(target_type, target_id);
 CREATE INDEX idx_reports_created_at ON reports(created_at);

@@ -13,6 +13,10 @@ class DatabaseFactory(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    fun connect(dataSource: DataSource) {
+        Database.connect(dataSource)
+    }
+
     fun createDataSource(): DataSource {
         logger.info("Connecting to database: ${config.jdbcUrl} as ${config.user}")
         val hikariConfig =
@@ -26,9 +30,7 @@ class DatabaseFactory(
                 transactionIsolation = "TRANSACTION_REPEATABLE_READ"
                 validate()
             }
-        val dataSource = HikariDataSource(hikariConfig)
-        Database.connect(dataSource)
-        return dataSource
+        return HikariDataSource(hikariConfig)
     }
 
     fun runMigrations(dataSource: DataSource) {

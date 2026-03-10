@@ -6,6 +6,7 @@ import com.fugisawa.quemfaz.auth.routing.authRoutes
 import com.fugisawa.quemfaz.config.AppConfig
 import com.fugisawa.quemfaz.config.configModule
 import com.fugisawa.quemfaz.config.infrastructureModule
+import com.fugisawa.quemfaz.infrastructure.database.DatabaseFactory
 import com.fugisawa.quemfaz.engagement.routing.engagementRoutes
 import com.fugisawa.quemfaz.favorites.routing.favoriteRoutes
 import com.fugisawa.quemfaz.moderation.routing.moderationRoutes
@@ -79,6 +80,8 @@ fun Application.module() {
 
     // Force initialization of infrastructure (DB, migrations)
     val dataSource: DataSource by inject()
+    val databaseFactory: DatabaseFactory by inject()
+    databaseFactory.connect(dataSource)
     logger.info("Infrastructure initialized successfully.")
 
     routing {
