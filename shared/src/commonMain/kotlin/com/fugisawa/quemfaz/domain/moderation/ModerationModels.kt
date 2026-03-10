@@ -2,7 +2,7 @@ package com.fugisawa.quemfaz.domain.moderation
 
 import com.fugisawa.quemfaz.core.id.ReportId
 import com.fugisawa.quemfaz.core.id.UserId
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable

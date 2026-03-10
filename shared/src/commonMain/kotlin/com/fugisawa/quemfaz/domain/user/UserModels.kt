@@ -5,7 +5,7 @@ import com.fugisawa.quemfaz.core.value.PersonName
 import com.fugisawa.quemfaz.core.value.PhoneNumber
 import com.fugisawa.quemfaz.core.value.PhotoUrl
 import com.fugisawa.quemfaz.domain.city.UserCityContext
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -9,7 +9,7 @@ import com.fugisawa.quemfaz.core.value.PhotoUrl
 import com.fugisawa.quemfaz.core.value.WhatsAppPhone
 import com.fugisawa.quemfaz.domain.city.City
 import com.fugisawa.quemfaz.domain.service.ProfessionalService
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
