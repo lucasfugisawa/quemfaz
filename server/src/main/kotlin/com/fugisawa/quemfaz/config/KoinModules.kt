@@ -1,6 +1,18 @@
 package com.fugisawa.quemfaz.config
 
 import com.fugisawa.quemfaz.environment.AppEnvironment
+import com.fugisawa.quemfaz.auth.application.CompleteUserProfileService
+import com.fugisawa.quemfaz.auth.application.StartOtpService
+import com.fugisawa.quemfaz.auth.application.VerifyOtpService
+import com.fugisawa.quemfaz.auth.domain.OtpChallengeRepository
+import com.fugisawa.quemfaz.auth.domain.OtpHasher
+import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
+import com.fugisawa.quemfaz.auth.domain.UserRepository
+import com.fugisawa.quemfaz.auth.infrastructure.ExposedOtpChallengeRepository
+import com.fugisawa.quemfaz.auth.infrastructure.ExposedUserPhoneAuthIdentityRepository
+import com.fugisawa.quemfaz.auth.infrastructure.ExposedUserRepository
+import com.fugisawa.quemfaz.auth.infrastructure.Sha256OtpHasher
+import com.fugisawa.quemfaz.auth.token.TokenService
 import com.fugisawa.quemfaz.infrastructure.database.DatabaseFactory
 import com.fugisawa.quemfaz.infrastructure.otp.DefaultOtpMessageComposer
 import com.fugisawa.quemfaz.infrastructure.otp.OtpCodeGenerator
@@ -55,4 +67,18 @@ val infrastructureModule = module {
     single<OtpMessageComposer> {
         DefaultOtpMessageComposer()
     }
+
+    // Auth Repositories
+    single<UserRepository> { ExposedUserRepository() }
+    single<UserPhoneAuthIdentityRepository> { ExposedUserPhoneAuthIdentityRepository() }
+    single<OtpChallengeRepository> { ExposedOtpChallengeRepository() }
+
+    // Auth Utilities
+    single<OtpHasher> { Sha256OtpHasher() }
+    single<TokenService> { TokenService(get<AppConfig>().jwt) }
+
+    // Auth Services
+    single { StartOtpService(get(), get(), get(), get(), get(), get<AppConfig>().otp) }
+    single { VerifyOtpService(get(), get(), get(), get(), get()) }
+    single { CompleteUserProfileService(get(), get()) }
 }

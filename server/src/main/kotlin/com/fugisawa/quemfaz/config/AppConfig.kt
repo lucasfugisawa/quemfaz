@@ -7,6 +7,14 @@ data class AppConfig(
     val database: DatabaseConfig,
     val sms: SmsConfig,
     val otp: OtpConfig,
+    val jwt: JwtConfig,
+)
+
+data class JwtConfig(
+    val secret: String,
+    val issuer: String,
+    val audience: String,
+    val expiresInMs: Long,
 )
 
 data class DatabaseConfig(

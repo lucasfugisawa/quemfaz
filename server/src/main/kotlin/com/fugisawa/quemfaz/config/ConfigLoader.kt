@@ -41,6 +41,12 @@ object ConfigLoader {
             otp = OtpConfig(
                 codeLength = ktorConfig.propertyOrNull("otp.codeLength")?.getString()?.toInt() ?: 6,
                 expirationMinutes = ktorConfig.propertyOrNull("otp.expirationMinutes")?.getString()?.toInt() ?: 5
+            ),
+            jwt = JwtConfig(
+                secret = ktorConfig.propertyOrNull("jwt.secret")?.getString() ?: "dev-secret",
+                issuer = ktorConfig.propertyOrNull("jwt.issuer")?.getString() ?: "quemfaz",
+                audience = ktorConfig.propertyOrNull("jwt.audience")?.getString() ?: "quemfaz-audience",
+                expiresInMs = ktorConfig.propertyOrNull("jwt.expiresInMs")?.getString()?.toLong() ?: 3600000L
             )
         )
     }
