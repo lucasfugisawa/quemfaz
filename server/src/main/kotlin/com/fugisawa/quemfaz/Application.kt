@@ -1,33 +1,36 @@
 package com.fugisawa.quemfaz
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.fugisawa.quemfaz.auth.routing.authRoutes
 import com.fugisawa.quemfaz.config.AppConfig
 import com.fugisawa.quemfaz.config.configModule
 import com.fugisawa.quemfaz.config.infrastructureModule
-import com.fugisawa.quemfaz.auth.routing.authRoutes
+import com.fugisawa.quemfaz.engagement.routing.engagementRoutes
+import com.fugisawa.quemfaz.favorites.routing.favoriteRoutes
+import com.fugisawa.quemfaz.moderation.routing.moderationRoutes
 import com.fugisawa.quemfaz.profile.routing.profileRoutes
 import com.fugisawa.quemfaz.search.routing.searchRoutes
-import com.fugisawa.quemfaz.favorites.routing.favoriteRoutes
-import com.fugisawa.quemfaz.engagement.routing.engagementRoutes
-import com.fugisawa.quemfaz.moderation.routing.moderationRoutes
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.auth.principal
+import io.ktor.server.netty.EngineMain
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
+import kotlinx.serialization.json.Json
+import org.koin.dsl.module
 import org.koin.ktor.ext.get
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
-import org.koin.dsl.module
-import javax.sql.DataSource
 import org.slf4j.LoggerFactory
-import kotlinx.serialization.json.Json
-import io.ktor.server.config.*
+import javax.sql.DataSource
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
@@ -38,28 +41,31 @@ fun Application.module() {
         modules(
             module { single { environment.config } },
             configModule,
-            infrastructureModule
+            infrastructureModule,
         )
     }
 
     val config = get<AppConfig>()
 
     install(ContentNegotiation) {
-        json(Json {
-            prettyPrint = true
-            isLenient = true
-            ignoreUnknownKeys = true
-        })
+        json(
+            Json {
+                prettyPrint = true
+                isLenient = true
+                ignoreUnknownKeys = true
+            },
+        )
     }
 
     install(Authentication) {
         jwt("auth-jwt") {
             realm = "quemfaz"
             verifier(
-                JWT.require(Algorithm.HMAC256(config.jwt.secret))
+                JWT
+                    .require(Algorithm.HMAC256(config.jwt.secret))
                     .withAudience(config.jwt.audience)
                     .withIssuer(config.jwt.issuer)
-                    .build()
+                    .build(),
             )
             validate { credential ->
                 if (credential.payload.getClaim("userId").asString() != "") {

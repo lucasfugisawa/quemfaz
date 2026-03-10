@@ -13,7 +13,7 @@ data class SearchQuery(
     val neighborhoods: List<String>,
     val interpretedServiceIds: List<String>,
     val inputMode: InputMode,
-    val createdAt: Instant
+    val createdAt: Instant,
 )
 
 data class InterpretedSearchQuery(
@@ -22,5 +22,5 @@ data class InterpretedSearchQuery(
     val serviceIds: List<String>,
     val cityName: String?,
     val neighborhoods: List<String>,
-    val freeTextAliases: List<String>
+    val freeTextAliases: List<String>,
 )

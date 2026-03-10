@@ -1,6 +1,8 @@
 package com.fugisawa.quemfaz.engagement.infrastructure
 
-import com.fugisawa.quemfaz.engagement.domain.*
+import com.fugisawa.quemfaz.engagement.domain.ContactChannel
+import com.fugisawa.quemfaz.engagement.domain.ContactClickEvent
+import com.fugisawa.quemfaz.engagement.domain.ContactClickEventRepository
 import com.fugisawa.quemfaz.profile.infrastructure.persistence.ProfessionalProfilesTable
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
@@ -20,16 +22,17 @@ object ContactClickEventsTable : Table("contact_click_events") {
 }
 
 class ExposedContactClickEventRepository : ContactClickEventRepository {
-    override fun save(event: ContactClickEvent) = transaction {
-        ContactClickEventsTable.insert {
-            it[id] = event.id
-            it[professionalProfileId] = event.professionalProfileId.value
-            it[userId] = event.userId?.value
-            it[channel] = event.channel
-            it[cityName] = event.cityName
-            it[sourceContext] = event.source
-            it[createdAt] = event.createdAt
+    override fun save(event: ContactClickEvent) =
+        transaction {
+            ContactClickEventsTable.insert {
+                it[id] = event.id
+                it[professionalProfileId] = event.professionalProfileId.value
+                it[userId] = event.userId?.value
+                it[channel] = event.channel
+                it[cityName] = event.cityName
+                it[sourceContext] = event.source
+                it[createdAt] = event.createdAt
+            }
+            Unit
         }
-        Unit
-    }
 }

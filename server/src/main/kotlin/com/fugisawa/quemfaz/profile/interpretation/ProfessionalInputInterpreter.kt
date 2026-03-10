@@ -4,5 +4,8 @@ import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftRespo
 import com.fugisawa.quemfaz.contract.profile.InputMode
 
 interface ProfessionalInputInterpreter {
-    fun interpret(inputText: String, inputMode: InputMode): CreateProfessionalProfileDraftResponse
+    fun interpret(
+        inputText: String,
+        inputMode: InputMode,
+    ): CreateProfessionalProfileDraftResponse
 }

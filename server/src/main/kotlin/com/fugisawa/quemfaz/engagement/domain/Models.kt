@@ -6,7 +6,7 @@ import java.time.Instant
 
 enum class ContactChannel {
     WHATSAPP,
-    PHONE_CALL
+    PHONE_CALL,
 }
 
 data class ContactClickEvent(
@@ -16,7 +16,7 @@ data class ContactClickEvent(
     val channel: ContactChannel,
     val cityName: String?,
     val source: String?,
-    val createdAt: Instant
+    val createdAt: Instant,
 )
 
 interface ContactClickEventRepository {

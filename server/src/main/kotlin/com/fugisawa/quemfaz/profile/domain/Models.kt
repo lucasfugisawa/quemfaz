@@ -20,36 +20,43 @@ data class ProfessionalProfile(
     val status: ProfessionalProfileStatus,
     val lastActiveAt: Instant,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
 )
 
 data class ProfessionalProfileService(
     val serviceId: String,
-    val matchLevel: ServiceMatchLevel
+    val matchLevel: ServiceMatchLevel,
 )
 
 data class PortfolioPhoto(
     val id: String,
     val photoUrl: String,
     val caption: String?,
-    val createdAt: Instant
+    val createdAt: Instant,
 )
 
 enum class ProfileCompleteness {
     INCOMPLETE,
-    COMPLETE
+    COMPLETE,
 }
 
 enum class ProfessionalProfileStatus {
     DRAFT,
     PUBLISHED,
-    BLOCKED
+    BLOCKED,
 }
 
 interface ProfessionalProfileRepository {
     fun findByUserId(userId: UserId): ProfessionalProfile?
+
     fun findById(id: ProfessionalProfileId): ProfessionalProfile?
+
     fun save(profile: ProfessionalProfile): ProfessionalProfile
+
     fun listPublishedByCity(cityName: String): List<ProfessionalProfile>
-    fun updateStatus(id: ProfessionalProfileId, status: ProfessionalProfileStatus): Boolean
+
+    fun updateStatus(
+        id: ProfessionalProfileId,
+        status: ProfessionalProfileStatus,
+    ): Boolean
 }

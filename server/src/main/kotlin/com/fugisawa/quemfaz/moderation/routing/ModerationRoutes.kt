@@ -5,15 +5,21 @@ import com.fugisawa.quemfaz.contract.moderation.CreateReportRequest
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
 import com.fugisawa.quemfaz.core.id.ReportId
 import com.fugisawa.quemfaz.core.id.UserId
-import com.fugisawa.quemfaz.moderation.application.*
+import com.fugisawa.quemfaz.moderation.application.CreateProfileReportService
+import com.fugisawa.quemfaz.moderation.application.ModerationService
 import com.fugisawa.quemfaz.moderation.domain.ReportStatus
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.principal
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import org.koin.ktor.ext.inject
 
 fun Route.moderationRoutes() {
@@ -24,9 +30,14 @@ fun Route.moderationRoutes() {
     authenticate("auth-jwt") {
         route("/reports") {
             post("/professional-profile") {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asString()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized)
-                
+                val userId =
+                    call
+                        .principal<JWTPrincipal>()
+                        ?.payload
+                        ?.getClaim("userId")
+                        ?.asString()
+                        ?: return@post call.respond(HttpStatusCode.Unauthorized)
+
                 val request = call.receive<CreateReportRequest>()
                 try {
                     val report = createProfileReportService.execute(UserId(userId), request)
@@ -39,7 +50,12 @@ fun Route.moderationRoutes() {
 
         route("/admin") {
             intercept(ApplicationCallPipeline.Call) {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asString()
+                val userId =
+                    call
+                        .principal<JWTPrincipal>()
+                        ?.payload
+                        ?.getClaim("userId")
+                        ?.asString()
                 if (userId == null || !appConfig.admin.adminUserIds.contains(userId)) {
                     call.respond(HttpStatusCode.Forbidden, "Admin access required")
                     return@intercept finish()
@@ -55,8 +71,9 @@ fun Route.moderationRoutes() {
 
                 get("/{reportId}") {
                     val reportId = call.parameters["reportId"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-                    val report = moderationService.getReportDetails(ReportId(reportId))
-                        ?: return@get call.respond(HttpStatusCode.NotFound)
+                    val report =
+                        moderationService.getReportDetails(ReportId(reportId))
+                            ?: return@get call.respond(HttpStatusCode.NotFound)
                     call.respond(report)
                 }
 

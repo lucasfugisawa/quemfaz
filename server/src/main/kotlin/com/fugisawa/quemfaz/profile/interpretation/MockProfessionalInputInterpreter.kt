@@ -7,21 +7,26 @@ import com.fugisawa.quemfaz.domain.service.CanonicalServices
 import com.fugisawa.quemfaz.domain.service.ServiceMatchLevel
 
 class MockProfessionalInputInterpreter : ProfessionalInputInterpreter {
-    override fun interpret(inputText: String, inputMode: InputMode): CreateProfessionalProfileDraftResponse {
+    override fun interpret(
+        inputText: String,
+        inputMode: InputMode,
+    ): CreateProfessionalProfileDraftResponse {
         val normalizedText = inputText.lowercase()
 
-        val interpretedServices = CanonicalServices.all.flatMap { service ->
-            val matches = mutableListOf<InterpretedServiceDto>()
-            if (normalizedText.contains(service.displayName.lowercase())) {
-                matches.add(InterpretedServiceDto(service.id.value, service.displayName, ServiceMatchLevel.PRIMARY.name))
-            } else {
-                val matchingAlias = service.baseAliases.find { normalizedText.contains(it.lowercase()) }
-                if (matchingAlias != null) {
-                    matches.add(InterpretedServiceDto(service.id.value, service.displayName, ServiceMatchLevel.PRIMARY.name))
-                }
-            }
-            matches
-        }.distinctBy { it.serviceId }
+        val interpretedServices =
+            CanonicalServices.all
+                .flatMap { service ->
+                    val matches = mutableListOf<InterpretedServiceDto>()
+                    if (normalizedText.contains(service.displayName.lowercase())) {
+                        matches.add(InterpretedServiceDto(service.id.value, service.displayName, ServiceMatchLevel.PRIMARY.name))
+                    } else {
+                        val matchingAlias = service.baseAliases.find { normalizedText.contains(it.lowercase()) }
+                        if (matchingAlias != null) {
+                            matches.add(InterpretedServiceDto(service.id.value, service.displayName, ServiceMatchLevel.PRIMARY.name))
+                        }
+                    }
+                    matches
+                }.distinctBy { it.serviceId }
 
         val cities = listOf("Batatais", "Franca", "Ribeirão Preto")
         val cityName = cities.find { normalizedText.contains(it.lowercase()) }
@@ -55,7 +60,7 @@ class MockProfessionalInputInterpreter : ProfessionalInputInterpreter {
             neighborhoods = neighborhoods,
             missingFields = missingFields,
             followUpQuestions = followUpQuestions.take(2),
-            freeTextAliases = interpretedServices.map { it.displayName }
+            freeTextAliases = interpretedServices.map { it.displayName },
         )
     }
 }

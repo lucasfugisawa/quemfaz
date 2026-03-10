@@ -2,13 +2,14 @@ package com.fugisawa.quemfaz.moderation.domain
 
 import com.fugisawa.quemfaz.core.id.ReportId
 import com.fugisawa.quemfaz.core.id.UserId
-import com.fugisawa.quemfaz.domain.moderation.*
+import com.fugisawa.quemfaz.domain.moderation.ReportReason
+import com.fugisawa.quemfaz.domain.moderation.ReportTargetType
 import java.time.Instant
 
 enum class ReportStatus {
     OPEN,
     DISMISSED,
-    RESOLVED
+    RESOLVED,
 }
 
 data class ServerReport(
@@ -21,11 +22,13 @@ data class ServerReport(
     val status: ReportStatus,
     val createdAt: Instant,
     val resolvedAt: Instant?,
-    val resolutionAction: String?
+    val resolutionAction: String?,
 )
 
 interface ReportRepository {
     fun save(report: ServerReport)
+
     fun findById(id: ReportId): ServerReport?
+
     fun list(status: ReportStatus? = null): List<ServerReport>
 }

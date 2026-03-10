@@ -4,7 +4,10 @@ import com.fugisawa.quemfaz.domain.service.CanonicalServices
 import com.fugisawa.quemfaz.search.domain.InterpretedSearchQuery
 
 class MockSearchQueryInterpreter : SearchQueryInterpreter {
-    override fun interpret(query: String, cityContext: String?): InterpretedSearchQuery {
+    override fun interpret(
+        query: String,
+        cityContext: String?,
+    ): InterpretedSearchQuery {
         val normalized = query.lowercase().trim()
         val serviceIds = mutableSetOf<String>()
         val detectedNeighborhoods = mutableListOf<String>()
@@ -40,7 +43,7 @@ class MockSearchQueryInterpreter : SearchQueryInterpreter {
             serviceIds = serviceIds.toList(),
             cityName = detectedCity,
             neighborhoods = detectedNeighborhoods,
-            freeTextAliases = emptyList() // Not used in Mock for now
+            freeTextAliases = emptyList(), // Not used in Mock for now
         )
     }
 }

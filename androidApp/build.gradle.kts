@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     kotlin("android")
+    id("org.jmailen.kotlinter")
 }
 
 // No kotlin { ... } block here if it's not a KMP module

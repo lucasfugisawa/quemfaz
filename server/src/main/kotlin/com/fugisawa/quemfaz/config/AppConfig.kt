@@ -12,7 +12,7 @@ data class AppConfig(
 )
 
 data class AdminConfig(
-    val adminUserIds: List<String>
+    val adminUserIds: List<String>,
 )
 
 data class JwtConfig(
@@ -28,25 +28,25 @@ data class DatabaseConfig(
     val name: String,
     val user: String,
     val pass: String,
-    val jdbcUrl: String = "jdbc:postgresql://$host:$port/$name"
+    val jdbcUrl: String = "jdbc:postgresql://$host:$port/$name",
 )
 
 data class SmsConfig(
     val provider: SmsProviderType,
-    val aws: AwsSmsConfig? = null
+    val aws: AwsSmsConfig? = null,
 )
 
 enum class SmsProviderType {
     FAKE,
-    AWS
+    AWS,
 }
 
 data class AwsSmsConfig(
     val region: String,
-    val senderId: String? = null
+    val senderId: String? = null,
 )
 
 data class OtpConfig(
     val codeLength: Int = 6,
-    val expirationMinutes: Int = 5
+    val expirationMinutes: Int = 5,
 )

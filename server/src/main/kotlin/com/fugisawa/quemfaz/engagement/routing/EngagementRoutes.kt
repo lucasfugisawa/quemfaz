@@ -3,13 +3,15 @@ package com.fugisawa.quemfaz.engagement.routing
 import com.fugisawa.quemfaz.contract.engagement.TrackContactClickRequest
 import com.fugisawa.quemfaz.core.id.UserId
 import com.fugisawa.quemfaz.engagement.application.TrackContactClickService
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.principal
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import org.koin.ktor.ext.inject
 
 fun Route.engagementRoutes() {
@@ -19,7 +21,12 @@ fun Route.engagementRoutes() {
         post("/contact-click") {
             val request = call.receive<TrackContactClickRequest>()
             val principal = call.principal<JWTPrincipal>()
-            val userId = principal?.payload?.getClaim("userId")?.asString()?.let { UserId(it) }
+            val userId =
+                principal
+                    ?.payload
+                    ?.getClaim("userId")
+                    ?.asString()
+                    ?.let { UserId(it) }
 
             try {
                 trackContactClickService.execute(userId, request)

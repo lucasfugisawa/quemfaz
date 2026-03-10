@@ -8,48 +8,55 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 class ProfessionalSearchRankingService {
-
     companion object {
         const val PRIMARY_MATCH_POINTS = 100
         const val SECONDARY_MATCH_POINTS = 50
         const val RELATED_MATCH_POINTS = 20
-        
+
         const val NEIGHBORHOOD_BONUS = 30
         const val COMPLETENESS_BONUS = 15
         const val RECENTLY_ACTIVE_BONUS = 10
-        
+
         val RECENTLY_ACTIVE_THRESHOLD = 7L // days
     }
 
-    fun rank(profiles: List<ProfessionalProfile>, query: InterpretedSearchQuery): List<ProfessionalProfile> {
-        return profiles.associateWith { calculateScore(it, query) }
+    fun rank(
+        profiles: List<ProfessionalProfile>,
+        query: InterpretedSearchQuery,
+    ): List<ProfessionalProfile> =
+        profiles
+            .associateWith { calculateScore(it, query) }
             .toList()
             .sortedByDescending { it.second }
             .map { it.first }
-    }
 
-    private fun calculateScore(profile: ProfessionalProfile, query: InterpretedSearchQuery): Int {
+    private fun calculateScore(
+        profile: ProfessionalProfile,
+        query: InterpretedSearchQuery,
+    ): Int {
         var score = 0
 
         // 1. Service Matching
         query.serviceIds.forEach { queryServiceId ->
             val profileService = profile.services.find { it.serviceId == queryServiceId }
             if (profileService != null) {
-                score += when (profileService.matchLevel) {
-                    ServiceMatchLevel.PRIMARY -> PRIMARY_MATCH_POINTS
-                    ServiceMatchLevel.SECONDARY -> SECONDARY_MATCH_POINTS
-                    ServiceMatchLevel.RELATED -> RELATED_MATCH_POINTS
-                }
+                score +=
+                    when (profileService.matchLevel) {
+                        ServiceMatchLevel.PRIMARY -> PRIMARY_MATCH_POINTS
+                        ServiceMatchLevel.SECONDARY -> SECONDARY_MATCH_POINTS
+                        ServiceMatchLevel.RELATED -> RELATED_MATCH_POINTS
+                    }
             }
         }
 
         // 2. Neighborhood Bonus
         if (query.neighborhoods.isNotEmpty()) {
-            val hasNeighborhoodMatch = profile.neighborhoods.any { profileNeighborhood ->
-                query.neighborhoods.any { queryNeighborhood ->
-                    profileNeighborhood.equals(queryNeighborhood, ignoreCase = true)
+            val hasNeighborhoodMatch =
+                profile.neighborhoods.any { profileNeighborhood ->
+                    query.neighborhoods.any { queryNeighborhood ->
+                        profileNeighborhood.equals(queryNeighborhood, ignoreCase = true)
+                    }
                 }
-            }
             if (hasNeighborhoodMatch) {
                 score += NEIGHBORHOOD_BONUS
             }

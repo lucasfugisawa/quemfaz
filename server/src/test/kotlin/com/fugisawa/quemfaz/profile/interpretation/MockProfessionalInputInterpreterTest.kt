@@ -6,7 +6,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class MockProfessionalInputInterpreterTest {
-
     private val interpreter = MockProfessionalInputInterpreter()
 
     @Test

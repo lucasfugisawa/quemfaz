@@ -1,18 +1,24 @@
 package com.fugisawa.quemfaz.auth.infrastructure
 
-import com.fugisawa.quemfaz.auth.domain.*
+import com.fugisawa.quemfaz.auth.domain.OtpChallenge
+import com.fugisawa.quemfaz.auth.domain.OtpChallengeRepository
+import com.fugisawa.quemfaz.auth.domain.User
+import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentity
+import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
+import com.fugisawa.quemfaz.auth.domain.UserRepository
+import com.fugisawa.quemfaz.auth.domain.UserStatus
 import com.fugisawa.quemfaz.core.id.UserId
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.sql.and
 import java.time.Instant
 
 object UsersTable : Table("users") {
@@ -52,144 +58,183 @@ object OtpChallengesTable : Table("otp_challenges") {
 }
 
 class ExposedUserRepository : UserRepository {
-    override fun create(user: User): User = transaction {
-        UsersTable.insert {
-            it[id] = user.id.value
-            it[name] = user.name
-            it[photoUrl] = user.photoUrl
-            it[status] = user.status
-            it[createdAt] = user.createdAt
-            it[updatedAt] = user.updatedAt
+    override fun create(user: User): User =
+        transaction {
+            UsersTable.insert {
+                it[id] = user.id.value
+                it[name] = user.name
+                it[photoUrl] = user.photoUrl
+                it[status] = user.status
+                it[createdAt] = user.createdAt
+                it[updatedAt] = user.updatedAt
+            }
+            user
         }
-        user
-    }
 
-    override fun findById(id: UserId): User? = transaction {
-        UsersTable.selectAll().where { UsersTable.id eq id.value }
-            .map { mapUser(it) }
-            .singleOrNull()
-    }
-
-    override fun updateProfile(id: UserId, name: String, photoUrl: String?): User? = transaction {
-        val updated = UsersTable.update({ UsersTable.id eq id.value }) {
-            it[UsersTable.name] = name
-            it[UsersTable.photoUrl] = photoUrl
-            it[updatedAt] = Instant.now()
+    override fun findById(id: UserId): User? =
+        transaction {
+            UsersTable
+                .selectAll()
+                .where { UsersTable.id eq id.value }
+                .map { mapUser(it) }
+                .singleOrNull()
         }
-        if (updated > 0) findById(id) else null
-    }
 
-    override fun updateStatus(id: UserId, status: UserStatus): Boolean = transaction {
-        UsersTable.update({ UsersTable.id eq id.value }) {
-            it[UsersTable.status] = status
-            it[updatedAt] = Instant.now()
-        } > 0
-    }
+    override fun updateProfile(
+        id: UserId,
+        name: String,
+        photoUrl: String?,
+    ): User? =
+        transaction {
+            val updated =
+                UsersTable.update({ UsersTable.id eq id.value }) {
+                    it[UsersTable.name] = name
+                    it[UsersTable.photoUrl] = photoUrl
+                    it[updatedAt] = Instant.now()
+                }
+            if (updated > 0) findById(id) else null
+        }
 
-    private fun mapUser(it: ResultRow) = User(
-        id = UserId(it[UsersTable.id]),
-        name = it[UsersTable.name],
-        photoUrl = it[UsersTable.photoUrl],
-        status = it[UsersTable.status],
-        createdAt = it[UsersTable.createdAt],
-        updatedAt = it[UsersTable.updatedAt]
-    )
+    override fun updateStatus(
+        id: UserId,
+        status: UserStatus,
+    ): Boolean =
+        transaction {
+            UsersTable.update({ UsersTable.id eq id.value }) {
+                it[UsersTable.status] = status
+                it[updatedAt] = Instant.now()
+            } > 0
+        }
+
+    private fun mapUser(it: ResultRow) =
+        User(
+            id = UserId(it[UsersTable.id]),
+            name = it[UsersTable.name],
+            photoUrl = it[UsersTable.photoUrl],
+            status = it[UsersTable.status],
+            createdAt = it[UsersTable.createdAt],
+            updatedAt = it[UsersTable.updatedAt],
+        )
 }
 
 class ExposedUserPhoneAuthIdentityRepository : UserPhoneAuthIdentityRepository {
-    override fun findByPhoneNumber(phoneNumber: String): UserPhoneAuthIdentity? = transaction {
-        UserPhoneAuthIdentitiesTable.selectAll().where { UserPhoneAuthIdentitiesTable.phoneNumber eq phoneNumber }
-            .map { mapIdentity(it) }
-            .singleOrNull()
-    }
-
-    override fun findByUserId(userId: UserId): UserPhoneAuthIdentity? = transaction {
-        UserPhoneAuthIdentitiesTable.selectAll().where { UserPhoneAuthIdentitiesTable.userId eq userId.value }
-            .map { mapIdentity(it) }
-            .singleOrNull()
-    }
-
-    override fun create(identity: UserPhoneAuthIdentity): UserPhoneAuthIdentity = transaction {
-        UserPhoneAuthIdentitiesTable.insert {
-            it[id] = identity.id
-            it[userId] = identity.userId.value
-            it[phoneNumber] = identity.phoneNumber
-            it[isVerified] = identity.isVerified
-            it[verifiedAt] = identity.verifiedAt
-            it[createdAt] = identity.createdAt
-            it[updatedAt] = identity.updatedAt
+    override fun findByPhoneNumber(phoneNumber: String): UserPhoneAuthIdentity? =
+        transaction {
+            UserPhoneAuthIdentitiesTable
+                .selectAll()
+                .where { UserPhoneAuthIdentitiesTable.phoneNumber eq phoneNumber }
+                .map { mapIdentity(it) }
+                .singleOrNull()
         }
-        identity
-    }
 
-    override fun markVerified(id: String, verifiedAt: Instant): Boolean = transaction {
-        UserPhoneAuthIdentitiesTable.update({ UserPhoneAuthIdentitiesTable.id eq id }) {
-            it[isVerified] = true
-            it[UserPhoneAuthIdentitiesTable.verifiedAt] = verifiedAt
-            it[updatedAt] = Instant.now()
-        } > 0
-    }
+    override fun findByUserId(userId: UserId): UserPhoneAuthIdentity? =
+        transaction {
+            UserPhoneAuthIdentitiesTable
+                .selectAll()
+                .where { UserPhoneAuthIdentitiesTable.userId eq userId.value }
+                .map { mapIdentity(it) }
+                .singleOrNull()
+        }
 
-    private fun mapIdentity(it: ResultRow) = UserPhoneAuthIdentity(
-        id = it[UserPhoneAuthIdentitiesTable.id],
-        userId = UserId(it[UserPhoneAuthIdentitiesTable.userId]),
-        phoneNumber = it[UserPhoneAuthIdentitiesTable.phoneNumber],
-        isVerified = it[UserPhoneAuthIdentitiesTable.isVerified],
-        verifiedAt = it[UserPhoneAuthIdentitiesTable.verifiedAt],
-        createdAt = it[UserPhoneAuthIdentitiesTable.createdAt],
-        updatedAt = it[UserPhoneAuthIdentitiesTable.updatedAt]
-    )
+    override fun create(identity: UserPhoneAuthIdentity): UserPhoneAuthIdentity =
+        transaction {
+            UserPhoneAuthIdentitiesTable.insert {
+                it[id] = identity.id
+                it[userId] = identity.userId.value
+                it[phoneNumber] = identity.phoneNumber
+                it[isVerified] = identity.isVerified
+                it[verifiedAt] = identity.verifiedAt
+                it[createdAt] = identity.createdAt
+                it[updatedAt] = identity.updatedAt
+            }
+            identity
+        }
+
+    override fun markVerified(
+        id: String,
+        verifiedAt: Instant,
+    ): Boolean =
+        transaction {
+            UserPhoneAuthIdentitiesTable.update({ UserPhoneAuthIdentitiesTable.id eq id }) {
+                it[isVerified] = true
+                it[UserPhoneAuthIdentitiesTable.verifiedAt] = verifiedAt
+                it[updatedAt] = Instant.now()
+            } > 0
+        }
+
+    private fun mapIdentity(it: ResultRow) =
+        UserPhoneAuthIdentity(
+            id = it[UserPhoneAuthIdentitiesTable.id],
+            userId = UserId(it[UserPhoneAuthIdentitiesTable.userId]),
+            phoneNumber = it[UserPhoneAuthIdentitiesTable.phoneNumber],
+            isVerified = it[UserPhoneAuthIdentitiesTable.isVerified],
+            verifiedAt = it[UserPhoneAuthIdentitiesTable.verifiedAt],
+            createdAt = it[UserPhoneAuthIdentitiesTable.createdAt],
+            updatedAt = it[UserPhoneAuthIdentitiesTable.updatedAt],
+        )
 }
 
 class ExposedOtpChallengeRepository : OtpChallengeRepository {
-    override fun create(challenge: OtpChallenge): OtpChallenge = transaction {
-        OtpChallengesTable.insert {
-            it[id] = challenge.id
-            it[phoneNumber] = challenge.phoneNumber
-            it[otpCodeHash] = challenge.otpCodeHash
-            it[expiresAt] = challenge.expiresAt
-            it[attemptCount] = challenge.attemptCount
-            it[maxAttempts] = challenge.maxAttempts
-            it[createdAt] = challenge.createdAt
+    override fun create(challenge: OtpChallenge): OtpChallenge =
+        transaction {
+            OtpChallengesTable.insert {
+                it[id] = challenge.id
+                it[phoneNumber] = challenge.phoneNumber
+                it[otpCodeHash] = challenge.otpCodeHash
+                it[expiresAt] = challenge.expiresAt
+                it[attemptCount] = challenge.attemptCount
+                it[maxAttempts] = challenge.maxAttempts
+                it[createdAt] = challenge.createdAt
+            }
+            challenge
         }
-        challenge
-    }
 
-    override fun findLatestActiveByPhoneNumber(phoneNumber: String): OtpChallenge? = transaction {
-        val now = Instant.now()
-        OtpChallengesTable.selectAll().where {
-            (OtpChallengesTable.phoneNumber eq phoneNumber) and
-                    (OtpChallengesTable.consumedAt.isNull()) and
-                    (OtpChallengesTable.expiresAt greater now)
-        }.orderBy(OtpChallengesTable.createdAt, org.jetbrains.exposed.sql.SortOrder.DESC)
-            .limit(1)
-            .map { mapChallenge(it) }
-            .singleOrNull()
-    }
-
-    override fun markConsumed(id: String, consumedAt: Instant): Boolean = transaction {
-        OtpChallengesTable.update({ OtpChallengesTable.id eq id }) {
-            it[OtpChallengesTable.consumedAt] = consumedAt
-        } > 0
-    }
-
-    override fun incrementAttemptCount(id: String): Int = transaction {
-        OtpChallengesTable.update({ OtpChallengesTable.id eq id }) {
-            it.update(attemptCount, attemptCount + 1)
+    override fun findLatestActiveByPhoneNumber(phoneNumber: String): OtpChallenge? =
+        transaction {
+            val now = Instant.now()
+            OtpChallengesTable
+                .selectAll()
+                .where {
+                    (OtpChallengesTable.phoneNumber eq phoneNumber) and
+                        (OtpChallengesTable.consumedAt.isNull()) and
+                        (OtpChallengesTable.expiresAt greater now)
+                }.orderBy(OtpChallengesTable.createdAt, org.jetbrains.exposed.sql.SortOrder.DESC)
+                .limit(1)
+                .map { mapChallenge(it) }
+                .singleOrNull()
         }
-        OtpChallengesTable.selectAll().where { OtpChallengesTable.id eq id }
-            .map { it[OtpChallengesTable.attemptCount] }
-            .singleOrNull() ?: -1
-    }
 
-    private fun mapChallenge(it: ResultRow) = OtpChallenge(
-        id = it[OtpChallengesTable.id],
-        phoneNumber = it[OtpChallengesTable.phoneNumber],
-        otpCodeHash = it[OtpChallengesTable.otpCodeHash],
-        expiresAt = it[OtpChallengesTable.expiresAt],
-        attemptCount = it[OtpChallengesTable.attemptCount],
-        maxAttempts = it[OtpChallengesTable.maxAttempts],
-        consumedAt = it[OtpChallengesTable.consumedAt],
-        createdAt = it[OtpChallengesTable.createdAt]
-    )
+    override fun markConsumed(
+        id: String,
+        consumedAt: Instant,
+    ): Boolean =
+        transaction {
+            OtpChallengesTable.update({ OtpChallengesTable.id eq id }) {
+                it[OtpChallengesTable.consumedAt] = consumedAt
+            } > 0
+        }
+
+    override fun incrementAttemptCount(id: String): Int =
+        transaction {
+            OtpChallengesTable.update({ OtpChallengesTable.id eq id }) {
+                it.update(attemptCount, attemptCount + 1)
+            }
+            OtpChallengesTable
+                .selectAll()
+                .where { OtpChallengesTable.id eq id }
+                .map { it[OtpChallengesTable.attemptCount] }
+                .singleOrNull() ?: -1
+        }
+
+    private fun mapChallenge(it: ResultRow) =
+        OtpChallenge(
+            id = it[OtpChallengesTable.id],
+            phoneNumber = it[OtpChallengesTable.phoneNumber],
+            otpCodeHash = it[OtpChallengesTable.otpCodeHash],
+            expiresAt = it[OtpChallengesTable.expiresAt],
+            attemptCount = it[OtpChallengesTable.attemptCount],
+            maxAttempts = it[OtpChallengesTable.maxAttempts],
+            consumedAt = it[OtpChallengesTable.consumedAt],
+            createdAt = it[OtpChallengesTable.createdAt],
+        )
 }

@@ -9,12 +9,12 @@ data class User(
     val photoUrl: String?,
     val status: UserStatus,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
 )
 
 enum class UserStatus {
     ACTIVE,
-    BLOCKED
+    BLOCKED,
 }
 
 data class UserPhoneAuthIdentity(
@@ -24,7 +24,7 @@ data class UserPhoneAuthIdentity(
     val isVerified: Boolean,
     val verifiedAt: Instant?,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
 )
 
 data class OtpChallenge(
@@ -35,9 +35,11 @@ data class OtpChallenge(
     val attemptCount: Int,
     val maxAttempts: Int,
     val consumedAt: Instant?,
-    val createdAt: Instant
+    val createdAt: Instant,
 ) {
     fun isExpired(now: Instant = Instant.now()) = expiresAt.isBefore(now)
+
     fun isConsumed() = consumedAt != null
+
     fun isMaxAttemptsReached() = attemptCount >= maxAttempts
 }

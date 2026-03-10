@@ -13,7 +13,6 @@ import java.time.Instant
 import kotlin.test.assertEquals
 
 class ProfessionalSearchRankingServiceTest {
-
     private val rankingService = ProfessionalSearchRankingService()
 
     private fun createProfile(
@@ -21,7 +20,7 @@ class ProfessionalSearchRankingServiceTest {
         services: List<ProfessionalProfileService>,
         neighborhoods: List<String> = emptyList(),
         completeness: ProfileCompleteness = ProfileCompleteness.INCOMPLETE,
-        lastActiveAt: Instant = Instant.now()
+        lastActiveAt: Instant = Instant.now(),
     ) = ProfessionalProfile(
         id = ProfessionalProfileId(id),
         userId = UserId("user-$id"),
@@ -37,44 +36,72 @@ class ProfessionalSearchRankingServiceTest {
         status = ProfessionalProfileStatus.PUBLISHED,
         lastActiveAt = lastActiveAt,
         createdAt = Instant.now(),
-        updatedAt = Instant.now()
+        updatedAt = Instant.now(),
     )
 
     @Test
     fun `should rank primary matches higher than related ones`() {
         val p1 = createProfile("p1", listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)))
         val p2 = createProfile("p2", listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.RELATED)))
-        
+
         val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList(), emptyList())
-        
+
         val ranked = rankingService.rank(listOf(p2, p1), query)
-        
+
         assertEquals("p1", ranked[0].id.value)
         assertEquals("p2", ranked[1].id.value)
     }
 
     @Test
     fun `should apply neighborhood bonus`() {
-        val p1 = createProfile("p1", listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)), neighborhoods = listOf("Centro"))
-        val p2 = createProfile("p2", listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)), neighborhoods = listOf("Other"))
-        
-        val query = InterpretedSearchQuery("limpeza no centro", "limpeza no centro", listOf("clean-house"), "Batatais", listOf("Centro"), emptyList())
-        
+        val p1 =
+            createProfile(
+                "p1",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                neighborhoods = listOf("Centro"),
+            )
+        val p2 =
+            createProfile(
+                "p2",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                neighborhoods = listOf("Other"),
+            )
+
+        val query =
+            InterpretedSearchQuery(
+                "limpeza no centro",
+                "limpeza no centro",
+                listOf("clean-house"),
+                "Batatais",
+                listOf("Centro"),
+                emptyList(),
+            )
+
         val ranked = rankingService.rank(listOf(p2, p1), query)
-        
+
         assertEquals("p1", ranked[0].id.value)
         assertEquals("p2", ranked[1].id.value)
     }
 
     @Test
     fun `should apply completeness and recently active bonus`() {
-        val p1 = createProfile("p1", listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)), completeness = ProfileCompleteness.COMPLETE)
-        val p2 = createProfile("p2", listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)), completeness = ProfileCompleteness.INCOMPLETE)
-        
+        val p1 =
+            createProfile(
+                "p1",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                completeness = ProfileCompleteness.COMPLETE,
+            )
+        val p2 =
+            createProfile(
+                "p2",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                completeness = ProfileCompleteness.INCOMPLETE,
+            )
+
         val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList(), emptyList())
-        
+
         val ranked = rankingService.rank(listOf(p2, p1), query)
-        
+
         assertEquals("p1", ranked[0].id.value)
         assertEquals("p2", ranked[1].id.value)
     }

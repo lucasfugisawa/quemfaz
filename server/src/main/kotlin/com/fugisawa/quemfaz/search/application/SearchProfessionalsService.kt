@@ -24,27 +24,31 @@ class SearchProfessionalsService(
     private val rankingService: ProfessionalSearchRankingService,
     private val searchQueryRepository: SearchQueryRepository,
     private val profileRepository: ProfessionalProfileRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    fun execute(userId: UserId?, request: SearchProfessionalsRequest): SearchProfessionalsResponse {
+    fun execute(
+        userId: UserId?,
+        request: SearchProfessionalsRequest,
+    ): SearchProfessionalsResponse {
         // 1. Interpret query
         val interpreted = interpreter.interpret(request.query, request.cityName)
         val city = interpreted.cityName ?: request.cityName ?: throw IllegalArgumentException("City context required for search")
 
         // 2. Persist query for analytics
-        val searchQuery = SearchQuery(
-            id = UUID.randomUUID().toString(),
-            userId = userId,
-            originalQuery = request.query,
-            normalizedQuery = interpreted.normalizedQuery,
-            cityName = city,
-            neighborhoods = interpreted.neighborhoods,
-            interpretedServiceIds = interpreted.serviceIds,
-            inputMode = request.inputMode,
-            createdAt = Instant.now()
-        )
+        val searchQuery =
+            SearchQuery(
+                id = UUID.randomUUID().toString(),
+                userId = userId,
+                originalQuery = request.query,
+                normalizedQuery = interpreted.normalizedQuery,
+                cityName = city,
+                neighborhoods = interpreted.neighborhoods,
+                interpretedServiceIds = interpreted.serviceIds,
+                inputMode = request.inputMode,
+                createdAt = Instant.now(),
+            )
         searchQueryRepository.create(searchQuery)
 
         // 3. Retrieve candidate profiles in city
@@ -56,33 +60,39 @@ class SearchProfessionalsService(
         // 5. Map to response
         return SearchProfessionalsResponse(
             normalizedQuery = interpreted.normalizedQuery,
-            interpretedServices = interpreted.serviceIds.map { serviceId ->
-                val canonical = CanonicalServices.findById(CanonicalServiceId(serviceId))
-                InterpretedServiceDto(serviceId, canonical?.displayName ?: serviceId, "PRIMARY")
-            },
-            results = ranked.map { profile ->
-                val user = userRepository.findById(profile.userId)
-                mapToResponse(profile, user?.name, user?.photoUrl)
-            }
+            interpretedServices =
+                interpreted.serviceIds.map { serviceId ->
+                    val canonical = CanonicalServices.findById(CanonicalServiceId(serviceId))
+                    InterpretedServiceDto(serviceId, canonical?.displayName ?: serviceId, "PRIMARY")
+                },
+            results =
+                ranked.map { profile ->
+                    val user = userRepository.findById(profile.userId)
+                    mapToResponse(profile, user?.name, user?.photoUrl)
+                },
         )
     }
 
-    private fun mapToResponse(profile: ProfessionalProfile, userName: String?, userPhotoUrl: String?): ProfessionalProfileResponse {
-        return ProfessionalProfileResponse(
+    private fun mapToResponse(
+        profile: ProfessionalProfile,
+        userName: String?,
+        userPhotoUrl: String?,
+    ): ProfessionalProfileResponse =
+        ProfessionalProfileResponse(
             id = profile.id.value,
             name = userName,
             photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
             description = profile.normalizedDescription ?: "",
             cityName = profile.cityName ?: "",
             neighborhoods = profile.neighborhoods,
-            services = profile.services.map { svc ->
-                val canonical = CanonicalServices.findById(CanonicalServiceId(svc.serviceId))
-                InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
-            },
+            services =
+                profile.services.map { svc ->
+                    val canonical = CanonicalServices.findById(CanonicalServiceId(svc.serviceId))
+                    InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
+                },
             profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
             activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
             whatsAppPhone = profile.whatsappPhone,
-            contactPhone = profile.contactPhone ?: ""
+            contactPhone = profile.contactPhone ?: "",
         )
-    }
 }
