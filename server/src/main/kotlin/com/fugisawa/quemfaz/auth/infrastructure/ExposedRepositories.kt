@@ -19,7 +19,7 @@ object UsersTable : Table("users") {
     val id = varchar("id", 128)
     val name = varchar("name", 255).nullable()
     val photoUrl = varchar("photo_url", 1024).nullable()
-    val status = varchar("status", 50)
+    val status = customEnumeration("status", "user_status", { UserStatus.valueOf(it as String) }, { it.name })
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
 
@@ -57,7 +57,7 @@ class ExposedUserRepository : UserRepository {
             it[id] = user.id.value
             it[name] = user.name
             it[photoUrl] = user.photoUrl
-            it[status] = user.status.name
+            it[status] = user.status
             it[createdAt] = user.createdAt
             it[updatedAt] = user.updatedAt
         }
@@ -83,7 +83,7 @@ class ExposedUserRepository : UserRepository {
         id = UserId(it[UsersTable.id]),
         name = it[UsersTable.name],
         photoUrl = it[UsersTable.photoUrl],
-        status = UserStatus.valueOf(it[UsersTable.status]),
+        status = it[UsersTable.status],
         createdAt = it[UsersTable.createdAt],
         updatedAt = it[UsersTable.updatedAt]
     )

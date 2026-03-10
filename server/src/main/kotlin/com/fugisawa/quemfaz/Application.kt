@@ -4,6 +4,7 @@ import com.fugisawa.quemfaz.config.AppConfig
 import com.fugisawa.quemfaz.config.configModule
 import com.fugisawa.quemfaz.config.infrastructureModule
 import com.fugisawa.quemfaz.auth.routing.authRoutes
+import com.fugisawa.quemfaz.profile.routing.profileRoutes
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -75,5 +76,6 @@ fun Application.module() {
             call.respondText("Ktor: ${Greeting().greet()}")
         }
         authRoutes()
+        profileRoutes()
     }
 }

@@ -21,6 +21,11 @@ import com.fugisawa.quemfaz.infrastructure.otp.RandomOtpCodeGenerator
 import com.fugisawa.quemfaz.infrastructure.sms.AwsSmsSender
 import com.fugisawa.quemfaz.infrastructure.sms.FakeSmsSender
 import com.fugisawa.quemfaz.infrastructure.sms.SmsSender
+import com.fugisawa.quemfaz.profile.application.*
+import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
+import com.fugisawa.quemfaz.profile.infrastructure.persistence.ExposedProfessionalProfileRepository
+import com.fugisawa.quemfaz.profile.interpretation.MockProfessionalInputInterpreter
+import com.fugisawa.quemfaz.profile.interpretation.ProfessionalInputInterpreter
 import io.ktor.server.config.*
 import org.koin.dsl.module
 import org.slf4j.LoggerFactory
@@ -81,4 +86,16 @@ val infrastructureModule = module {
     single { StartOtpService(get(), get(), get(), get(), get(), get<AppConfig>().otp) }
     single { VerifyOtpService(get(), get(), get(), get(), get()) }
     single { CompleteUserProfileService(get(), get()) }
+
+    // Professional Profile Repositories
+    single<ProfessionalProfileRepository> { ExposedProfessionalProfileRepository() }
+
+    // Professional Profile Interpretation
+    single<ProfessionalInputInterpreter> { MockProfessionalInputInterpreter() }
+
+    // Professional Profile Services
+    single { CreateProfessionalProfileDraftService(get()) }
+    single { ConfirmProfessionalProfileService(get(), get()) }
+    single { GetMyProfessionalProfileService(get(), get()) }
+    single { GetPublicProfessionalProfileService(get(), get()) }
 }

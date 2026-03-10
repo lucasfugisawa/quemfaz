@@ -1,0 +1,94 @@
+package com.fugisawa.quemfaz.profile.application
+
+import com.fugisawa.quemfaz.auth.domain.User
+import com.fugisawa.quemfaz.auth.domain.UserRepository
+import com.fugisawa.quemfaz.auth.domain.UserStatus
+import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
+import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
+import com.fugisawa.quemfaz.core.id.UserId
+import com.fugisawa.quemfaz.profile.domain.ProfessionalProfile
+import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
+import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
+import org.junit.Test
+import java.time.Instant
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+
+class ProfileServicesTest {
+
+    private class FakeProfessionalProfileRepository : ProfessionalProfileRepository {
+        val profiles = mutableMapOf<String, ProfessionalProfile>()
+        override fun findByUserId(userId: UserId) = profiles.values.find { it.userId == userId }
+        override fun findById(id: ProfessionalProfileId) = profiles[id.value]
+        override fun save(profile: ProfessionalProfile): ProfessionalProfile {
+            profiles[profile.id.value] = profile
+            return profile
+        }
+        override fun listPublishedByCity(cityName: String) = profiles.values.filter { it.cityName == cityName }
+    }
+
+    private class FakeUserRepository : UserRepository {
+        val users = mutableMapOf<String, User>()
+        override fun create(user: User) = user.also { users[it.id.value] = it }
+        override fun findById(id: UserId) = users[id.value]
+        override fun updateProfile(id: UserId, name: String, photoUrl: String?) = null
+    }
+
+    @Test
+    fun `should confirm and publish professional profile`() {
+        val profileRepo = FakeProfessionalProfileRepository()
+        val userRepo = FakeUserRepository()
+        val userId = UserId("user-123")
+        userRepo.create(User(userId, "John Doe", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
+
+        val service = ConfirmProfessionalProfileService(profileRepo, userRepo)
+        val request = ConfirmProfessionalProfileRequest(
+            normalizedDescription = "Pintor experiente",
+            selectedServiceIds = listOf("paint-residential"),
+            cityName = "Batatais",
+            neighborhoods = listOf("Centro"),
+            contactPhone = "16999999999",
+            whatsAppPhone = "16999999999",
+            photoUrl = null,
+            portfolioPhotoUrls = emptyList()
+        )
+
+        val response = service.execute(userId, request)
+
+        assertNotNull(response.id)
+        assertEquals("John Doe", response.name)
+        assertEquals("Pintor experiente", response.description)
+        assertEquals(ProfileCompleteness.COMPLETE, profileRepo.findByUserId(userId)?.completeness)
+        assertEquals(1, response.services.size)
+        assertEquals("paint-residential", response.services[0].serviceId)
+    }
+
+    @Test
+    fun `should get public profile only if published`() {
+        val profileRepo = FakeProfessionalProfileRepository()
+        val userRepo = FakeUserRepository()
+        val userId = UserId("user-123")
+        val profileId = ProfessionalProfileId("prof-123")
+        
+        userRepo.create(User(userId, "John Doe", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
+        
+        val service = GetPublicProfessionalProfileService(profileRepo, userRepo)
+
+        // No profile yet
+        assertEquals(null, service.execute(profileId))
+
+        // Save a draft
+        val draft = ProfessionalProfile(
+            profileId, userId, "Desc", "Desc", "123", "123", "City", 
+            emptyList(), emptyList(), emptyList(), ProfileCompleteness.INCOMPLETE, 
+            com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus.DRAFT, 
+            Instant.now(), Instant.now(), Instant.now()
+        )
+        profileRepo.save(draft)
+        assertEquals(null, service.execute(profileId))
+
+        // Publish it
+        profileRepo.save(draft.copy(status = com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus.PUBLISHED))
+        assertNotNull(service.execute(profileId))
+    }
+}

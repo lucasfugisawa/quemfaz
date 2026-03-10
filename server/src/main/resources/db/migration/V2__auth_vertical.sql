@@ -1,10 +1,12 @@
 -- V2: Auth Vertical Schema
 
+CREATE TYPE user_status AS ENUM ('ACTIVE', 'BLOCKED');
+
 CREATE TABLE users (
     id TEXT PRIMARY KEY, -- Using text-based IDs (ULID recommended by context if present, otherwise UUID strings)
     name TEXT,
     photo_url TEXT,
-    status TEXT NOT NULL DEFAULT 'ACTIVE',
+    status user_status NOT NULL DEFAULT 'ACTIVE',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
