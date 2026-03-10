@@ -92,7 +92,7 @@ val infrastructureModule =
 
         single<OtpCodeGenerator> {
             val config = get<AppConfig>()
-            RandomOtpCodeGenerator(config.otp)
+            RandomOtpCodeGenerator(config.otp, config.sms.provider)
         }
 
         single<OtpMessageComposer> {

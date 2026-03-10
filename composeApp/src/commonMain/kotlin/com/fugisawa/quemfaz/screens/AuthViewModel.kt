@@ -51,7 +51,7 @@ class AuthViewModel(
             try {
                 val response = apiClients.verifyOtp(VerifyOtpRequest(phoneNumber, otpCode))
                 if (response.success) {
-                    val token = response.token ?: "dummy-token-${response.userId}"
+                    val token = response.token
                     sessionManager.setAuthenticated(token)
                     
                     if (response.requiresProfileCompletion) {

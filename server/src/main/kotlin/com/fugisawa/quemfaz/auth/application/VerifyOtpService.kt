@@ -48,18 +48,19 @@ class VerifyOtpService(
             if (identity != null) {
                 val user = userRepository.findById(identity.userId)
                 if (user == null) {
-                    VerifyOtpResult.Failure("User not found for identity")
+                    return@transaction VerifyOtpResult.Failure("User not found for identity")
                 } else if (user.status == UserStatus.BLOCKED) {
-                    VerifyOtpResult.Failure("User is blocked")
+                    return@transaction VerifyOtpResult.Failure("User is blocked")
                 } else {
                     val token = tokenService.generateToken(user.id)
-                    VerifyOtpResult.Success(
+                    return@transaction VerifyOtpResult.Success(
                         response =
                             VerifyOtpResponse(
                                 success = true,
                                 userId = user.id.value,
                                 isNewUser = false,
                                 requiresProfileCompletion = user.name == null,
+                                token = token,
                             ),
                         token = token,
                     )
@@ -91,13 +92,14 @@ class VerifyOtpService(
                 userPhoneAuthIdentityRepository.create(newIdentity)
 
                 val token = tokenService.generateToken(userId)
-                VerifyOtpResult.Success(
+                return@transaction VerifyOtpResult.Success(
                     response =
                         VerifyOtpResponse(
                             success = true,
                             userId = userId.value,
                             isNewUser = true,
                             requiresProfileCompletion = true,
+                            token = token,
                         ),
                     token = token,
                 )

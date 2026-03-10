@@ -28,12 +28,11 @@ class VerifyOtpServiceTest {
     @Before
     fun setup() {
         Database.connect(
-            "jdbc:postgresql://localhost:5432/quemfaz",
-            driver = "org.postgresql.Driver",
-            user = "quemfaz",
-            password = "quemfaz",
+            "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
+            driver = "org.h2.Driver",
         )
         transaction {
+            exec("CREATE TYPE IF NOT EXISTS user_status AS ENUM ('ACTIVE', 'BLOCKED')")
             SchemaUtils.drop(UsersTable, UserPhoneAuthIdentitiesTable, OtpChallengesTable)
             SchemaUtils.create(UsersTable, UserPhoneAuthIdentitiesTable, OtpChallengesTable)
         }
