@@ -31,7 +31,6 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.datetime)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -42,10 +41,6 @@ kotlin {
 android {
     namespace = "com.fugisawa.quemfaz.shared"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
     }

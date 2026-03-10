@@ -1,6 +1,6 @@
 This is a Kotlin Multiplatform project targeting Android, iOS, Web, Server.
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
+* [/composeApp](./composeApp/src) is the shared UI and platform logic for all targets.
   It contains several subfolders:
     - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
     - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
@@ -9,14 +9,16 @@ This is a Kotlin Multiplatform project targeting Android, iOS, Web, Server.
       Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
       folder is the appropriate location.
 
+* [/androidApp](./androidApp/src) is the Android application module.
+  It depends on `composeApp` and `shared` to provide the final Android app experience.
+
 * [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
   you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
 
 * [/server](./server/src/main/kotlin) is for the Ktor server application.
 
-* [/shared](./shared/src) is for the code that will be shared between all targets in the project.
-  The most important subfolder is [commonMain](./shared/src/commonMain/kotlin). If preferred, you
-  can add code to the platform-specific folders here too.
+* [/shared](./shared/src) is the pure business logic and models shared between all targets in the project.
+  The most important subfolder is [commonMain](./shared/src/commonMain/kotlin).
 
 ### Build and Run Android Application
 
@@ -25,11 +27,11 @@ in your IDE’s toolbar or build it directly from the terminal:
 
 - on macOS/Linux
   ```shell
-  ./gradlew :composeApp:assembleDebug
+  ./gradlew :androidApp:assembleDebug
   ```
 - on Windows
   ```shell
-  .\gradlew.bat :composeApp:assembleDebug
+  .\gradlew.bat :androidApp:assembleDebug
   ```
 
 ### Build and Run Server
