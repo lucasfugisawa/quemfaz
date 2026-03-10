@@ -26,6 +26,12 @@ import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.infrastructure.persistence.ExposedProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.interpretation.MockProfessionalInputInterpreter
 import com.fugisawa.quemfaz.profile.interpretation.ProfessionalInputInterpreter
+import com.fugisawa.quemfaz.search.application.SearchProfessionalsService
+import com.fugisawa.quemfaz.search.domain.SearchQueryRepository
+import com.fugisawa.quemfaz.search.infrastructure.persistence.ExposedSearchQueryRepository
+import com.fugisawa.quemfaz.search.interpretation.MockSearchQueryInterpreter
+import com.fugisawa.quemfaz.search.interpretation.SearchQueryInterpreter
+import com.fugisawa.quemfaz.search.ranking.ProfessionalSearchRankingService
 import io.ktor.server.config.*
 import org.koin.dsl.module
 import org.slf4j.LoggerFactory
@@ -98,4 +104,16 @@ val infrastructureModule = module {
     single { ConfirmProfessionalProfileService(get(), get()) }
     single { GetMyProfessionalProfileService(get(), get()) }
     single { GetPublicProfessionalProfileService(get(), get()) }
+
+    // Search Repositories
+    single<SearchQueryRepository> { ExposedSearchQueryRepository() }
+
+    // Search Interpretation
+    single<SearchQueryInterpreter> { MockSearchQueryInterpreter() }
+
+    // Search Ranking
+    single { ProfessionalSearchRankingService() }
+
+    // Search Services
+    single { SearchProfessionalsService(get(), get(), get(), get(), get()) }
 }

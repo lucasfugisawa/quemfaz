@@ -5,6 +5,7 @@ import com.fugisawa.quemfaz.config.configModule
 import com.fugisawa.quemfaz.config.infrastructureModule
 import com.fugisawa.quemfaz.auth.routing.authRoutes
 import com.fugisawa.quemfaz.profile.routing.profileRoutes
+import com.fugisawa.quemfaz.search.routing.searchRoutes
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -77,5 +78,6 @@ fun Application.module() {
         }
         authRoutes()
         profileRoutes()
+        searchRoutes()
     }
 }
