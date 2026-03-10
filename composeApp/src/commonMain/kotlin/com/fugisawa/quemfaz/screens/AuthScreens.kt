@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun PhoneLoginScreen(
@@ -14,33 +15,45 @@ fun PhoneLoginScreen(
 ) {
     var phone by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Login", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = phone,
-            onValueChange = { phone = it },
-            label = { Text("Phone Number") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { onSendOtp(phone) },
-            enabled = phone.isNotBlank() && uiState !is AuthUiState.Loading,
-            modifier = Modifier.fillMaxWidth()
+    Box(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (uiState is AuthUiState.Loading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp))
-            } else {
-                Text("Send OTP")
+            Text("Welcome to Quem Faz", style = MaterialTheme.typography.headlineLarge)
+            Text("Find professionals or offer your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                label = { Text("Phone Number") },
+                placeholder = { Text("+55 11 99999-9999") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Button(
+                onClick = { onSendOtp(phone) },
+                enabled = phone.isNotBlank() && uiState !is AuthUiState.Loading,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                if (uiState is AuthUiState.Loading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text("Continue", style = MaterialTheme.typography.titleMedium)
+                }
             }
-        }
-        if (uiState is AuthUiState.Error) {
-            Text(uiState.message, color = MaterialTheme.colorScheme.error)
+            
+            if (uiState is AuthUiState.Error) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(uiState.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
@@ -53,34 +66,45 @@ fun OtpVerificationScreen(
 ) {
     var otp by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Verify Phone", style = MaterialTheme.typography.headlineMedium)
-        Text("Sent to $phone")
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = otp,
-            onValueChange = { otp = it },
-            label = { Text("OTP Code") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { onVerifyOtp(otp) },
-            enabled = otp.isNotBlank() && uiState !is AuthUiState.Loading,
-            modifier = Modifier.fillMaxWidth()
+    Box(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (uiState is AuthUiState.Loading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp))
-            } else {
-                Text("Verify")
+            Text("Verify OTP", style = MaterialTheme.typography.headlineLarge)
+            Text("Enter the code sent to $phone", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            OutlinedTextField(
+                value = otp,
+                onValueChange = { if (it.length <= 6) otp = it },
+                label = { Text("6-digit Code") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium,
+                textStyle = LocalTextStyle.current.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Center, letterSpacing = 8.sp)
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Button(
+                onClick = { onVerifyOtp(otp) },
+                enabled = otp.length == 6 && uiState !is AuthUiState.Loading,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                if (uiState is AuthUiState.Loading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text("Verify and Login", style = MaterialTheme.typography.titleMedium)
+                }
             }
-        }
-        if (uiState is AuthUiState.Error) {
-            Text(uiState.message, color = MaterialTheme.colorScheme.error)
+            
+            if (uiState is AuthUiState.Error) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(uiState.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
@@ -92,29 +116,38 @@ fun CompleteUserProfileScreen(
 ) {
     var name by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Complete Profile", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Your Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { onComplete(name, null) },
-            enabled = name.isNotBlank() && uiState !is AuthUiState.Loading,
-            modifier = Modifier.fillMaxWidth()
+    Box(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (uiState is AuthUiState.Loading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp))
-            } else {
-                Text("Save and Continue")
+            Text("Finish Profile", style = MaterialTheme.typography.headlineLarge)
+            Text("Tell us how we should call you.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Full Name") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Button(
+                onClick = { onComplete(name, null) },
+                enabled = name.isNotBlank() && uiState !is AuthUiState.Loading,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                if (uiState is AuthUiState.Loading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text("Let's go!", style = MaterialTheme.typography.titleMedium)
+                }
             }
         }
     }

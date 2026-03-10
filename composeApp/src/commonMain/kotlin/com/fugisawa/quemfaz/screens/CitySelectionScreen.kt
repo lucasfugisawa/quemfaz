@@ -10,21 +10,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CitySelectionScreen(
     cities: List<String>,
     onCitySelected: (String) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Choose your city", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-        LazyColumn {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Select your city") },
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
             items(cities) { city ->
                 ListItem(
-                    headlineContent = { Text(city) },
+                    headlineContent = { Text(city, style = MaterialTheme.typography.bodyLarge) },
+                    trailingContent = { Text("›", style = MaterialTheme.typography.headlineSmall) },
                     modifier = Modifier.clickable { onCitySelected(city) }
                 )
-                HorizontalDivider()
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
             }
         }
     }
