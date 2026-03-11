@@ -77,6 +77,31 @@ in your IDE's toolbar or run it directly from the terminal:
 To build and run the development version of the iOS app, use the run configuration from the run widget
 in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
 
+### Integration Tests (Server)
+
+The project includes a robust integration test infrastructure using **Testcontainers (PostgreSQL)** and **Ktor `testApplication`**.
+
+#### Prerequisites
+- Docker must be running on your machine.
+- For Windows users, ensure the Docker engine is exposed via named pipe (default for Docker Desktop).
+
+#### Running tests
+- Run all server tests:
+  ```shell
+  .\gradlew.bat :server:test
+  ```
+- Run integration tests specifically:
+  ```shell
+  .\gradlew.bat :server:test --tests "com.fugisawa.quemfaz.integration.*"
+  ```
+
+#### Infrastructure Features
+- **CI/CD Compatible**: Configurations can be overridden via environment variables:
+  - `TEST_JWT_SECRET`, `TEST_JWT_ISSUER`, `TEST_JWT_AUDIENCE`, `TEST_JWT_EXPIRES_IN`
+  - `TEST_SMS_PROVIDER` (defaults to `FAKE`)
+- **Automatic Cleanup**: Integration tests can define `tablesToClean` to have specific tables truncated before each test run, ensuring isolation.
+- **Authenticated Client**: `createTestClient(token)` helper facilitates testing protected endpoints.
+
 ---
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
