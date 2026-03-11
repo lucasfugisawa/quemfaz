@@ -9,7 +9,6 @@ import com.fugisawa.quemfaz.moderation.application.CreateProfileReportService
 import com.fugisawa.quemfaz.moderation.application.ModerationService
 import com.fugisawa.quemfaz.moderation.domain.ReportStatus
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.application.createRouteScopedPlugin
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
