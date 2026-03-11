@@ -19,6 +19,7 @@ hikari = "7.0.2"
 postgresql = "42.7.10"
 flyway = "12.1.0"
 exposed = "0.60.0"
+testcontainers = "2.0.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -46,6 +47,11 @@ flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
+koinTestJunit4 = { module = "io.insert-koin:koin-test-junit4", version.ref = "koin" }
+koinTestJunit5 = { module = "io.insert-koin:koin-test-junit5", version.ref = "koin" }
+testcontainersPostgresql = { module = "org.testcontainers:postgresql", version = "1.21.4" }
+testcontainersJunitJupiter = { module = "org.testcontainers:junit-jupiter", version = "1.21.4" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

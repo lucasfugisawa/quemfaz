@@ -16,6 +16,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.install
+import io.ktor.server.application.pluginOrNull
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
@@ -35,15 +36,19 @@ import javax.sql.DataSource
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
-fun Application.module() {
+fun Application.module(koinModules: List<org.koin.core.module.Module>? = null) {
     val logger = LoggerFactory.getLogger("Application")
 
-    install(Koin) {
-        modules(
-            module { single { environment.config } },
-            configModule,
-            infrastructureModule,
-        )
+    if (pluginOrNull(Koin) == null) {
+        install(Koin) {
+            modules(
+                koinModules ?: listOf(
+                    module { single { environment.config } },
+                    configModule,
+                    infrastructureModule,
+                ),
+            )
+        }
     }
 
     val config = get<AppConfig>()
