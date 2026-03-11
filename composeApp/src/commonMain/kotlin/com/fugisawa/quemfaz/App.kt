@@ -13,6 +13,8 @@ import com.fugisawa.quemfaz.session.AuthState
 import com.fugisawa.quemfaz.session.SessionManager
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
+import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
+import com.fugisawa.quemfaz.platform.openUrl
 
 @Composable
 fun App(baseUrl: String = BASE_URL_DEFAULT) {
@@ -115,24 +117,76 @@ fun MainFlow(
     navigateTo: (Screen) -> Unit,
     navigateBack: () -> Unit
 ) {
+    val homeViewModel: HomeViewModel = koinInject()
+    val searchUiState by homeViewModel.searchUiState.collectAsState()
+
+    var currentQuery by remember { mutableStateOf("") }
+    var currentProfileId by remember { mutableStateOf("") }
+
     when (currentScreen) {
         is Screen.Home -> {
             HomeScreen(
                 currentCity = currentCity,
                 onCityClick = { navigateTo(Screen.CitySelection) },
-                onSearch = { navigateTo(Screen.SearchResults) /* For MVP we use a simple state */ },
+                onSearch = { query ->
+                    currentQuery = query
+                    homeViewModel.search(query)
+                    navigateTo(Screen.SearchResults)
+                },
                 onOfferServices = { navigateTo(Screen.OnboardingStart) }
             )
         }
         is Screen.CitySelection -> {
-            val viewModel: HomeViewModel = koinInject()
             CitySelectionScreen(
-                cities = viewModel.supportedCities,
+                cities = homeViewModel.supportedCities,
                 onCitySelected = {
-                    viewModel.selectCity(it)
+                    homeViewModel.selectCity(it)
                     navigateTo(Screen.Home)
                 }
             )
+        }
+        is Screen.SearchResults -> {
+            SearchResultsScreen(
+                query = currentQuery,
+                uiState = searchUiState,
+                onProfileClick = { id ->
+                    currentProfileId = id
+                    navigateTo(Screen.ProfessionalProfile)
+                }
+            )
+        }
+        is Screen.ProfessionalProfile -> {
+            val profileViewModel: ProfileViewModel = koinInject()
+            val profileUiState by profileViewModel.uiState.collectAsState()
+            LaunchedEffect(currentProfileId) {
+                profileViewModel.loadProfile(currentProfileId)
+            }
+            ProfessionalProfileScreen(
+                id = currentProfileId,
+                uiState = profileUiState,
+                onContactClick = { channel ->
+                    profileViewModel.trackContactClick(currentProfileId, channel)
+                    val profile = (profileUiState as? ProfileUiState.Content)?.profile
+                    when (channel) {
+                        ContactChannelDto.WHATSAPP -> {
+                            val digits = profile?.whatsAppPhone?.filter { it.isDigit() }
+                            if (!digits.isNullOrBlank()) openUrl("https://wa.me/$digits")
+                        }
+                        ContactChannelDto.PHONE_CALL -> {
+                            val phone = profile?.contactPhone?.ifBlank { null }
+                            if (phone != null) openUrl("tel:$phone")
+                        }
+                    }
+                },
+                onFavoriteToggle = { profileViewModel.toggleFavorite(currentProfileId) },
+                onReportClick = { }
+            )
+        }
+        is Screen.Favorites -> {
+            FavoritesScreen(onNavigateBack = navigateBack)
+        }
+        is Screen.MyProfile -> {
+            MyProfileScreen(onNavigateBack = navigateBack)
         }
         is Screen.OnboardingStart -> {
             val viewModel: OnboardingViewModel = koinInject()
