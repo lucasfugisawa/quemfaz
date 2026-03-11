@@ -48,19 +48,20 @@ fun Route.moderationRoutes() {
         }
 
         route("/admin") {
-            val adminCheck = createRouteScopedPlugin("AdminCheck") {
-                onCall { call ->
-                    val userId =
-                        call
-                            .principal<JWTPrincipal>()
-                            ?.payload
-                            ?.getClaim("userId")
-                            ?.asString()
-                    if (userId == null || !appConfig.admin.adminUserIds.contains(userId)) {
-                        call.respond(HttpStatusCode.Forbidden, "Admin access required")
+            val adminCheck =
+                createRouteScopedPlugin("AdminCheck") {
+                    onCall { call ->
+                        val userId =
+                            call
+                                .principal<JWTPrincipal>()
+                                ?.payload
+                                ?.getClaim("userId")
+                                ?.asString()
+                        if (userId == null || !appConfig.admin.adminUserIds.contains(userId)) {
+                            call.respond(HttpStatusCode.Forbidden, "Admin access required")
+                        }
                     }
                 }
-            }
             install(adminCheck)
 
             route("/reports") {

@@ -2,10 +2,22 @@ package com.fugisawa.quemfaz.domain.service
 
 import com.fugisawa.quemfaz.core.id.CanonicalServiceId
 
+/**
+ * Central registry of all canonical services available in the platform.
+ *
+ * This object provides O(1) lookups for services by ID and display name,
+ * and efficient searches by alias.
+ *
+ * Note: In production, this data should ideally be stored in a database
+ * with caching. This in-memory approach is suitable for small, stable taxonomies.
+ */
 object CanonicalServices {
     private fun s(id: String, name: String, desc: String, cat: ServiceCategory, aliases: List<String> = emptyList()) =
         CanonicalService(CanonicalServiceId(id), name, desc, cat, aliases)
 
+    /**
+     * Complete list of all available canonical services.
+     */
     val all = listOf(
         // Cleaning
         s("clean-house", "Limpeza Residencial", "Limpeza de casas e apartamentos", ServiceCategory.CLEANING, listOf("diarista", "faxina", "limpeza de casa")),
@@ -47,6 +59,85 @@ object CanonicalServices {
         s("other-general", "Outros Serviços", "Serviços não listados anteriormente", ServiceCategory.OTHER, listOf("diverso"))
     )
 
-    fun findById(id: CanonicalServiceId) = all.find { it.id == id }
-    fun findByDisplayName(name: String) = all.find { it.displayName.equals(name, ignoreCase = true) }
+    // O(1) lookup indices
+    private val byId: Map<CanonicalServiceId, CanonicalService> = all.associateBy { it.id }
+    private val byDisplayName: Map<String, CanonicalService> = all.associateBy { it.displayName.lowercase() }
+
+    // Alias index for efficient searching
+    private val byAlias: Map<String, List<CanonicalService>> = buildMap<String, MutableList<CanonicalService>> {
+        all.forEach { service ->
+            service.baseAliases.forEach { alias ->
+                getOrPut(alias.lowercase()) { mutableListOf() }.add(service)
+            }
+        }
+    }
+
+    /**
+     * Finds a service by its unique ID.
+     * @return The service if found, null otherwise.
+     */
+    fun findById(id: CanonicalServiceId): CanonicalService? = byId[id]
+
+    /**
+     * Finds a service by its display name (case-insensitive).
+     * @return The service if found, null otherwise.
+     */
+    fun findByDisplayName(name: String): CanonicalService? = byDisplayName[name.lowercase()]
+
+    /**
+     * Finds all services that match the given alias (case-insensitive).
+     * @return List of matching services, empty if none found.
+     */
+    fun findByAlias(alias: String): List<CanonicalService> =
+        byAlias[alias.lowercase()] ?: emptyList()
+
+    /**
+     * Finds all services in a given category.
+     * @return List of services in the category.
+     */
+    fun findByCategory(category: ServiceCategory): List<CanonicalService> =
+        all.filter { it.category == category }
+
+    /**
+     * Searches for services matching the query string.
+     * Checks display name, aliases, and description.
+     * @return List of matching services, ordered by relevance.
+     */
+    fun search(query: String): List<CanonicalService> {
+        if (query.isBlank()) return emptyList()
+
+        val lowerQuery = query.lowercase().trim()
+        val results = mutableSetOf<Pair<CanonicalService, Int>>() // (service, score)
+
+        all.forEach { service ->
+            var score = 0
+
+            // Exact display name match (highest priority)
+            if (service.displayName.lowercase() == lowerQuery) {
+                score += 100
+            } else if (service.displayName.lowercase().contains(lowerQuery)) {
+                score += 50
+            }
+
+            // Alias matches
+            service.baseAliases.forEach { alias ->
+                if (alias.lowercase() == lowerQuery) {
+                    score += 80
+                } else if (alias.lowercase().contains(lowerQuery)) {
+                    score += 40
+                }
+            }
+
+            // Description match (lowest priority)
+            if (service.description.lowercase().contains(lowerQuery)) {
+                score += 10
+            }
+
+            if (score > 0) {
+                results.add(service to score)
+            }
+        }
+
+        return results.sortedByDescending { it.second }.map { it.first }
+    }
 }
