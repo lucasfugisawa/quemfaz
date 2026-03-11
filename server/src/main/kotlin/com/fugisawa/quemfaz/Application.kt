@@ -83,7 +83,6 @@ fun Application.module(koinModules: List<org.koin.core.module.Module>? = null) {
         }
     }
 
-    // Force initialization of infrastructure (DB, migrations)
     val dataSource: DataSource by inject()
     val databaseFactory: DatabaseFactory by inject()
     databaseFactory.connect(dataSource)

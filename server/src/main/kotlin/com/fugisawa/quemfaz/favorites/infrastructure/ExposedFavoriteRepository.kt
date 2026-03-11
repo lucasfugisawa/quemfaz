@@ -22,13 +22,8 @@ object FavoritesTable : Table("favorites") {
     val createdAt = timestamp("created_at")
 
     override val primaryKey = PrimaryKey(id)
-
-    // The UsersTable is defined in com.fugisawa.quemfaz.auth.infrastructure
-    // but we can define it here if needed or reference it correctly.
-    // Given the structure, let's reference it.
 }
 
-// In case UsersTable is not accessible directly:
 private object UsersTable : Table("users") {
     val id = varchar("id", 128)
     override val primaryKey = PrimaryKey(id)

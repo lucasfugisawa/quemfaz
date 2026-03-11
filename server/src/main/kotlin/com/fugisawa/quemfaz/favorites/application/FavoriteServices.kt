@@ -78,8 +78,6 @@ class ListFavoritesService(
         val profiles =
             favorites.mapNotNull { fav ->
                 val profile = profileRepository.findById(fav.professionalProfileId)
-                // Decide: include only published profiles in favorites list?
-                // MVP rule: "blocked/non-public profiles must not behave like normal favorite targets"
                 if (profile != null && profile.status == ProfessionalProfileStatus.PUBLISHED) {
                     val user = userRepository.findById(profile.userId)
                     mapToResponse(profile, user?.name, user?.photoUrl)
@@ -112,7 +110,7 @@ class ListFavoritesService(
                     InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
                 },
             profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
-            activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)), // Active in last 7 days
+            activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
             whatsAppPhone = profile.whatsappPhone,
             contactPhone = profile.contactPhone ?: "",
         )

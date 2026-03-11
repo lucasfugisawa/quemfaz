@@ -71,9 +71,6 @@ fun Route.authRoutes() {
                         ?: return@get call.respond(HttpStatusCode.Unauthorized)
 
                 val userId = UserId(userIdStr)
-                // We can't easily get full profile here without injecting more repos or services,
-                // but let's just return what we can or skip if not strictly required.
-                // Issue says optional.
                 call.respond(mapOf("userId" to userIdStr))
             }
         }

@@ -59,8 +59,6 @@ abstract class BaseIntegrationTest {
 
     @BeforeEach
     fun clearDatabase() {
-        // Obsolete: Cleanup is now handled inside integrationTestApplication
-        // to ensure a valid DataSource and transaction context are available.
     }
 
     protected fun integrationTestApplication(

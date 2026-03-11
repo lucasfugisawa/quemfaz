@@ -80,22 +80,18 @@ data class ProfessionalProfile(
     val updatedAt: Instant
 ) {
     init {
-        // Business rule: Published profiles must be complete
         require(status != ProfileStatus.PUBLISHED || completeness == ProfileCompleteness.COMPLETE) {
             "Published profiles must be complete"
         }
 
-        // Validate neighborhoods
         require(neighborhoods.isNotEmpty() || status == ProfileStatus.DRAFT) {
             "Published profiles must have at least one neighborhood"
         }
 
-        // Validate services
         require(services.isNotEmpty() || status == ProfileStatus.DRAFT) {
             "Published profiles must have at least one service"
         }
 
-        // Validate description
         require(description.isNotBlank() || status == ProfileStatus.DRAFT) {
             "Published profiles must have a description"
         }

@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class AuthIntegrationTest : BaseIntegrationTest() {
-    // Definimos as tabelas que devem ser limpas antes de cada teste para garantir isolamento
+    // Define tables that should be cleaned before each test to ensure isolation
     override val tablesToClean: List<Table> =
         listOf(
             UserPhoneAuthIdentitiesTable,
