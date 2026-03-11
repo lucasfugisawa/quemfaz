@@ -9,8 +9,8 @@ import com.fugisawa.quemfaz.moderation.application.CreateProfileReportService
 import com.fugisawa.quemfaz.moderation.application.ModerationService
 import com.fugisawa.quemfaz.moderation.domain.ReportStatus
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.call
+import io.ktor.server.application.createRouteScopedPlugin
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
@@ -49,18 +49,20 @@ fun Route.moderationRoutes() {
         }
 
         route("/admin") {
-            intercept(ApplicationCallPipeline.Call) {
-                val userId =
-                    call
-                        .principal<JWTPrincipal>()
-                        ?.payload
-                        ?.getClaim("userId")
-                        ?.asString()
-                if (userId == null || !appConfig.admin.adminUserIds.contains(userId)) {
-                    call.respond(HttpStatusCode.Forbidden, "Admin access required")
-                    return@intercept finish()
+            val adminCheck = createRouteScopedPlugin("AdminCheck") {
+                onCall { call ->
+                    val userId =
+                        call
+                            .principal<JWTPrincipal>()
+                            ?.payload
+                            ?.getClaim("userId")
+                            ?.asString()
+                    if (userId == null || !appConfig.admin.adminUserIds.contains(userId)) {
+                        call.respond(HttpStatusCode.Forbidden, "Admin access required")
+                    }
                 }
             }
+            install(adminCheck)
 
             route("/reports") {
                 get {
