@@ -3,7 +3,7 @@ package com.fugisawa.quemfaz.infrastructure.otp
 import com.fugisawa.quemfaz.config.OtpConfig
 import com.fugisawa.quemfaz.config.SmsProviderType
 import kotlin.random.Random
- 
+
 class RandomOtpCodeGenerator(
     private val config: OtpConfig,
     private val smsProvider: SmsProviderType,

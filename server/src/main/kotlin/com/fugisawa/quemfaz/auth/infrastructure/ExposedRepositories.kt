@@ -25,17 +25,18 @@ object UsersTable : Table("users") {
     val id = varchar("id", 128)
     val name = varchar("name", 255).nullable()
     val photoUrl = varchar("photo_url", 1024).nullable()
-    val status = customEnumeration(
-        "status",
-        "user_status",
-        { UserStatus.valueOf(it as String) },
-        {
-            val pgObject = org.postgresql.util.PGobject()
-            pgObject.type = "user_status"
-            pgObject.value = it.name
-            pgObject
-        },
-    )
+    val status =
+        customEnumeration(
+            "status",
+            "user_status",
+            { UserStatus.valueOf(it as String) },
+            {
+                val pgObject = org.postgresql.util.PGobject()
+                pgObject.type = "user_status"
+                pgObject.value = it.name
+                pgObject
+            },
+        )
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
 

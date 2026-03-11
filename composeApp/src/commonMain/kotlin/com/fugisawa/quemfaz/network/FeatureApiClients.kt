@@ -1,15 +1,26 @@
 package com.fugisawa.quemfaz.network
 
-import com.fugisawa.quemfaz.contract.auth.*
+import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
+import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
+import com.fugisawa.quemfaz.contract.auth.StartOtpResponse
+import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
+import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
+import com.fugisawa.quemfaz.contract.auth.VerifyOtpResponse
 import com.fugisawa.quemfaz.contract.common.SimpleSuccessResponse
 import com.fugisawa.quemfaz.contract.engagement.TrackContactClickRequest
 import com.fugisawa.quemfaz.contract.favorites.FavoritesListResponse
 import com.fugisawa.quemfaz.contract.moderation.CreateReportRequest
-import com.fugisawa.quemfaz.contract.profile.*
+import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
+import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftRequest
+import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
+import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsResponse
 import io.ktor.client.call.body
-import io.ktor.client.request.*
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
