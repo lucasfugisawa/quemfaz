@@ -57,7 +57,7 @@ class SearchProfessionalsServiceTest {
     private class FakeUserRepository : UserRepository {
         override fun create(user: User): User = user
 
-        override fun findById(id: UserId): User? = User(id, "User ${id.value}", null, UserStatus.ACTIVE, Instant.now(), Instant.now())
+        override fun findById(id: UserId): User = User(id, "User ${id.value}", null, UserStatus.ACTIVE, Instant.now(), Instant.now())
 
         override fun updateProfile(
             id: UserId,

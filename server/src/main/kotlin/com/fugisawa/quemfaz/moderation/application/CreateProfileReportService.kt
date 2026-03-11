@@ -28,9 +28,8 @@ class CreateProfileReportService(
         }
 
         val profileId = ProfessionalProfileId(request.targetId)
-        val profile =
-            profileRepository.findById(profileId)
-                ?: throw IllegalArgumentException("Target profile not found")
+        profileRepository.findById(profileId)
+            ?: throw IllegalArgumentException("Target profile not found")
 
         val report =
             ServerReport(

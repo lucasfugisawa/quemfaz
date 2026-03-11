@@ -180,7 +180,7 @@ class AppResultTest {
 
     @Test
     fun `nullable to AppResult should handle non-null`() {
-        val value: Int? = 42
+        val value = 42
         val result = value.toAppResult(testError)
         assertEquals(42, result.getOrNull())
     }

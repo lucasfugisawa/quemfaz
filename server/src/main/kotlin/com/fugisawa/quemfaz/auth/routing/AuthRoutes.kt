@@ -11,7 +11,6 @@ import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.core.id.UserId
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
@@ -70,7 +69,6 @@ fun Route.authRoutes() {
                     principal?.payload?.getClaim("userId")?.asString()
                         ?: return@get call.respond(HttpStatusCode.Unauthorized)
 
-                val userId = UserId(userIdStr)
                 call.respond(mapOf("userId" to userIdStr))
             }
         }
