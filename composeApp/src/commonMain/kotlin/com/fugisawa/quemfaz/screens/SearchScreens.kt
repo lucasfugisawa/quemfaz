@@ -7,34 +7,40 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.ui.components.AppScreen
+import com.fugisawa.quemfaz.ui.components.ErrorMessage
+import com.fugisawa.quemfaz.ui.components.FullScreenLoading
+import com.fugisawa.quemfaz.ui.components.ProfileAvatar
+import com.fugisawa.quemfaz.ui.components.ServiceChipList
+import com.fugisawa.quemfaz.ui.components.StatusChipRow
+import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @Composable
 fun SearchResultsScreen(
     query: String,
     uiState: SearchUiState,
-    onProfileClick: (String) -> Unit
+    onProfileClick: (String) -> Unit,
+    onNavigateBack: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Results for \"$query\"", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(16.dp))
-
+    AppScreen(title = "Results for \"$query\"", onNavigateBack = onNavigateBack) {
         when (uiState) {
-            is SearchUiState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-            }
+            is SearchUiState.Loading -> FullScreenLoading()
             is SearchUiState.Error -> {
-                Text(uiState.message, color = MaterialTheme.colorScheme.error)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    ErrorMessage(uiState.message)
+                }
             }
             is SearchUiState.Success -> {
                 if (uiState.response.results.isEmpty()) {
-                    Text("No professionals found.")
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No professionals found.")
+                    }
                 } else {
-                    LazyColumn {
+                    LazyColumn(contentPadding = PaddingValues(Spacing.md)) {
                         items(uiState.response.results) { profile ->
                             ProfessionalCard(profile, onClick = { onProfileClick(profile.id) })
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(Spacing.sm))
                         }
                     }
                 }
@@ -54,21 +60,10 @@ fun ProfessionalCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(Spacing.md)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.size(56.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            profile.name?.take(1)?.uppercase() ?: "?",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.width(12.dp))
+                ProfileAvatar(name = profile.name, size = 56.dp)
+                Spacer(modifier = Modifier.width(Spacing.sm + Spacing.xs))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(profile.name ?: "Anonymous", style = MaterialTheme.typography.titleMedium)
                     Text(profile.cityName, style = MaterialTheme.typography.bodySmall)
@@ -82,45 +77,15 @@ fun ProfessionalCard(
                 }
             }
             if (profile.services.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    profile.services.take(3).forEach { service ->
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text(service.displayName) }
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                ServiceChipList(services = profile.services, maxItems = 3)
             }
             if (profile.activeRecently || profile.profileComplete) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (profile.activeRecently) {
-                        SuggestionChip(
-                            onClick = {},
-                            label = {
-                                Text(
-                                    "Active recently",
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        )
-                    }
-                    if (profile.profileComplete) {
-                        SuggestionChip(
-                            onClick = {},
-                            label = {
-                                Text(
-                                    "Complete profile",
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(Spacing.xs))
+                StatusChipRow(
+                    activeRecently = profile.activeRecently,
+                    profileComplete = profile.profileComplete
+                )
             }
         }
     }

@@ -7,7 +7,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.fugisawa.quemfaz.ui.components.ErrorMessage
+import com.fugisawa.quemfaz.ui.components.FullScreenLoading
+import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @Composable
 fun FavoritesScreen(
@@ -15,39 +17,27 @@ fun FavoritesScreen(
     onProfileClick: (String) -> Unit,
     onRetry: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(Spacing.md)) {
         Text("Favorites", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.md))
 
         when (uiState) {
-            is FavoritesUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
+            is FavoritesUiState.Loading -> FullScreenLoading()
             is FavoritesUiState.Error -> {
-                Column(
+                Box(
                     modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(uiState.message, color = MaterialTheme.colorScheme.error)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = onRetry) {
-                        Text("Retry")
-                    }
+                    ErrorMessage(message = uiState.message, onRetry = onRetry)
                 }
             }
             is FavoritesUiState.Empty -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("⭐", style = MaterialTheme.typography.displayMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "No favorites yet",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                        Text("No favorites yet", style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(Spacing.xs))
                         Text(
                             "Professionals you favorite will appear here.",
                             style = MaterialTheme.typography.bodyMedium,
@@ -60,7 +50,7 @@ fun FavoritesScreen(
                 LazyColumn {
                     items(uiState.favorites) { profile ->
                         ProfessionalCard(profile, onClick = { onProfileClick(profile.id) })
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                     }
                 }
             }

@@ -8,10 +8,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.domain.moderation.ReportReason
+import com.fugisawa.quemfaz.ui.components.AppScreen
+import com.fugisawa.quemfaz.ui.components.ErrorMessage
+import com.fugisawa.quemfaz.ui.components.FullScreenLoading
+import com.fugisawa.quemfaz.ui.components.ProfileAvatar
+import com.fugisawa.quemfaz.ui.components.ServiceChipList
+import com.fugisawa.quemfaz.ui.components.StatusChipRow
+import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -20,9 +26,12 @@ fun ProfessionalProfileScreen(
     uiState: ProfileUiState,
     onContactClick: (ContactChannelDto) -> Unit,
     onFavoriteToggle: () -> Unit,
-    onReportSubmit: (ReportReason) -> Unit
+    onReportSubmit: (ReportReason) -> Unit,
+    onNavigateBack: () -> Unit
 ) {
     var showReportDialog by remember { mutableStateOf(false) }
+
+    val title = (uiState as? ProfileUiState.Content)?.profile?.name ?: "Professional"
 
     if (showReportDialog) {
         ReportDialog(
@@ -34,106 +43,77 @@ fun ProfessionalProfileScreen(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
+    AppScreen(title = title, onNavigateBack = onNavigateBack) {
         when (uiState) {
-            is ProfileUiState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-            }
+            is ProfileUiState.Loading -> FullScreenLoading()
             is ProfileUiState.Error -> {
-                Text(uiState.message, color = MaterialTheme.colorScheme.error)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    ErrorMessage(uiState.message)
+                }
             }
             is ProfileUiState.Content -> {
                 val profile = uiState.profile
-
-                ProfileHeader(profile, uiState.isFavorite, onFavoriteToggle)
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (profile.neighborhoods.isNotEmpty()) {
-                    Text(
-                        profile.neighborhoods.joinToString(" · "),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                if (profile.activeRecently || profile.profileComplete) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (profile.activeRecently) {
-                            SuggestionChip(
-                                onClick = {},
-                                label = {
-                                    Text(
-                                        "Active recently",
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
-                            )
-                        }
-                        if (profile.profileComplete) {
-                            SuggestionChip(
-                                onClick = {},
-                                label = {
-                                    Text(
-                                        "Complete profile",
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
-                if (profile.description.isNotBlank()) {
-                    Text(profile.description, style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                if (profile.services.isNotEmpty()) {
-                    Text("Services", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        profile.services.forEach { service ->
-                            SuggestionChip(
-                                onClick = {},
-                                label = { Text(service.displayName) }
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Button(
-                        onClick = { onContactClick(ContactChannelDto.WHATSAPP) },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("WhatsApp")
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = { onContactClick(ContactChannelDto.PHONE_CALL) },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Call")
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-
-                TextButton(
-                    onClick = { showReportDialog = true },
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(Spacing.md)
                 ) {
-                    Text("Report Profile", color = MaterialTheme.colorScheme.error)
+                    ProfileHeader(profile, uiState.isFavorite, onFavoriteToggle)
+                    Spacer(modifier = Modifier.height(Spacing.sm))
+
+                    if (profile.neighborhoods.isNotEmpty()) {
+                        Text(
+                            profile.neighborhoods.joinToString(" · "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                    }
+
+                    StatusChipRow(
+                        activeRecently = profile.activeRecently,
+                        profileComplete = profile.profileComplete
+                    )
+                    if (profile.activeRecently || profile.profileComplete) {
+                        Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
+                    }
+
+                    if (profile.description.isNotBlank()) {
+                        Text(profile.description, style = MaterialTheme.typography.bodyLarge)
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                    }
+
+                    if (profile.services.isNotEmpty()) {
+                        Text("Services", style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                        ServiceChipList(services = profile.services)
+                        Spacer(modifier = Modifier.height(Spacing.lg))
+                    }
+
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Button(
+                            onClick = { onContactClick(ContactChannelDto.WHATSAPP) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("WhatsApp")
+                        }
+                        Spacer(modifier = Modifier.width(Spacing.sm))
+                        Button(
+                            onClick = { onContactClick(ContactChannelDto.PHONE_CALL) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Call")
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(Spacing.md))
+
+                    TextButton(
+                        onClick = { showReportDialog = true },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("Report Profile", color = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
         }
@@ -147,19 +127,12 @@ fun ProfileHeader(
     onFavoriteToggle: () -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Surface(
-            modifier = Modifier.size(80.dp),
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.primaryContainer
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    profile.name?.take(1)?.uppercase() ?: "?",
-                    style = MaterialTheme.typography.headlineLarge
-                )
-            }
-        }
-        Spacer(modifier = Modifier.width(16.dp))
+        ProfileAvatar(
+            name = profile.name,
+            size = 80.dp,
+            textStyle = MaterialTheme.typography.headlineLarge
+        )
+        Spacer(modifier = Modifier.width(Spacing.md))
         Column(modifier = Modifier.weight(1f)) {
             Text(profile.name ?: "Anonymous", style = MaterialTheme.typography.headlineSmall)
             Text(profile.cityName, style = MaterialTheme.typography.bodyMedium)
@@ -183,7 +156,7 @@ fun ReportDialog(
         text = {
             Column {
                 Text("Select a reason:", style = MaterialTheme.typography.bodyMedium)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.sm))
                 ReportReason.entries.forEach { reason ->
                     Row(
                         modifier = Modifier

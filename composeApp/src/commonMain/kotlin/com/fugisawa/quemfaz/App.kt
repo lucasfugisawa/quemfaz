@@ -233,7 +233,8 @@ fun MainFlow(
                         onProfileClick = { id ->
                             currentProfileId = id
                             navigateTo(Screen.ProfessionalProfile)
-                        }
+                        },
+                        onNavigateBack = navigateBack
                     )
                 }
                 is Screen.ProfessionalProfile -> {
@@ -263,7 +264,8 @@ fun MainFlow(
                         onFavoriteToggle = { profileViewModel.toggleFavorite(currentProfileId) },
                         onReportSubmit = { reason ->
                             profileViewModel.reportProfile(currentProfileId, reason, null)
-                        }
+                        },
+                        onNavigateBack = navigateBack
                     )
                 }
                 is Screen.Favorites -> {
