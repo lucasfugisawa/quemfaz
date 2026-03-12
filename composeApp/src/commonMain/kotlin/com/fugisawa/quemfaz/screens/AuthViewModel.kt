@@ -94,6 +94,10 @@ class AuthViewModel(
         }
     }
 
+    fun logout() {
+        sessionManager.logout()
+    }
+
     fun fetchCurrentUser() {
         viewModelScope.launch {
             try {

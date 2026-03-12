@@ -10,39 +10,83 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfessionalProfileScreen(
     uiState: EditProfileUiState,
     onSave: (description: String, city: String, neighborhoods: List<String>, contactPhone: String, whatsAppPhone: String) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onGoToOnboarding: () -> Unit
 ) {
-    when (uiState) {
-        is EditProfileUiState.Loading -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        }
-        is EditProfileUiState.NoProfile -> {
-            Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("No professional profile found.", style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = onNavigateBack) { Text("Go Back") }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Professional Profile") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Text("←", style = MaterialTheme.typography.titleLarge)
+                    }
                 }
-            }
+            )
         }
-        is EditProfileUiState.Error -> {
-            Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(uiState.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = onNavigateBack) { Text("Go Back") }
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            when (uiState) {
+                is EditProfileUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
+                is EditProfileUiState.NoProfile -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "You don't have a professional profile yet.",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Button(
+                                onClick = onGoToOnboarding,
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                shape = MaterialTheme.shapes.medium
+                            ) {
+                                Text("Set up professional profile")
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(onClick = onNavigateBack) { Text("Go Back") }
+                        }
+                    }
+                }
+                is EditProfileUiState.Error -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                uiState.message,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(onClick = onNavigateBack) { Text("Go Back") }
+                        }
+                    }
+                }
+                is EditProfileUiState.Ready -> EditProfileForm(
+                    uiState.profile, isSaving = false, isSaved = false, onSave = onSave
+                )
+                is EditProfileUiState.Saving -> EditProfileForm(
+                    uiState.profile, isSaving = true, isSaved = false, onSave = onSave
+                )
+                is EditProfileUiState.Saved -> EditProfileForm(
+                    uiState.profile, isSaving = false, isSaved = true, onSave = onSave
+                )
             }
         }
-        is EditProfileUiState.Ready -> EditProfileForm(uiState.profile, isSaving = false, isSaved = false, onSave = onSave)
-        is EditProfileUiState.Saving -> EditProfileForm(uiState.profile, isSaving = true, isSaved = false, onSave = onSave)
-        is EditProfileUiState.Saved -> EditProfileForm(uiState.profile, isSaving = false, isSaved = true, onSave = onSave)
     }
 }
 
@@ -65,18 +109,14 @@ private fun EditProfileForm(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        Text("Edit Professional Profile", style = MaterialTheme.typography.headlineSmall)
-
         if (profile.services.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "Services: ${profile.services.joinToString(", ") { it.displayName }}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.height(16.dp))
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
             value = description,
