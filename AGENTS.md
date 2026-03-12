@@ -1,4 +1,4 @@
-# Agent Instructions — Quemfaz
+# Agent Instructions — QuemFaz
 
 This repository uses `CLAUDE.md` as its primary agent instructions file, optimized for Claude Code (auto-loaded).
 

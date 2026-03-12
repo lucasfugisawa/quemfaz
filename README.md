@@ -1,4 +1,4 @@
-# Quemfaz
+# QuemFaz
 
 A local-professionals-radar app connecting service seekers with professionals in Brazilian cities. Built with Kotlin Multiplatform (KMP) and Compose Multiplatform, targeting Android, iOS, Web, and a Ktor backend.
 

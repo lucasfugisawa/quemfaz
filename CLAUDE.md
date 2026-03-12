@@ -1,4 +1,4 @@
-# Claude Code Instructions — Quemfaz
+# Claude Code Instructions — QuemFaz
 
 This file is auto-loaded by Claude Code. Read it before touching any code.
 

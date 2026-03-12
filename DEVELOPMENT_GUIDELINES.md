@@ -1,6 +1,6 @@
 # Development Guidelines
 
-Engineering standards, conventions, and architectural guardrails for the Quemfaz codebase.
+Engineering standards, conventions, and architectural guardrails for the QuemFaz codebase.
 
 ---
 
