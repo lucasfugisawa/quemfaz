@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.di
 import com.fugisawa.quemfaz.network.ApiClient
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.screens.AuthViewModel
+import com.fugisawa.quemfaz.screens.EditProfessionalProfileViewModel
 import com.fugisawa.quemfaz.screens.HomeViewModel
 import com.fugisawa.quemfaz.screens.OnboardingViewModel
 import com.fugisawa.quemfaz.screens.ProfileViewModel
@@ -23,4 +24,5 @@ val appModule = module {
     factory { HomeViewModel(get(), get()) }
     factory { ProfileViewModel(get()) }
     factory { OnboardingViewModel(get()) }
+    factory { EditProfessionalProfileViewModel(get()) }
 }

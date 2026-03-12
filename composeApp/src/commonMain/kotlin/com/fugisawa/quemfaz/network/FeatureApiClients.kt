@@ -21,6 +21,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -62,6 +63,12 @@ class FeatureApiClients(private val apiClient: ApiClient) {
 
     suspend fun getMyProfessionalProfile(): ProfessionalProfileResponse =
         apiClient.client.get("/professional-profile/me").body()
+
+    suspend fun updateMyProfessionalProfile(request: ConfirmProfessionalProfileRequest): ProfessionalProfileResponse =
+        apiClient.client.put("/professional-profile/me") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body()
 
     suspend fun createDraft(request: CreateProfessionalProfileDraftRequest): CreateProfessionalProfileDraftResponse =
         apiClient.client.post("/professional-profile/draft") {

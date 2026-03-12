@@ -207,7 +207,7 @@ fun MainFlow(
                 onSaveProfile = { name, photo -> authViewModel.completeProfile(name, photo) },
                 onNavigateToFavorites = { navigateTo(Screen.Favorites) },
                 onChangeCity = { navigateTo(Screen.CitySelection) },
-                onManageProfessionalProfile = { navigateTo(Screen.OnboardingStart) },
+                onManageProfessionalProfile = { navigateTo(Screen.EditProfessionalProfile) },
                 onLogout = { myProfileSessionManager.logout() }
             )
         }
@@ -221,6 +221,20 @@ fun MainFlow(
                     viewModel.confirmProfile(desc, services, city, neighborhoods, phone)
                 },
                 onFinish = { navigateTo(Screen.MyProfile) }
+            )
+        }
+        is Screen.EditProfessionalProfile -> {
+            val viewModel: com.fugisawa.quemfaz.screens.EditProfessionalProfileViewModel = koinInject()
+            val uiState by viewModel.uiState.collectAsState()
+            LaunchedEffect(Unit) {
+                viewModel.loadProfile()
+            }
+            com.fugisawa.quemfaz.screens.EditProfessionalProfileScreen(
+                uiState = uiState,
+                onSave = { desc, city, neighborhoods, contactPhone, whatsAppPhone ->
+                    viewModel.saveProfile(desc, city, neighborhoods, contactPhone, whatsAppPhone)
+                },
+                onNavigateBack = navigateBack
             )
         }
         else -> {
