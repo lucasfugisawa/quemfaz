@@ -8,6 +8,8 @@ import com.fugisawa.quemfaz.profile.application.ConfirmProfessionalProfileServic
 import com.fugisawa.quemfaz.profile.application.CreateProfessionalProfileDraftService
 import com.fugisawa.quemfaz.profile.application.GetMyProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.GetPublicProfessionalProfileService
+import com.fugisawa.quemfaz.profile.application.UpdateProfessionalProfileService
+import com.fugisawa.quemfaz.profile.application.UpdateProfileResult
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
@@ -18,6 +20,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import org.koin.ktor.ext.inject
 
@@ -26,6 +29,7 @@ fun Route.profileRoutes() {
     val confirmProfileService by inject<ConfirmProfessionalProfileService>()
     val getMyProfileService by inject<GetMyProfessionalProfileService>()
     val getPublicProfileService by inject<GetPublicProfessionalProfileService>()
+    val updateProfileService by inject<UpdateProfessionalProfileService>()
 
     route("/professional-profile") {
         // Public route
@@ -78,6 +82,34 @@ fun Route.profileRoutes() {
                     call.respond(response)
                 } else {
                     call.respond(HttpStatusCode.NoContent)
+                }
+            }
+
+            put("/me") {
+                val principal = call.principal<JWTPrincipal>()
+                val userId =
+                    principal?.payload?.getClaim("userId")?.asString()
+                        ?: return@put call.respond(HttpStatusCode.Unauthorized)
+
+                val request = call.receive<ConfirmProfessionalProfileRequest>()
+                when (val result = updateProfileService.execute(UserId(userId), request)) {
+                    is UpdateProfileResult.Success -> {
+                        call.respond(result.response)
+                    }
+
+                    is UpdateProfileResult.NotFound -> {
+                        call.respond(
+                            HttpStatusCode.NotFound,
+                            mapOf("message" to "Professional profile not found"),
+                        )
+                    }
+
+                    is UpdateProfileResult.Blocked -> {
+                        call.respond(
+                            HttpStatusCode.Forbidden,
+                            mapOf("message" to "Profile is blocked and cannot be updated"),
+                        )
+                    }
                 }
             }
         }

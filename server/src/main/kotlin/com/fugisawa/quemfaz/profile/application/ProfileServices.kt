@@ -118,6 +118,71 @@ class GetPublicProfessionalProfileService(
     }
 }
 
+sealed class UpdateProfileResult {
+    data class Success(
+        val response: ProfessionalProfileResponse,
+    ) : UpdateProfileResult()
+
+    object NotFound : UpdateProfileResult()
+
+    object Blocked : UpdateProfileResult()
+}
+
+class UpdateProfessionalProfileService(
+    private val profileRepository: ProfessionalProfileRepository,
+    private val userRepository: UserRepository,
+) {
+    fun execute(
+        userId: UserId,
+        request: ConfirmProfessionalProfileRequest,
+    ): UpdateProfileResult {
+        val existing = profileRepository.findByUserId(userId) ?: return UpdateProfileResult.NotFound
+        if (existing.status == ProfessionalProfileStatus.BLOCKED) return UpdateProfileResult.Blocked
+
+        val user = userRepository.findById(userId) ?: return UpdateProfileResult.NotFound
+
+        val services =
+            request.selectedServiceIds.map { serviceId ->
+                ProfessionalProfileService(serviceId, ServiceMatchLevel.PRIMARY)
+            }
+
+        val portfolioPhotos =
+            request.portfolioPhotoUrls.map { url ->
+                PortfolioPhoto(UUID.randomUUID().toString(), url, null, Instant.now())
+            }
+
+        val completeness =
+            if (
+                request.normalizedDescription.isNotBlank() &&
+                request.selectedServiceIds.isNotEmpty() &&
+                !request.cityName.isNullOrBlank() &&
+                request.contactPhone.isNotBlank()
+            ) {
+                ProfileCompleteness.COMPLETE
+            } else {
+                ProfileCompleteness.INCOMPLETE
+            }
+
+        val updated =
+            existing.copy(
+                description = request.normalizedDescription,
+                normalizedDescription = request.normalizedDescription,
+                contactPhone = request.contactPhone,
+                whatsappPhone = request.whatsAppPhone,
+                cityName = request.cityName,
+                neighborhoods = request.neighborhoods,
+                services = services,
+                portfolioPhotos = portfolioPhotos,
+                completeness = completeness,
+                lastActiveAt = Instant.now(),
+                updatedAt = Instant.now(),
+            )
+
+        val saved = profileRepository.save(updated)
+        return UpdateProfileResult.Success(mapToResponse(saved, user.name, user.photoUrl))
+    }
+}
+
 private fun mapToResponse(
     profile: ProfessionalProfile,
     userName: String?,
