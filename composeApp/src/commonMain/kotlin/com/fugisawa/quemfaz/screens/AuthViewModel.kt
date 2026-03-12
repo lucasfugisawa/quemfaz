@@ -29,6 +29,9 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    private val _hydrationFailed = MutableStateFlow(false)
+    val hydrationFailed: StateFlow<Boolean> = _hydrationFailed.asStateFlow()
+
     fun startOtp(phoneNumber: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
@@ -87,8 +90,9 @@ class AuthViewModel(
             try {
                 val profile = apiClients.getCurrentProfile()
                 sessionManager.setCurrentUser(profile)
+                _hydrationFailed.value = false
             } catch (e: Exception) {
-                // Silent fail — profile hydration failure does not break auth flow
+                _hydrationFailed.value = true
             }
         }
     }

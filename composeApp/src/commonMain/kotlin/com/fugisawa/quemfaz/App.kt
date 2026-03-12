@@ -67,8 +67,10 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
                                 authViewModel.fetchCurrentUser()
                             }
                         }
-                        if (currentCity == null && currentScreen != Screen.CitySelection) {
-                            currentScreen = Screen.CitySelection
+                        LaunchedEffect(currentCity) {
+                            if (currentCity == null && currentScreen != Screen.CitySelection) {
+                                currentScreen = Screen.CitySelection
+                            }
                         }
                         MainFlow(currentScreen, currentCity, navigateTo, navigateBack)
                     }
@@ -201,13 +203,16 @@ fun MainFlow(
             val myProfileSessionManager: com.fugisawa.quemfaz.session.SessionManager = koinInject()
             val currentUser by myProfileSessionManager.currentUser.collectAsState()
             val profileUiState by authViewModel.uiState.collectAsState()
+            val hydrationFailed by authViewModel.hydrationFailed.collectAsState()
             MyProfileScreen(
                 currentUser = currentUser,
                 uiState = profileUiState,
+                hydrationFailed = hydrationFailed,
                 onSaveProfile = { name, photo -> authViewModel.completeProfile(name, photo) },
                 onNavigateToFavorites = { navigateTo(Screen.Favorites) },
                 onChangeCity = { navigateTo(Screen.CitySelection) },
                 onManageProfessionalProfile = { navigateTo(Screen.EditProfessionalProfile) },
+                onRetry = { authViewModel.fetchCurrentUser() },
                 onLogout = { myProfileSessionManager.logout() }
             )
         }

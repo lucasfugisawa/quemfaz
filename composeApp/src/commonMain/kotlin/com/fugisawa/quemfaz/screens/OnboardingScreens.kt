@@ -15,6 +15,7 @@ fun OnboardingScreens(
     onFinish: () -> Unit
 ) {
     var inputText by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
 
     Scaffold { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(24.dp)) {
@@ -91,8 +92,20 @@ fun OnboardingScreens(
                             }
                         }
                         
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        OutlinedTextField(
+                            value = phoneNumber,
+                            onValueChange = { phoneNumber = it },
+                            label = { Text("Phone number") },
+                            placeholder = { Text("e.g. +55 11 99999-9999") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = MaterialTheme.shapes.medium
+                        )
+
                         Spacer(modifier = Modifier.weight(1f))
-                        
+
                         Button(
                             onClick = {
                                 onConfirm(
@@ -100,9 +113,10 @@ fun OnboardingScreens(
                                     draft.interpretedServices.map { it.serviceId },
                                     draft.cityName,
                                     draft.neighborhoods,
-                                    "" // Placeholder for contact phone
+                                    phoneNumber
                                 )
                             },
+                            enabled = phoneNumber.isNotBlank(),
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = MaterialTheme.shapes.medium
                         ) {

@@ -11,15 +11,25 @@ import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
 fun MyProfileScreen(
     currentUser: UserProfileResponse?,
     uiState: AuthUiState,
+    hydrationFailed: Boolean,
     onSaveProfile: (name: String, photoUrl: String?) -> Unit,
     onNavigateToFavorites: () -> Unit,
     onChangeCity: () -> Unit,
     onManageProfessionalProfile: () -> Unit,
+    onRetry: () -> Unit,
     onLogout: () -> Unit
 ) {
     if (currentUser == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-            CircularProgressIndicator()
+            if (hydrationFailed) {
+                Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                    Text("Error loading profile", color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = onRetry) { Text("Retry") }
+                }
+            } else {
+                CircularProgressIndicator()
+            }
         }
         return
     }

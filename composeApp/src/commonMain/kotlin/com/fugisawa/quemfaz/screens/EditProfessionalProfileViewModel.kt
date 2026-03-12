@@ -62,7 +62,7 @@ class EditProfessionalProfileViewModel(
                         contactPhone = contactPhone,
                         whatsAppPhone = whatsAppPhone.ifBlank { null },
                         photoUrl = null,
-                        portfolioPhotoUrls = emptyList()
+                        portfolioPhotoUrls = current.portfolioPhotoUrls
                     )
                 )
                 _uiState.value = EditProfileUiState.Saved(updated)

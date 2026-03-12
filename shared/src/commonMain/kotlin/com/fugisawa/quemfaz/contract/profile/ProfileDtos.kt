@@ -56,5 +56,6 @@ data class ProfessionalProfileResponse(
     val profileComplete: Boolean,
     val activeRecently: Boolean,
     val whatsAppPhone: String?,
-    val contactPhone: String
+    val contactPhone: String,
+    val portfolioPhotoUrls: List<String> = emptyList()
 )
