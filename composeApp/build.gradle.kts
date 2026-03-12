@@ -41,11 +41,11 @@ kotlin {
             implementation(projects.shared)
 
             // Ktor client
-            implementation("io.ktor:ktor-client-core:2.3.12")
-            implementation("io.ktor:ktor-client-content-negotiation:2.3.12")
-            implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.12")
-            implementation("io.ktor:ktor-client-auth:2.3.12")
-            implementation("io.ktor:ktor-client-logging:2.3.12")
+            implementation("io.ktor:ktor-client-core:3.4.1")
+            implementation("io.ktor:ktor-client-content-negotiation:3.4.1")
+            implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.1")
+            implementation("io.ktor:ktor-client-auth:3.4.1")
+            implementation("io.ktor:ktor-client-logging:3.4.1")
 
             // Koin
             implementation("io.insert-koin:koin-core:4.0.2")
@@ -55,13 +55,13 @@ kotlin {
             implementation("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
         }
         androidMain.dependencies {
-            implementation("io.ktor:ktor-client-okhttp:2.3.12")
+            implementation("io.ktor:ktor-client-okhttp:3.4.1")
         }
         iosMain.dependencies {
-            implementation("io.ktor:ktor-client-darwin:2.3.12")
+            implementation("io.ktor:ktor-client-darwin:3.4.1")
         }
         jsMain.dependencies {
-            implementation("io.ktor:ktor-client-js:2.3.12")
+            implementation("io.ktor:ktor-client-js:3.4.1")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
