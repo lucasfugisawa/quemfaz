@@ -2,6 +2,7 @@ package com.fugisawa.quemfaz.auth.routing
 
 import com.fugisawa.quemfaz.auth.application.CompleteProfileResult
 import com.fugisawa.quemfaz.auth.application.CompleteUserProfileService
+import com.fugisawa.quemfaz.auth.application.GetAuthenticatedUserService
 import com.fugisawa.quemfaz.auth.application.StartOtpService
 import com.fugisawa.quemfaz.auth.application.VerifyOtpResult
 import com.fugisawa.quemfaz.auth.application.VerifyOtpService
@@ -27,6 +28,7 @@ fun Route.authRoutes() {
     val startOtpService by inject<StartOtpService>()
     val verifyOtpService by inject<VerifyOtpService>()
     val completeUserProfileService by inject<CompleteUserProfileService>()
+    val getAuthenticatedUserService by inject<GetAuthenticatedUserService>()
 
     route("/auth") {
         post("/start-otp") {
@@ -69,7 +71,12 @@ fun Route.authRoutes() {
                     principal?.payload?.getClaim("userId")?.asString()
                         ?: return@get call.respond(HttpStatusCode.Unauthorized)
 
-                call.respond(mapOf("userId" to userIdStr))
+                try {
+                    val response = getAuthenticatedUserService.execute(UserId(userIdStr))
+                    call.respond(response)
+                } catch (e: IllegalArgumentException) {
+                    call.respond(HttpStatusCode.NotFound, e.message ?: "User not found")
+                }
             }
         }
     }

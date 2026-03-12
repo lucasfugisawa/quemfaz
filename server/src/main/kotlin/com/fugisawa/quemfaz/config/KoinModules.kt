@@ -1,6 +1,7 @@
 package com.fugisawa.quemfaz.config
 
 import com.fugisawa.quemfaz.auth.application.CompleteUserProfileService
+import com.fugisawa.quemfaz.auth.application.GetAuthenticatedUserService
 import com.fugisawa.quemfaz.auth.application.StartOtpService
 import com.fugisawa.quemfaz.auth.application.VerifyOtpService
 import com.fugisawa.quemfaz.auth.domain.OtpChallengeRepository
@@ -115,6 +116,7 @@ val infrastructureModule =
         single { StartOtpService(get(), get(), get(), get(), get(), get<AppConfig>().otp) }
         single { VerifyOtpService(get(), get(), get(), get(), get()) }
         single { CompleteUserProfileService(get(), get()) }
+        single { GetAuthenticatedUserService(get(), get()) }
 
         // Professional Profile Repositories
         single<ProfessionalProfileRepository> { ExposedProfessionalProfileRepository() }

@@ -53,10 +53,11 @@ class AuthViewModel(
                 if (response.success) {
                     val token = response.token
                     sessionManager.setAuthenticated(token)
-                    
+
                     if (response.requiresProfileCompletion) {
                         _uiState.value = AuthUiState.ProfileCompletionRequired
                     } else {
+                        fetchCurrentUser()
                         _uiState.value = AuthUiState.Success
                     }
                 } else {
@@ -73,10 +74,21 @@ class AuthViewModel(
             _uiState.value = AuthUiState.Loading
             try {
                 val response = apiClients.completeProfile(CompleteUserProfileRequest(name, photoUrl))
-                sessionManager.setAuthenticated(sessionManager.authState.value.let { "" }, response) // Keep token, update user
+                sessionManager.setCurrentUser(response)
                 _uiState.value = AuthUiState.Success
             } catch (e: Exception) {
                 _uiState.value = AuthUiState.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun fetchCurrentUser() {
+        viewModelScope.launch {
+            try {
+                val profile = apiClients.getCurrentProfile()
+                sessionManager.setCurrentUser(profile)
+            } catch (e: Exception) {
+                // Silent fail — profile hydration failure does not break auth flow
             }
         }
     }

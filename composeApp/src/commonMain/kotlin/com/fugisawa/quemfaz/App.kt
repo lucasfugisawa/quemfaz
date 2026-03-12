@@ -60,6 +60,13 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
                         AuthFlow(navigateTo)
                     }
                     is AuthState.Authenticated -> {
+                        val authViewModel: AuthViewModel = koinInject()
+                        val currentUser by sessionManager.currentUser.collectAsState()
+                        LaunchedEffect(Unit) {
+                            if (currentUser == null) {
+                                authViewModel.fetchCurrentUser()
+                            }
+                        }
                         if (currentCity == null && currentScreen != Screen.CitySelection) {
                             currentScreen = Screen.CitySelection
                         }

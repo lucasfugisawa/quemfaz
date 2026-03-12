@@ -42,6 +42,10 @@ class SessionManager(
         _authState.value = AuthState.Authenticated
     }
 
+    fun setCurrentUser(user: UserProfileResponse) {
+        _currentUser.value = user
+    }
+
     fun setBlocked() {
         _authState.value = AuthState.Blocked
     }
