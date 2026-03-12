@@ -266,7 +266,19 @@ fun MainFlow(
                     )
                 }
                 is Screen.Favorites -> {
-                    FavoritesScreen(onNavigateBack = navigateBack)
+                    val favoritesViewModel: FavoritesViewModel = koinInject()
+                    val favoritesUiState by favoritesViewModel.uiState.collectAsState()
+                    LaunchedEffect(Unit) {
+                        favoritesViewModel.loadFavorites()
+                    }
+                    FavoritesScreen(
+                        uiState = favoritesUiState,
+                        onProfileClick = { id ->
+                            currentProfileId = id
+                            navigateTo(Screen.ProfessionalProfile)
+                        },
+                        onRetry = { favoritesViewModel.loadFavorites() }
+                    )
                 }
                 is Screen.MyProfile -> {
                     MyProfileScreen(

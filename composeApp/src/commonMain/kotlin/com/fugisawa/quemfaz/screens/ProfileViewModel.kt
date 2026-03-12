@@ -33,8 +33,13 @@ class ProfileViewModel(
             _uiState.value = ProfileUiState.Loading
             try {
                 val profile = apiClients.getProfessionalProfile(id)
-                // In a real app we'd also check if it's in favorites list
-                _uiState.value = ProfileUiState.Content(profile)
+                val isFavorite = try {
+                    val favorites = apiClients.getFavorites()
+                    favorites.favorites.any { it.id == id }
+                } catch (_: Exception) {
+                    false
+                }
+                _uiState.value = ProfileUiState.Content(profile, isFavorite = isFavorite)
             } catch (e: Exception) {
                 _uiState.value = ProfileUiState.Error(e.message ?: "Failed to load profile")
             }

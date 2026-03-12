@@ -6,6 +6,7 @@ import com.fugisawa.quemfaz.screens.AuthViewModel
 import com.fugisawa.quemfaz.screens.EditProfessionalProfileViewModel
 import com.fugisawa.quemfaz.screens.HomeViewModel
 import com.fugisawa.quemfaz.screens.OnboardingViewModel
+import com.fugisawa.quemfaz.screens.FavoritesViewModel
 import com.fugisawa.quemfaz.screens.ProfileViewModel
 import com.fugisawa.quemfaz.session.SessionManager
 import com.fugisawa.quemfaz.session.SessionStorage
@@ -24,5 +25,6 @@ val appModule = module {
     factory { HomeViewModel(get(), get()) }
     factory { ProfileViewModel(get()) }
     factory { OnboardingViewModel(get()) }
+    factory { FavoritesViewModel(get()) }
     factory { EditProfessionalProfileViewModel(get()) }
 }
