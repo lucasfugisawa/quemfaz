@@ -13,8 +13,11 @@ import com.fugisawa.quemfaz.auth.infrastructure.ExposedUserRepository
 import com.fugisawa.quemfaz.auth.infrastructure.Sha256OtpHasher
 import com.fugisawa.quemfaz.auth.token.TokenService
 import com.fugisawa.quemfaz.engagement.application.TrackContactClickService
+import com.fugisawa.quemfaz.engagement.application.TrackProfileViewService
 import com.fugisawa.quemfaz.engagement.domain.ContactClickEventRepository
+import com.fugisawa.quemfaz.engagement.domain.ProfileViewEventRepository
 import com.fugisawa.quemfaz.engagement.infrastructure.ExposedContactClickEventRepository
+import com.fugisawa.quemfaz.engagement.infrastructure.ExposedProfileViewEventRepository
 import com.fugisawa.quemfaz.environment.AppEnvironment
 import com.fugisawa.quemfaz.favorites.application.AddFavoriteService
 import com.fugisawa.quemfaz.favorites.application.ListFavoritesService
@@ -146,6 +149,8 @@ val infrastructureModule =
         // Engagement
         single<ContactClickEventRepository> { ExposedContactClickEventRepository() }
         single { TrackContactClickService(get(), get()) }
+        single<ProfileViewEventRepository> { ExposedProfileViewEventRepository() }
+        single { TrackProfileViewService(get(), get()) }
 
         // Moderation
         single<ReportRepository> { ExposedReportRepository() }

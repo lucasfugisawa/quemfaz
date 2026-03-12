@@ -8,6 +8,7 @@ import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpResponse
 import com.fugisawa.quemfaz.contract.common.SimpleSuccessResponse
 import com.fugisawa.quemfaz.contract.engagement.TrackContactClickRequest
+import com.fugisawa.quemfaz.contract.engagement.TrackProfileViewRequest
 import com.fugisawa.quemfaz.contract.favorites.FavoritesListResponse
 import com.fugisawa.quemfaz.contract.moderation.CreateReportRequest
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
@@ -87,6 +88,12 @@ class FeatureApiClients(private val apiClient: ApiClient) {
     // Engagement
     suspend fun trackContactClick(request: TrackContactClickRequest): SimpleSuccessResponse =
         apiClient.client.post("/engagement/contact-click") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body()
+
+    suspend fun trackProfileView(request: TrackProfileViewRequest): SimpleSuccessResponse =
+        apiClient.client.post("/engagement/profile-view") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()

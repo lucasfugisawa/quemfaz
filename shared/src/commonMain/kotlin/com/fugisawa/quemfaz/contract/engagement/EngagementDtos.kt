@@ -14,3 +14,9 @@ data class TrackContactClickRequest(
     val channel: ContactChannelDto,
     val source: String? = null
 )
+
+@Serializable
+data class TrackProfileViewRequest(
+    val professionalProfileId: String,
+    val source: String? = null
+)

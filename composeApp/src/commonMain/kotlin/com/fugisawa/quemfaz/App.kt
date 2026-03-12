@@ -15,6 +15,7 @@ import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
 import com.fugisawa.quemfaz.platform.openUrl
+import com.fugisawa.quemfaz.domain.moderation.ReportReason
 
 @Composable
 fun App(baseUrl: String = BASE_URL_DEFAULT) {
@@ -160,6 +161,7 @@ fun MainFlow(
             val profileUiState by profileViewModel.uiState.collectAsState()
             LaunchedEffect(currentProfileId) {
                 profileViewModel.loadProfile(currentProfileId)
+                profileViewModel.trackProfileView(currentProfileId)
             }
             ProfessionalProfileScreen(
                 id = currentProfileId,
@@ -179,7 +181,9 @@ fun MainFlow(
                     }
                 },
                 onFavoriteToggle = { profileViewModel.toggleFavorite(currentProfileId) },
-                onReportClick = { }
+                onReportSubmit = { reason ->
+                    profileViewModel.reportProfile(currentProfileId, reason, null)
+                }
             )
         }
         is Screen.Favorites -> {

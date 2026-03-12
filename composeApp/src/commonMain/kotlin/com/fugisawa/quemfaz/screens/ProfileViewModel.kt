@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
 import com.fugisawa.quemfaz.contract.engagement.TrackContactClickRequest
+import com.fugisawa.quemfaz.contract.engagement.TrackProfileViewRequest
 import com.fugisawa.quemfaz.contract.moderation.CreateReportRequest
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.domain.moderation.ReportReason
@@ -53,6 +54,16 @@ class ProfileViewModel(
                 }
             } catch (e: Exception) {
                 // Handle error
+            }
+        }
+    }
+
+    fun trackProfileView(profileId: String) {
+        viewModelScope.launch {
+            try {
+                apiClients.trackProfileView(TrackProfileViewRequest(profileId))
+            } catch (e: Exception) {
+                // Silent fail for tracking
             }
         }
     }

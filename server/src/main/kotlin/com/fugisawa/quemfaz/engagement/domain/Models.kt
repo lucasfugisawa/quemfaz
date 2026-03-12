@@ -22,3 +22,16 @@ data class ContactClickEvent(
 interface ContactClickEventRepository {
     fun save(event: ContactClickEvent)
 }
+
+data class ProfileViewEvent(
+    val id: String,
+    val professionalProfileId: ProfessionalProfileId,
+    val userId: UserId?,
+    val cityName: String?,
+    val source: String?,
+    val createdAt: Instant,
+)
+
+interface ProfileViewEventRepository {
+    fun save(event: ProfileViewEvent)
+}

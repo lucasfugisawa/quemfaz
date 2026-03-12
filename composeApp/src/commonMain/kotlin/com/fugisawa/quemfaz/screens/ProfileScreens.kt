@@ -1,23 +1,45 @@
 package com.fugisawa.quemfaz.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.domain.moderation.ReportReason
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfessionalProfileScreen(
     id: String,
     uiState: ProfileUiState,
     onContactClick: (ContactChannelDto) -> Unit,
     onFavoriteToggle: () -> Unit,
-    onReportClick: () -> Unit
+    onReportSubmit: (ReportReason) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    var showReportDialog by remember { mutableStateOf(false) }
+
+    if (showReportDialog) {
+        ReportDialog(
+            onDismiss = { showReportDialog = false },
+            onSubmit = { reason ->
+                onReportSubmit(reason)
+                showReportDialog = false
+            }
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
         when (uiState) {
             is ProfileUiState.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
@@ -27,15 +49,69 @@ fun ProfessionalProfileScreen(
             }
             is ProfileUiState.Content -> {
                 val profile = uiState.profile
+
                 ProfileHeader(profile, uiState.isFavorite, onFavoriteToggle)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(profile.description, style = MaterialTheme.typography.bodyLarge)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Services:", style = MaterialTheme.typography.titleMedium)
-                profile.services.forEach { service ->
-                    Text("• ${service.displayName}")
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (profile.neighborhoods.isNotEmpty()) {
+                    Text(
+                        profile.neighborhoods.joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-                Spacer(modifier = Modifier.height(32.dp))
+
+                if (profile.activeRecently || profile.profileComplete) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        if (profile.activeRecently) {
+                            SuggestionChip(
+                                onClick = {},
+                                label = {
+                                    Text(
+                                        "Active recently",
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            )
+                        }
+                        if (profile.profileComplete) {
+                            SuggestionChip(
+                                onClick = {},
+                                label = {
+                                    Text(
+                                        "Complete profile",
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                if (profile.description.isNotBlank()) {
+                    Text(profile.description, style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                if (profile.services.isNotEmpty()) {
+                    Text("Services", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        profile.services.forEach { service ->
+                            SuggestionChip(
+                                onClick = {},
+                                label = { Text(service.displayName) }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Button(
                         onClick = { onContactClick(ContactChannelDto.WHATSAPP) },
@@ -52,7 +128,11 @@ fun ProfessionalProfileScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                TextButton(onClick = onReportClick, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+
+                TextButton(
+                    onClick = { showReportDialog = true },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
                     Text("Report Profile", color = MaterialTheme.colorScheme.error)
                 }
             }
@@ -73,7 +153,10 @@ fun ProfileHeader(
             color = MaterialTheme.colorScheme.primaryContainer
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text(profile.name?.take(1) ?: "?", style = MaterialTheme.typography.headlineLarge)
+                Text(
+                    profile.name?.take(1)?.uppercase() ?: "?",
+                    style = MaterialTheme.typography.headlineLarge
+                )
             }
         }
         Spacer(modifier = Modifier.width(16.dp))
@@ -85,4 +168,57 @@ fun ProfileHeader(
             Text(if (isFavorite) "❤️" else "🤍")
         }
     }
+}
+
+@Composable
+fun ReportDialog(
+    onDismiss: () -> Unit,
+    onSubmit: (ReportReason) -> Unit
+) {
+    var selectedReason by remember { mutableStateOf<ReportReason?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Report Profile") },
+        text = {
+            Column {
+                Text("Select a reason:", style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                ReportReason.entries.forEach { reason ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selectedReason = reason },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = selectedReason == reason,
+                            onClick = { selectedReason = reason }
+                        )
+                        Text(reason.toDisplayName(), style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { selectedReason?.let { onSubmit(it) } },
+                enabled = selectedReason != null
+            ) {
+                Text("Report")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+private fun ReportReason.toDisplayName(): String = when (this) {
+    ReportReason.SPAM -> "Spam"
+    ReportReason.INAPPROPRIATE_CONTENT -> "Inappropriate content"
+    ReportReason.WRONG_PHONE_NUMBER -> "Wrong phone number"
+    ReportReason.FAKE_PROFILE -> "Fake profile"
+    ReportReason.ABUSIVE_BEHAVIOR -> "Abusive behavior"
+    ReportReason.OTHER -> "Other"
 }
