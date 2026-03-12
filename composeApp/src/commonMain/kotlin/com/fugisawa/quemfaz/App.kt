@@ -197,7 +197,19 @@ fun MainFlow(
             FavoritesScreen(onNavigateBack = navigateBack)
         }
         is Screen.MyProfile -> {
-            MyProfileScreen(onNavigateBack = navigateBack)
+            val authViewModel: AuthViewModel = koinInject()
+            val myProfileSessionManager: com.fugisawa.quemfaz.session.SessionManager = koinInject()
+            val currentUser by myProfileSessionManager.currentUser.collectAsState()
+            val profileUiState by authViewModel.uiState.collectAsState()
+            MyProfileScreen(
+                currentUser = currentUser,
+                uiState = profileUiState,
+                onSaveProfile = { name, photo -> authViewModel.completeProfile(name, photo) },
+                onNavigateToFavorites = { navigateTo(Screen.Favorites) },
+                onChangeCity = { navigateTo(Screen.CitySelection) },
+                onManageProfessionalProfile = { navigateTo(Screen.OnboardingStart) },
+                onLogout = { myProfileSessionManager.logout() }
+            )
         }
         is Screen.OnboardingStart -> {
             val viewModel: OnboardingViewModel = koinInject()
