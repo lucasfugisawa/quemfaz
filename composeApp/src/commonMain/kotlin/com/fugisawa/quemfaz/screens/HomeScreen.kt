@@ -8,6 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,4 +104,18 @@ fun HomeScreen(
             }
         }
     }
+}
+
+// ── Previews ──
+
+@LightDarkScreenPreview
+@Composable
+private fun HomeScreenWithCityPreview() {
+    AppTheme { HomeScreen(currentCity = "São Paulo", onCityClick = {}, onSearch = {}, onOfferServices = {}) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun HomeScreenNoCityPreview() {
+    AppTheme { HomeScreen(currentCity = null, onCityClick = {}, onSearch = {}, onOfferServices = {}) }
 }

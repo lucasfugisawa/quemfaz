@@ -9,6 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,4 +41,12 @@ fun CitySelectionScreen(
             }
         }
     }
+}
+
+// ── Previews ──
+
+@LightDarkScreenPreview
+@Composable
+private fun CitySelectionPreview() {
+    AppTheme { CitySelectionScreen(cities = PreviewSamples.sampleCities, onCitySelected = {}) }
 }

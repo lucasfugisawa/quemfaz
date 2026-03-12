@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.ui.components.AppScreen
 import com.fugisawa.quemfaz.ui.components.ErrorMessage
@@ -14,6 +15,10 @@ import com.fugisawa.quemfaz.ui.components.FullScreenLoading
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.components.ServiceChipList
 import com.fugisawa.quemfaz.ui.components.StatusChipRow
+import com.fugisawa.quemfaz.ui.preview.LightDarkPreview
+import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @Composable
@@ -89,4 +94,69 @@ fun ProfessionalCard(
             }
         }
     }
+}
+
+// ── Previews ──
+
+@LightDarkScreenPreview
+@Composable
+private fun SearchResultsLoadingPreview() {
+    AppTheme { SearchResultsScreen(query = "plumber", uiState = SearchUiState.Loading, onProfileClick = {}, onNavigateBack = {}) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun SearchResultsContentPreview() {
+    AppTheme {
+        SearchResultsScreen(
+            query = "plumber",
+            uiState = SearchUiState.Success(PreviewSamples.sampleSearchResponse),
+            onProfileClick = {},
+            onNavigateBack = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun SearchResultsEmptyPreview() {
+    AppTheme {
+        SearchResultsScreen(
+            query = "underwater basket weaving",
+            uiState = SearchUiState.Success(PreviewSamples.sampleSearchResponseEmpty),
+            onProfileClick = {},
+            onNavigateBack = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun SearchResultsErrorPreview() {
+    AppTheme {
+        SearchResultsScreen(
+            query = "plumber",
+            uiState = SearchUiState.Error("Network error. Check your connection and try again."),
+            onProfileClick = {},
+            onNavigateBack = {}
+        )
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun ProfessionalCardPreview() {
+    AppTheme { ProfessionalCard(profile = PreviewSamples.sampleProfile, onClick = {}) }
+}
+
+@LightDarkPreview
+@Composable
+private fun ProfessionalCardLongTextPreview() {
+    AppTheme { ProfessionalCard(profile = PreviewSamples.sampleProfileLongText, onClick = {}) }
+}
+
+@LightDarkPreview
+@Composable
+private fun ProfessionalCardMinimalPreview() {
+    AppTheme { ProfessionalCard(profile = PreviewSamples.sampleProfileMinimal, onClick = {}) }
 }

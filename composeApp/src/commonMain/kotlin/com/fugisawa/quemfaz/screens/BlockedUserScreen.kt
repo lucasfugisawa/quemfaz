@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 
 @Composable
 fun BlockedUserScreen(
@@ -28,4 +30,12 @@ fun BlockedUserScreen(
             Text("Contact Support")
         }
     }
+}
+
+// ── Previews ──
+
+@LightDarkScreenPreview
+@Composable
+private fun BlockedUserPreview() {
+    AppTheme { BlockedUserScreen(onContactSupport = {}) }
 }

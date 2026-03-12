@@ -9,6 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.fugisawa.quemfaz.ui.components.ErrorMessage
 import com.fugisawa.quemfaz.ui.components.FullScreenLoading
+import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @Composable
@@ -56,4 +59,36 @@ fun FavoritesScreen(
             }
         }
     }
+}
+
+// ── Previews ──
+
+@LightDarkScreenPreview
+@Composable
+private fun FavoritesLoadingPreview() {
+    AppTheme { FavoritesScreen(uiState = FavoritesUiState.Loading, onProfileClick = {}, onRetry = {}) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun FavoritesContentPreview() {
+    AppTheme {
+        FavoritesScreen(
+            uiState = FavoritesUiState.Content(listOf(PreviewSamples.sampleProfile, PreviewSamples.sampleProfile2)),
+            onProfileClick = {},
+            onRetry = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun FavoritesEmptyPreview() {
+    AppTheme { FavoritesScreen(uiState = FavoritesUiState.Empty, onProfileClick = {}, onRetry = {}) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun FavoritesErrorPreview() {
+    AppTheme { FavoritesScreen(uiState = FavoritesUiState.Error("Failed to load favorites."), onProfileClick = {}, onRetry = {}) }
 }

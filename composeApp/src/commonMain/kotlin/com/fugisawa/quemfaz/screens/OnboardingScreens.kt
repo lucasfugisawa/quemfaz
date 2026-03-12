@@ -6,6 +6,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 
 @Composable
 fun OnboardingScreens(
@@ -164,5 +167,52 @@ fun OnboardingScreens(
                 }
             }
         }
+    }
+}
+
+// ── Previews ──
+
+@LightDarkScreenPreview
+@Composable
+private fun OnboardingIdlePreview() {
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onFinish = {}) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun OnboardingLoadingPreview() {
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onFinish = {}) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun OnboardingDraftReadyPreview() {
+    AppTheme {
+        OnboardingScreens(
+            uiState = OnboardingUiState.DraftReady(PreviewSamples.sampleDraftResponse),
+            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onFinish = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun OnboardingPublishedPreview() {
+    AppTheme {
+        OnboardingScreens(
+            uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
+            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onFinish = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun OnboardingErrorPreview() {
+    AppTheme {
+        OnboardingScreens(
+            uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
+            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onFinish = {}
+        )
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.domain.moderation.ReportReason
@@ -17,6 +18,9 @@ import com.fugisawa.quemfaz.ui.components.FullScreenLoading
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.components.ServiceChipList
 import com.fugisawa.quemfaz.ui.components.StatusChipRow
+import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -194,4 +198,77 @@ private fun ReportReason.toDisplayName(): String = when (this) {
     ReportReason.FAKE_PROFILE -> "Fake profile"
     ReportReason.ABUSIVE_BEHAVIOR -> "Abusive behavior"
     ReportReason.OTHER -> "Other"
+}
+
+// ── Previews ──
+
+@LightDarkScreenPreview
+@Composable
+private fun ProfileLoadingPreview() {
+    AppTheme {
+        ProfessionalProfileScreen(
+            id = "prof-1", uiState = ProfileUiState.Loading,
+            onContactClick = {}, onFavoriteToggle = {}, onReportSubmit = {}, onNavigateBack = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun ProfileContentPreview() {
+    AppTheme {
+        ProfessionalProfileScreen(
+            id = "prof-1",
+            uiState = ProfileUiState.Content(PreviewSamples.sampleProfile, isFavorite = false),
+            onContactClick = {}, onFavoriteToggle = {}, onReportSubmit = {}, onNavigateBack = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun ProfileContentFavoritedPreview() {
+    AppTheme {
+        ProfessionalProfileScreen(
+            id = "prof-1",
+            uiState = ProfileUiState.Content(PreviewSamples.sampleProfile, isFavorite = true),
+            onContactClick = {}, onFavoriteToggle = {}, onReportSubmit = {}, onNavigateBack = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun ProfileContentLongTextPreview() {
+    AppTheme {
+        ProfessionalProfileScreen(
+            id = "prof-long",
+            uiState = ProfileUiState.Content(PreviewSamples.sampleProfileLongText, isFavorite = false),
+            onContactClick = {}, onFavoriteToggle = {}, onReportSubmit = {}, onNavigateBack = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun ProfileContentMinimalPreview() {
+    AppTheme {
+        ProfessionalProfileScreen(
+            id = "prof-min",
+            uiState = ProfileUiState.Content(PreviewSamples.sampleProfileMinimal, isFavorite = false),
+            onContactClick = {}, onFavoriteToggle = {}, onReportSubmit = {}, onNavigateBack = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun ProfileErrorPreview() {
+    AppTheme {
+        ProfessionalProfileScreen(
+            id = "prof-1",
+            uiState = ProfileUiState.Error("Profile not found or has been removed."),
+            onContactClick = {}, onFavoriteToggle = {}, onReportSubmit = {}, onNavigateBack = {}
+        )
+    }
 }

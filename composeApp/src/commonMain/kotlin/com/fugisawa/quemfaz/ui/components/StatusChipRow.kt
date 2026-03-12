@@ -6,6 +6,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.Surface
+import com.fugisawa.quemfaz.ui.preview.LightDarkPreview
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @Composable
@@ -25,4 +28,18 @@ fun StatusChipRow(activeRecently: Boolean, profileComplete: Boolean) {
             )
         }
     }
+}
+
+// ── Previews ──
+
+@LightDarkPreview
+@Composable
+private fun StatusChipRowBothPreview() {
+    AppTheme { Surface { StatusChipRow(activeRecently = true, profileComplete = true) } }
+}
+
+@LightDarkPreview
+@Composable
+private fun StatusChipRowActiveOnlyPreview() {
+    AppTheme { Surface { StatusChipRow(activeRecently = true, profileComplete = false) } }
 }

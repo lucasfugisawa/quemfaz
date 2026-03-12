@@ -7,6 +7,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @Composable
@@ -152,4 +154,48 @@ fun CompleteUserProfileScreen(
             }
         }
     }
+}
+
+// ── Previews ──
+
+@LightDarkScreenPreview
+@Composable
+private fun PhoneLoginIdlePreview() {
+    AppTheme { PhoneLoginScreen(onSendOtp = {}, uiState = AuthUiState.Idle) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun PhoneLoginLoadingPreview() {
+    AppTheme { PhoneLoginScreen(onSendOtp = {}, uiState = AuthUiState.Loading) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun PhoneLoginErrorPreview() {
+    AppTheme { PhoneLoginScreen(onSendOtp = {}, uiState = AuthUiState.Error("Invalid phone number. Please check and try again.")) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun OtpVerificationIdlePreview() {
+    AppTheme { OtpVerificationScreen(phone = "+55 11 99999-1234", onVerifyOtp = {}, uiState = AuthUiState.OtpSent("+55 11 99999-1234")) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun OtpVerificationErrorPreview() {
+    AppTheme { OtpVerificationScreen(phone = "+55 11 99999-1234", onVerifyOtp = {}, uiState = AuthUiState.Error("Invalid code. Please try again.")) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun CompleteUserProfileIdlePreview() {
+    AppTheme { CompleteUserProfileScreen(onComplete = { _, _ -> }, uiState = AuthUiState.ProfileCompletionRequired) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun CompleteUserProfileLoadingPreview() {
+    AppTheme { CompleteUserProfileScreen(onComplete = { _, _ -> }, uiState = AuthUiState.Loading) }
 }

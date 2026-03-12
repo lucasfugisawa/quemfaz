@@ -9,6 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -199,5 +202,63 @@ private fun EditProfileForm(
                 Text("Save")
             }
         }
+    }
+}
+
+// ── Previews ──
+
+@LightDarkScreenPreview
+@Composable
+private fun EditProfileLoadingPreview() {
+    AppTheme { EditProfessionalProfileScreen(uiState = EditProfileUiState.Loading, onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun EditProfileNoProfilePreview() {
+    AppTheme { EditProfessionalProfileScreen(uiState = EditProfileUiState.NoProfile, onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun EditProfileReadyPreview() {
+    AppTheme {
+        EditProfessionalProfileScreen(
+            uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile),
+            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun EditProfileSavingPreview() {
+    AppTheme {
+        EditProfessionalProfileScreen(
+            uiState = EditProfileUiState.Saving(PreviewSamples.sampleProfile),
+            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun EditProfileSavedPreview() {
+    AppTheme {
+        EditProfessionalProfileScreen(
+            uiState = EditProfileUiState.Saved(PreviewSamples.sampleProfile),
+            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun EditProfileErrorPreview() {
+    AppTheme {
+        EditProfessionalProfileScreen(
+            uiState = EditProfileUiState.Error("Failed to load profile. Please try again later."),
+            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+        )
     }
 }
