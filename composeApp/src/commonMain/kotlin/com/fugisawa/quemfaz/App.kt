@@ -16,13 +16,14 @@ import org.koin.compose.koinInject
 import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
 import com.fugisawa.quemfaz.platform.openUrl
 import com.fugisawa.quemfaz.domain.moderation.ReportReason
+import com.fugisawa.quemfaz.ui.theme.AppTheme
 
 @Composable
 fun App(baseUrl: String = BASE_URL_DEFAULT) {
     KoinApplication(application = {
         modules(appModule)
     }) {
-        MaterialTheme {
+        AppTheme {
             val sessionManager = koinInject<SessionManager>()
             val authState by sessionManager.authState.collectAsState()
             val currentCity by sessionManager.currentCity.collectAsState()
