@@ -43,7 +43,7 @@ class ApiClient(
         install(HttpCallValidator) {
             validateResponse { response ->
                 if (response.status == HttpStatusCode.Unauthorized &&
-                    response.request.headers.contains(HttpHeaders.Authorization)
+                    response.headers.contains(HttpHeaders.Authorization)
                 ) {
                     onUnauthorized()
                 }
