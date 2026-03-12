@@ -47,12 +47,17 @@ class SessionManager(
     }
 
     fun setBlocked() {
+        // Clear the token and user so the blocked state is clean.
+        // On next cold start the user goes through OTP again and will be blocked again.
+        sessionStorage.clear()
+        _currentUser.value = null
         _authState.value = AuthState.Blocked
     }
 
     fun logout() {
         sessionStorage.clear()
         _currentUser.value = null
+        // City is intentionally preserved — it is a device-level preference, not user-specific.
         _authState.value = AuthState.Unauthenticated
     }
 

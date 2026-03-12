@@ -54,7 +54,7 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
                         }
                     }
                     is AuthState.Blocked -> {
-                        BlockedUserScreen(onContactSupport = { /* TODO */ })
+                        BlockedUserScreen(onContactSupport = { openUrl("mailto:suporte@quemfaz.com") })
                     }
                     is AuthState.Unauthenticated -> {
                         AuthFlow(navigateTo)

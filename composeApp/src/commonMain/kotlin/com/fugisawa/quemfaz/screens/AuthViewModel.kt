@@ -7,6 +7,8 @@ import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
+import io.ktor.client.plugins.ResponseException
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,6 +68,13 @@ class AuthViewModel(
                 } else {
                     _uiState.value = AuthUiState.Error("Invalid OTP")
                 }
+            } catch (e: ResponseException) {
+                if (e.response.status == HttpStatusCode.Forbidden) {
+                    // Server returned 403: user is blocked.
+                    sessionManager.setBlocked()
+                } else {
+                    _uiState.value = AuthUiState.Error("Invalid OTP code")
+                }
             } catch (e: Exception) {
                 _uiState.value = AuthUiState.Error(e.message ?: "Unknown error")
             }
@@ -89,8 +98,13 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 val profile = apiClients.getCurrentProfile()
-                sessionManager.setCurrentUser(profile)
-                _hydrationFailed.value = false
+                if (profile.status == "BLOCKED") {
+                    // User was blocked server-side since their token was issued.
+                    sessionManager.setBlocked()
+                } else {
+                    sessionManager.setCurrentUser(profile)
+                    _hydrationFailed.value = false
+                }
             } catch (e: Exception) {
                 _hydrationFailed.value = true
             }

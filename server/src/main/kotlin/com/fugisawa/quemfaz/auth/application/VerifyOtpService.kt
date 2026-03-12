@@ -50,7 +50,7 @@ class VerifyOtpService(
                 if (user == null) {
                     return@transaction VerifyOtpResult.Failure("User not found for identity")
                 } else if (user.status == UserStatus.BLOCKED) {
-                    return@transaction VerifyOtpResult.Failure("User is blocked")
+                    return@transaction VerifyOtpResult.Blocked
                 } else {
                     val token = tokenService.generateToken(user.id)
                     return@transaction VerifyOtpResult.Success(
@@ -116,4 +116,6 @@ sealed class VerifyOtpResult {
     data class Failure(
         val message: String,
     ) : VerifyOtpResult()
+
+    object Blocked : VerifyOtpResult()
 }

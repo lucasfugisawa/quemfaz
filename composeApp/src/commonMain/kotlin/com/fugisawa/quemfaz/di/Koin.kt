@@ -17,7 +17,7 @@ val appModule = module {
     single<Settings> { Settings() }
     single<SessionStorage> { SettingsSessionStorage(get()) }
     single { SessionManager(get(), get()) }
-    single { (baseUrl: String) -> ApiClient(get(), baseUrl) }
+    single { (baseUrl: String) -> ApiClient(get(), baseUrl, onUnauthorized = { get<SessionManager>().logout() }) }
     single { FeatureApiClients(get()) }
 
     factory { AuthViewModel(get(), get()) }

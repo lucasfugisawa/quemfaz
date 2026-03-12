@@ -45,6 +45,10 @@ fun Route.authRoutes() {
                     call.respond(result.response)
                 }
 
+                is VerifyOtpResult.Blocked -> {
+                    call.respond(HttpStatusCode.Forbidden, mapOf("message" to "User is blocked"))
+                }
+
                 is VerifyOtpResult.Failure -> {
                     call.respond(HttpStatusCode.Unauthorized, mapOf("message" to result.message))
                 }
