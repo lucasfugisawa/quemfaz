@@ -109,14 +109,27 @@ class LlmProfessionalInputInterpreter(
         }
 
     companion object {
+        private val CANONICAL_SERVICES_CATALOG =
+            CanonicalServices.all.joinToString("\n") { service ->
+                "- ${service.id.value}: ${service.displayName} (aliases: ${(service.baseAliases).joinToString(", ")})"
+            }
+
         private val SYSTEM_PROMPT =
             """
             Extract structured data about a professional service provider.
 
             Return structured output.
 
+            You MUST map the described services to the canonical services supported by the platform.
+            Use ONLY the service names from the catalog below. Do not invent new service names.
+            If the description mentions a service not in the catalog, map it to the closest match or to "Outros Serviços".
+
+            Supported services catalog:
+            $CANONICAL_SERVICES_CATALOG
+
             Rules:
-            - infer services from description
+            - infer services from description and map them to the canonical service displayName values above
+            - the "services" field must contain only displayName values from the catalog
             - extract city if present
             - extract neighborhoods if present
             - if important information is missing:
