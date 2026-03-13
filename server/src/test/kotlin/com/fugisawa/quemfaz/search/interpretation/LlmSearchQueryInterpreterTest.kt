@@ -31,7 +31,7 @@ class LlmSearchQueryInterpreterTest {
         val service =
             createFakeService(
                 SearchInterpretation(
-                    service = "pintura residencial",
+                    serviceId = "paint-residential",
                     city = "Batatais",
                     neighborhoods = listOf("Centro"),
                 ),
@@ -50,7 +50,7 @@ class LlmSearchQueryInterpreterTest {
         val service =
             createFakeService(
                 SearchInterpretation(
-                    service = "pintura residencial",
+                    serviceId = "paint-residential",
                     city = null,
                     neighborhoods = emptyList(),
                 ),

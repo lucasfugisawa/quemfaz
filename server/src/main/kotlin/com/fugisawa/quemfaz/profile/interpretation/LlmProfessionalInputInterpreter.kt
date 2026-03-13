@@ -4,6 +4,7 @@ import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
+import com.fugisawa.quemfaz.core.id.CanonicalServiceId
 import com.fugisawa.quemfaz.domain.service.CanonicalServices
 import com.fugisawa.quemfaz.domain.service.ServiceMatchLevel
 import com.fugisawa.quemfaz.llm.LlmAgentService
@@ -39,17 +40,14 @@ class LlmProfessionalInputInterpreter(
         interpretation: OnboardingInterpretation,
     ): CreateProfessionalProfileDraftResponse {
         val interpretedServices =
-            interpretation.services
-                .flatMap { serviceName ->
-                    val normalized = serviceName.lowercase()
-                    CanonicalServices.all
-                        .filter { canonical ->
-                            val keywords = canonical.baseAliases + canonical.displayName.lowercase()
-                            keywords.any { normalized.contains(it) || it.contains(normalized) }
-                        }.map { canonical ->
-                            InterpretedServiceDto(canonical.id.value, canonical.displayName, ServiceMatchLevel.PRIMARY.name)
-                        }
-                }.distinctBy { it.serviceId }
+            interpretation.serviceIds
+                .mapNotNull { serviceId ->
+                    CanonicalServices.findById(CanonicalServiceId(serviceId))
+                }
+                .map { canonical ->
+                    InterpretedServiceDto(canonical.id.value, canonical.displayName, ServiceMatchLevel.PRIMARY.name)
+                }
+                .distinctBy { it.serviceId }
 
         val missingFields = mutableListOf<String>()
         val followUpQuestions = mutableListOf<String>()
@@ -72,7 +70,7 @@ class LlmProfessionalInputInterpreter(
             neighborhoods = interpretation.neighborhoods,
             missingFields = missingFields,
             followUpQuestions = followUpQuestions,
-            freeTextAliases = interpretation.services,
+            freeTextAliases = interpretedServices.map { it.displayName },
         )
     }
 
@@ -121,15 +119,15 @@ class LlmProfessionalInputInterpreter(
             Return structured output.
 
             You MUST map the described services to the canonical services supported by the platform.
-            Use ONLY the service names from the catalog below. Do not invent new service names.
-            If the description mentions a service not in the catalog, map it to the closest match or to "Outros Serviços".
+            Use ONLY the service IDs from the catalog below. Do not invent new service IDs.
+            If the description mentions a service not in the catalog, map it to the closest match or to "other-general".
 
             Supported services catalog:
             $CANONICAL_SERVICES_CATALOG
 
             Rules:
-            - infer services from description and map them to the canonical service displayName values above
-            - the "services" field must contain only displayName values from the catalog
+            - infer services from description and map them to the canonical service ID values above
+            - the "serviceIds" field must contain only ID values from the catalog
             - extract city if present
             - extract neighborhoods if present
             - if important information is missing:

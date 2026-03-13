@@ -33,7 +33,7 @@ class LlmProfessionalInputInterpreterTest {
         val service =
             createFakeService(
                 OnboardingInterpretation(
-                    services = listOf("pintura residencial"),
+                    serviceIds = listOf("paint-residential"),
                     city = "Batatais",
                     neighborhoods = listOf("Centro"),
                     needsClarification = false,
@@ -55,7 +55,7 @@ class LlmProfessionalInputInterpreterTest {
         val service =
             createFakeService(
                 OnboardingInterpretation(
-                    services = listOf("pintura"),
+                    serviceIds = listOf("paint-residential"),
                     city = null,
                     neighborhoods = emptyList(),
                     needsClarification = true,
@@ -76,7 +76,7 @@ class LlmProfessionalInputInterpreterTest {
         val service =
             createFakeService(
                 OnboardingInterpretation(
-                    services = listOf("pintura residencial"),
+                    serviceIds = listOf("paint-residential"),
                     city = "Batatais",
                     neighborhoods = listOf("Centro"),
                     needsClarification = false,

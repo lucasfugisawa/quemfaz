@@ -1,5 +1,6 @@
 package com.fugisawa.quemfaz.search.interpretation
 
+import com.fugisawa.quemfaz.core.id.CanonicalServiceId
 import com.fugisawa.quemfaz.domain.service.CanonicalServices
 import com.fugisawa.quemfaz.llm.LlmAgentService
 import com.fugisawa.quemfaz.llm.SearchInterpretation
@@ -35,13 +36,8 @@ class LlmSearchQueryInterpreter(
         cityContext: String?,
         interpretation: SearchInterpretation,
     ): InterpretedSearchQuery {
-        val normalized = interpretation.service.lowercase()
-        val serviceIds =
-            CanonicalServices.all
-                .filter { canonical ->
-                    val keywords = canonical.baseAliases + canonical.displayName.lowercase()
-                    keywords.any { normalized.contains(it) || it.contains(normalized) }
-                }.map { it.id.value }
+        val canonical = CanonicalServices.findById(CanonicalServiceId(interpretation.serviceId))
+        val serviceIds = if (canonical != null) listOf(canonical.id.value) else emptyList()
 
         return InterpretedSearchQuery(
             originalQuery = query,
@@ -49,7 +45,7 @@ class LlmSearchQueryInterpreter(
             serviceIds = serviceIds,
             cityName = interpretation.city ?: cityContext,
             neighborhoods = interpretation.neighborhoods,
-            freeTextAliases = listOf(interpretation.service),
+            freeTextAliases = if (canonical != null) listOf(canonical.displayName) else emptyList(),
         )
     }
 
@@ -77,15 +73,15 @@ class LlmSearchQueryInterpreter(
             Extract structured search information from the user query.
 
             You MUST map the requested service to the canonical services supported by the platform.
-            Use ONLY the service displayName values from the catalog below. Do not invent new service names.
-            If the query mentions a service not in the catalog, map it to the closest match or to "Outros Serviços".
+            Use ONLY the service ID values from the catalog below. Do not invent new service IDs.
+            If the query mentions a service not in the catalog, map it to the closest match or to "other-general".
 
             Supported services catalog:
             $CANONICAL_SERVICES_CATALOG
 
             Rules:
-            - identify the requested service and map it to a canonical service displayName from the catalog
-            - the "service" field must contain only a displayName value from the catalog
+            - identify the requested service and map it to a canonical service ID from the catalog
+            - the "serviceId" field must contain only an ID value from the catalog
             - extract city if present
             - extract neighborhoods if present
             - do not invent information
