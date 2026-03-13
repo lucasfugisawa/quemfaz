@@ -6,6 +6,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
+import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
@@ -15,6 +17,8 @@ fun OnboardingScreens(
     uiState: OnboardingUiState,
     onCreateDraft: (String) -> Unit,
     onConfirm: (String, List<String>, String?, List<String>, String) -> Unit,
+    onSubmitClarifications: (String, List<ClarificationAnswer>) -> Unit,
+    onSkipClarification: (CreateProfessionalProfileDraftResponse) -> Unit,
     onFinish: () -> Unit
 ) {
     var inputText by remember { mutableStateOf("") }
@@ -59,6 +63,56 @@ fun OnboardingScreens(
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
                         Text("Interpreting your description...", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                is OnboardingUiState.NeedsClarification -> {
+                    val questions = uiState.draft.followUpQuestions
+                    val answers = remember { mutableStateListOf(*Array(questions.size) { "" }) }
+
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Text("We need a bit more info", style = MaterialTheme.typography.headlineLarge)
+                        Text("Please answer the questions below so we can better understand your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        questions.forEachIndexed { index, question ->
+                            Text(question, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = answers[index],
+                                onValueChange = { answers[index] = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Your answer") },
+                                singleLine = true,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Button(
+                            onClick = {
+                                val clarificationAnswers = questions.mapIndexed { index, question ->
+                                    ClarificationAnswer(question, answers[index])
+                                }
+                                onSubmitClarifications(uiState.originalDescription, clarificationAnswers)
+                            },
+                            enabled = answers.any { it.isNotBlank() },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text("Submit answers", style = MaterialTheme.typography.titleMedium)
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        TextButton(
+                            onClick = { onSkipClarification(uiState.draft) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Skip and continue")
+                        }
                     }
                 }
                 is OnboardingUiState.DraftReady -> {
@@ -175,13 +229,13 @@ fun OnboardingScreens(
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onFinish = {}) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onFinish = {}) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
 }
 
 @LightDarkScreenPreview
@@ -190,7 +244,7 @@ private fun OnboardingDraftReadyPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.DraftReady(PreviewSamples.sampleDraftResponse),
-            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onFinish = {}
+            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
         )
     }
 }
@@ -201,7 +255,7 @@ private fun OnboardingPublishedPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
-            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onFinish = {}
+            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
         )
     }
 }
@@ -212,7 +266,7 @@ private fun OnboardingErrorPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
-            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onFinish = {}
+            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
         )
     }
 }

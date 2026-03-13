@@ -1,9 +1,11 @@
 package com.fugisawa.quemfaz.profile.routing
 
+import com.fugisawa.quemfaz.contract.profile.ClarifyDraftRequest
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftRequest
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
 import com.fugisawa.quemfaz.core.id.UserId
+import com.fugisawa.quemfaz.profile.application.ClarifyProfessionalProfileDraftService
 import com.fugisawa.quemfaz.profile.application.ConfirmProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.CreateProfessionalProfileDraftService
 import com.fugisawa.quemfaz.profile.application.GetMyProfessionalProfileService
@@ -26,6 +28,7 @@ import org.koin.ktor.ext.inject
 
 fun Route.profileRoutes() {
     val createDraftService by inject<CreateProfessionalProfileDraftService>()
+    val clarifyDraftService by inject<ClarifyProfessionalProfileDraftService>()
     val confirmProfileService by inject<ConfirmProfessionalProfileService>()
     val getMyProfileService by inject<GetMyProfessionalProfileService>()
     val getPublicProfileService by inject<GetPublicProfessionalProfileService>()
@@ -53,6 +56,17 @@ fun Route.profileRoutes() {
 
                 val request = call.receive<CreateProfessionalProfileDraftRequest>()
                 val response = createDraftService.execute(UserId(userId), request)
+                call.respond(response)
+            }
+
+            post("/draft/clarify") {
+                val principal = call.principal<JWTPrincipal>()
+                val userId =
+                    principal?.payload?.getClaim("userId")?.asString()
+                        ?: return@post call.respond(HttpStatusCode.Unauthorized)
+
+                val request = call.receive<ClarifyDraftRequest>()
+                val response = clarifyDraftService.execute(UserId(userId), request)
                 call.respond(response)
             }
 

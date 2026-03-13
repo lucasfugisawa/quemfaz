@@ -33,6 +33,19 @@ data class CreateProfessionalProfileDraftResponse(
 )
 
 @Serializable
+data class ClarificationAnswer(
+    val question: String,
+    val answer: String,
+)
+
+@Serializable
+data class ClarifyDraftRequest(
+    val originalDescription: String,
+    val clarificationAnswers: List<ClarificationAnswer>,
+    val inputMode: InputMode = InputMode.TEXT,
+)
+
+@Serializable
 data class ConfirmProfessionalProfileRequest(
     val normalizedDescription: String,
     val selectedServiceIds: List<String>,

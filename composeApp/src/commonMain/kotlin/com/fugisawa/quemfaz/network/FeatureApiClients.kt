@@ -11,6 +11,7 @@ import com.fugisawa.quemfaz.contract.engagement.TrackContactClickRequest
 import com.fugisawa.quemfaz.contract.engagement.TrackProfileViewRequest
 import com.fugisawa.quemfaz.contract.favorites.FavoritesListResponse
 import com.fugisawa.quemfaz.contract.moderation.CreateReportRequest
+import com.fugisawa.quemfaz.contract.profile.ClarifyDraftRequest
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftRequest
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
@@ -72,6 +73,12 @@ class FeatureApiClients(private val apiClient: ApiClient) {
 
     suspend fun createDraft(request: CreateProfessionalProfileDraftRequest): CreateProfessionalProfileDraftResponse =
         apiClient.client.post("/professional-profile/draft") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body()
+
+    suspend fun clarifyDraft(request: ClarifyDraftRequest): CreateProfessionalProfileDraftResponse =
+        apiClient.client.post("/professional-profile/draft/clarify") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()

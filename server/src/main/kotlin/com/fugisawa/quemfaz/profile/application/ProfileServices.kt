@@ -1,6 +1,7 @@
 package com.fugisawa.quemfaz.profile.application
 
 import com.fugisawa.quemfaz.auth.domain.UserRepository
+import com.fugisawa.quemfaz.contract.profile.ClarifyDraftRequest
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftRequest
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
@@ -28,6 +29,20 @@ class CreateProfessionalProfileDraftService(
         userId: UserId,
         request: CreateProfessionalProfileDraftRequest,
     ): CreateProfessionalProfileDraftResponse = interpreter.interpret(request.inputText, request.inputMode)
+}
+
+class ClarifyProfessionalProfileDraftService(
+    private val interpreter: ProfessionalInputInterpreter,
+) {
+    fun execute(
+        userId: UserId,
+        request: ClarifyDraftRequest,
+    ): CreateProfessionalProfileDraftResponse =
+        interpreter.interpretWithClarifications(
+            request.originalDescription,
+            request.clarificationAnswers,
+            request.inputMode,
+        )
 }
 
 class ConfirmProfessionalProfileService(

@@ -305,6 +305,10 @@ fun MainFlow(
                         onConfirm = { desc, services, city, neighborhoods, phone ->
                             viewModel.confirmProfile(desc, services, city, neighborhoods, phone)
                         },
+                        onSubmitClarifications = { desc, answers ->
+                            viewModel.submitClarifications(desc, answers)
+                        },
+                        onSkipClarification = { draft -> viewModel.skipClarification(draft) },
                         onFinish = { navigateToTab(Screen.MyProfile) }
                     )
                 }

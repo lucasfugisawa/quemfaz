@@ -1,5 +1,6 @@
 package com.fugisawa.quemfaz.profile.interpretation
 
+import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
@@ -62,5 +63,14 @@ class MockProfessionalInputInterpreter : ProfessionalInputInterpreter {
             followUpQuestions = followUpQuestions.take(2),
             freeTextAliases = interpretedServices.map { it.displayName },
         )
+    }
+
+    override fun interpretWithClarifications(
+        originalDescription: String,
+        clarificationAnswers: List<ClarificationAnswer>,
+        inputMode: InputMode,
+    ): CreateProfessionalProfileDraftResponse {
+        val combinedText = originalDescription + " " + clarificationAnswers.joinToString(" ") { it.answer }
+        return interpret(combinedText, inputMode)
     }
 }

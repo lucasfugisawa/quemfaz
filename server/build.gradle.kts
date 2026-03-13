@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
+    alias(libs.plugins.kotlinxSerialization)
     id("org.jmailen.kotlinter")
     application
 }
@@ -24,6 +25,8 @@ dependencies {
     implementation("io.ktor:ktor-server-auth-jwt-jvm:${libs.versions.ktor.get()}")
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
+    implementation("ai.koog:koog-agents:0.6.4")
+    implementation("ai.koog:http-client-ktor:0.6.4")
 
     implementation(libs.postgresql)
     implementation(libs.hikari)
