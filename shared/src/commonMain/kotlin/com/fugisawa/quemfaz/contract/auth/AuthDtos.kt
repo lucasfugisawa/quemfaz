@@ -56,7 +56,8 @@ data class UserProfileResponse(
     val name: String?,
     val photoUrl: String?,
     val cityName: String?,
-    val status: String
+    val status: String,
+    val hasProfessionalProfile: Boolean = false,
 )
 
 @Serializable

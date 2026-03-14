@@ -15,6 +15,7 @@ import com.fugisawa.quemfaz.ui.theme.AppTheme
 @Composable
 fun HomeScreen(
     currentCity: String?,
+    showEarnMoneyCard: Boolean,
     onCityClick: () -> Unit,
     onSearch: (String) -> Unit,
     onOfferServices: () -> Unit
@@ -85,22 +86,26 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                onClick = onOfferServices
-            ) {
-                Row(
-                    modifier = Modifier.padding(24.dp).fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+            if (showEarnMoneyCard) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    onClick = onOfferServices
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Earn money", style = MaterialTheme.typography.titleMedium)
-                        Text("Offer your services here", style = MaterialTheme.typography.bodySmall)
+                    Row(
+                        modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Earn money", style = MaterialTheme.typography.titleMedium)
+                            Text("Offer your services here", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Text("🚀", style = MaterialTheme.typography.headlineLarge)
                     }
-                    Text("🚀", style = MaterialTheme.typography.headlineLarge)
                 }
+            } else {
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
@@ -111,11 +116,41 @@ fun HomeScreen(
 @LightDarkScreenPreview
 @Composable
 private fun HomeScreenWithCityPreview() {
-    AppTheme { HomeScreen(currentCity = "São Paulo", onCityClick = {}, onSearch = {}, onOfferServices = {}) }
+    AppTheme {
+        HomeScreen(
+            currentCity = "São Paulo",
+            showEarnMoneyCard = true,
+            onCityClick = {},
+            onSearch = {},
+            onOfferServices = {}
+        )
+    }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun HomeScreenNoCityPreview() {
-    AppTheme { HomeScreen(currentCity = null, onCityClick = {}, onSearch = {}, onOfferServices = {}) }
+    AppTheme {
+        HomeScreen(
+            currentCity = null,
+            showEarnMoneyCard = true,
+            onCityClick = {},
+            onSearch = {},
+            onOfferServices = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun HomeScreenProfessionalPreview() {
+    AppTheme {
+        HomeScreen(
+            currentCity = "São Paulo",
+            showEarnMoneyCard = false,
+            onCityClick = {},
+            onSearch = {},
+            onOfferServices = {}
+        )
+    }
 }

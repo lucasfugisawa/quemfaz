@@ -101,6 +101,7 @@ object PreviewSamples {
         photoUrl = null,
         cityName = "São Paulo",
         status = "ACTIVE",
+        hasProfessionalProfile = false,
     )
 
     val sampleUserMinimal = UserProfileResponse(
@@ -110,6 +111,17 @@ object PreviewSamples {
         photoUrl = null,
         cityName = null,
         status = "ACTIVE",
+        hasProfessionalProfile = false,
+    )
+
+    val sampleUserProfessional = UserProfileResponse(
+        id = "user-3",
+        phoneNumber = "+55 16 99999-0000",
+        name = "Carlos Silva",
+        photoUrl = null,
+        cityName = "São Paulo",
+        status = "ACTIVE",
+        hasProfessionalProfile = true,
     )
 
     val sampleCities = listOf(

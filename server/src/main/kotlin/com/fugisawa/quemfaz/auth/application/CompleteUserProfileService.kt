@@ -5,12 +5,14 @@ import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
 import com.fugisawa.quemfaz.core.id.UserId
+import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 
 class CompleteUserProfileService(
     private val userRepository: UserRepository,
     private val userPhoneAuthIdentityRepository: UserPhoneAuthIdentityRepository,
+    private val profileRepository: ProfessionalProfileRepository,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -24,6 +26,7 @@ class CompleteUserProfileService(
             userRepository.updateProfile(userId, request.name, request.photoUrl)
 
             val identity = userPhoneAuthIdentityRepository.findByUserId(userId)
+            val profileExists = profileRepository.findByUserId(userId) != null
 
             CompleteProfileResult.Success(
                 UserProfileResponse(
@@ -33,6 +36,7 @@ class CompleteUserProfileService(
                     photoUrl = request.photoUrl,
                     cityName = null,
                     status = user.status.name,
+                    hasProfessionalProfile = profileExists,
                 ),
             )
         }

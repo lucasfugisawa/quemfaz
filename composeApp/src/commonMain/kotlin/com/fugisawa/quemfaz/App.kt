@@ -169,6 +169,8 @@ fun MainFlow(
     val authUiState by authViewModel.uiState.collectAsState()
     val hydrationFailed by authViewModel.hydrationFailed.collectAsState()
 
+    val showEarnMoneyCard by homeViewModel.showEarnMoneyCard.collectAsState()
+
     var currentQuery by remember { mutableStateOf("") }
     var currentProfileId by remember { mutableStateOf("") }
 
@@ -207,6 +209,7 @@ fun MainFlow(
                 is Screen.Home -> {
                     HomeScreen(
                         currentCity = currentCity,
+                        showEarnMoneyCard = showEarnMoneyCard,
                         onCityClick = { navigateTo(Screen.CitySelection) },
                         onSearch = { query ->
                             currentQuery = query

@@ -123,8 +123,8 @@ val infrastructureModule =
         single { StartOtpService(get(), get(), get(), get(), get(), get<AppConfig>().otp) }
         single { VerifyOtpService(get(), get(), get(), get(), get(), get()) }
         single { RefreshTokenService(get(), get()) }
-        single { CompleteUserProfileService(get(), get()) }
-        single { GetAuthenticatedUserService(get(), get()) }
+        single { CompleteUserProfileService(get(), get(), get()) }
+        single { GetAuthenticatedUserService(get(), get(), get()) }
 
         // Professional Profile Repositories
         single<ProfessionalProfileRepository> { ExposedProfessionalProfileRepository() }

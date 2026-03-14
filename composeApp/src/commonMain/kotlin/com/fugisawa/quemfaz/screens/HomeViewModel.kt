@@ -8,8 +8,11 @@ import com.fugisawa.quemfaz.contract.search.SearchProfessionalsResponse
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed class SearchUiState {
@@ -29,6 +32,10 @@ class HomeViewModel(
 
     val currentCity = sessionManager.currentCity
     
+    val showEarnMoneyCard = sessionManager.currentUser
+        .map { it?.hasProfessionalProfile != true }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     val supportedCities = listOf("Batatais", "Franca", "Ribeirão Preto")
 
     fun selectCity(city: String) {
