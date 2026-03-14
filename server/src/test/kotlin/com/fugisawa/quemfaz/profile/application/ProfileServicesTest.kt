@@ -44,6 +44,12 @@ class ProfileServicesTest {
             profiles[id.value] = p.copy(status = status)
             return true
         }
+
+        override fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean {
+            val p = profiles[id.value] ?: return false
+            profiles[id.value] = p.copy(knownName = knownName)
+            return true
+        }
     }
 
     private class FakeUserRepository : UserRepository {
@@ -53,11 +59,19 @@ class ProfileServicesTest {
 
         override fun findById(id: UserId) = users[id.value]
 
-        override fun updateProfile(
-            id: UserId,
-            name: String,
-            photoUrl: String?,
-        ) = null
+        override fun updateName(id: UserId, firstName: String, lastName: String): User? {
+            val u = users[id.value] ?: return null
+            val updated = u.copy(firstName = firstName, lastName = lastName)
+            users[id.value] = updated
+            return updated
+        }
+
+        override fun updatePhotoUrl(id: UserId, photoUrl: String): User? {
+            val u = users[id.value] ?: return null
+            val updated = u.copy(photoUrl = photoUrl)
+            users[id.value] = updated
+            return updated
+        }
 
         override fun updateStatus(
             id: UserId,
@@ -74,7 +88,7 @@ class ProfileServicesTest {
         val profileRepo = FakeProfessionalProfileRepository()
         val userRepo = FakeUserRepository()
         val userId = UserId("user-123")
-        userRepo.create(User(userId, "John Doe", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
+        userRepo.create(User(userId, "John", "Doe", "https://example.com/photo.jpg", UserStatus.ACTIVE, Instant.now(), Instant.now()))
 
         val service = ConfirmProfessionalProfileService(profileRepo, userRepo)
         val request =
@@ -92,7 +106,8 @@ class ProfileServicesTest {
         val response = service.execute(userId, request)
 
         assertNotNull(response.id)
-        assertEquals("John Doe", response.name)
+        assertEquals("John", response.firstName)
+        assertEquals("Doe", response.lastName)
         assertEquals("Pintor experiente", response.description)
         assertEquals(ProfileCompleteness.COMPLETE, profileRepo.findByUserId(userId)?.completeness)
         assertEquals(1, response.services.size)
@@ -104,7 +119,7 @@ class ProfileServicesTest {
         val profileRepo = FakeProfessionalProfileRepository()
         val userRepo = FakeUserRepository()
         val userId = UserId("user-123")
-        userRepo.create(User(userId, "John Doe", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
+        userRepo.create(User(userId, "John", "Doe", "https://example.com/photo.jpg", UserStatus.ACTIVE, Instant.now(), Instant.now()))
 
         // Create initial profile via confirm service
         val confirmService = ConfirmProfessionalProfileService(profileRepo, userRepo)
@@ -156,7 +171,7 @@ class ProfileServicesTest {
         val profileRepo = FakeProfessionalProfileRepository()
         val userRepo = FakeUserRepository()
         val userId = UserId("user-no-profile")
-        userRepo.create(User(userId, "Jane", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
+        userRepo.create(User(userId, "Jane", "", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
 
         val service = UpdateProfessionalProfileService(profileRepo, userRepo)
         val result =
@@ -182,7 +197,7 @@ class ProfileServicesTest {
         val profileRepo = FakeProfessionalProfileRepository()
         val userRepo = FakeUserRepository()
         val userId = UserId("user-blocked")
-        userRepo.create(User(userId, "Blocked User", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
+        userRepo.create(User(userId, "Blocked", "User", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
 
         // Create profile directly as BLOCKED
         val profileId = ProfessionalProfileId("prof-blocked")
@@ -233,7 +248,7 @@ class ProfileServicesTest {
         val userId = UserId("user-123")
         val profileId = ProfessionalProfileId("prof-123")
 
-        userRepo.create(User(userId, "John Doe", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
+        userRepo.create(User(userId, "John", "Doe", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
 
         val service = GetPublicProfessionalProfileService(profileRepo, userRepo)
 

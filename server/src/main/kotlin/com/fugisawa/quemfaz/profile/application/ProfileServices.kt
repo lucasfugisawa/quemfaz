@@ -56,6 +56,7 @@ class ConfirmProfessionalProfileService(
         request: ConfirmProfessionalProfileRequest,
     ): ProfessionalProfileResponse {
         val user = userRepository.findById(userId) ?: throw IllegalStateException("User not found")
+        require(user.photoUrl != null) { "Profile photo is required to confirm a professional profile" }
 
         val existingProfile = profileRepository.findByUserId(userId)
 
@@ -105,12 +106,7 @@ class ConfirmProfessionalProfileService(
 
         val savedProfile = profileRepository.save(profile)
 
-        // Update user photoUrl if provided and different
-        if (request.photoUrl != null && request.photoUrl != user.photoUrl) {
-            userRepository.updateProfile(userId, user.name ?: "", request.photoUrl)
-        }
-
-        return mapToResponse(savedProfile, user.name, request.photoUrl ?: user.photoUrl)
+        return mapToResponse(savedProfile, user.firstName, user.lastName, user.photoUrl)
     }
 }
 
@@ -121,7 +117,7 @@ class GetMyProfessionalProfileService(
     fun execute(userId: UserId): ProfessionalProfileResponse? {
         val profile = profileRepository.findByUserId(userId) ?: return null
         val user = userRepository.findById(userId)
-        return mapToResponse(profile, user?.name, user?.photoUrl)
+        return mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl)
     }
 }
 
@@ -134,7 +130,7 @@ class GetPublicProfessionalProfileService(
         if (profile.status != ProfessionalProfileStatus.PUBLISHED) return null
 
         val user = userRepository.findById(profile.userId)
-        return mapToResponse(profile, user?.name, user?.photoUrl)
+        return mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl)
     }
 }
 
@@ -200,38 +196,33 @@ class UpdateProfessionalProfileService(
 
         val saved = profileRepository.save(updated)
 
-        // Update user photoUrl if provided and different
-        if (request.photoUrl != null && request.photoUrl != user.photoUrl) {
-            userRepository.updateProfile(userId, user.name ?: "", request.photoUrl)
-        }
-
-        return UpdateProfileResult.Success(mapToResponse(saved, user.name, request.photoUrl ?: user.photoUrl))
+        return UpdateProfileResult.Success(mapToResponse(saved, user.firstName, user.lastName, user.photoUrl))
     }
 }
 
 private fun mapToResponse(
     profile: ProfessionalProfile,
-    userName: String?,
+    firstName: String,
+    lastName: String,
     userPhotoUrl: String?,
 ): ProfessionalProfileResponse =
     ProfessionalProfileResponse(
         id = profile.id.value,
-        name = userName,
+        firstName = firstName,
+        lastName = lastName,
+        knownName = profile.knownName,
         photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
         description = profile.normalizedDescription ?: "",
         cityName = profile.cityName ?: "",
         neighborhoods = profile.neighborhoods,
-        services =
-            profile.services.map { svc ->
-                val canonical =
-                    CanonicalServices.findById(
-                        com.fugisawa.quemfaz.core.id
-                            .CanonicalServiceId(svc.serviceId),
-                    )
-                InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
-            },
+        services = profile.services.map { svc ->
+            val canonical = CanonicalServices.findById(
+                com.fugisawa.quemfaz.core.id.CanonicalServiceId(svc.serviceId)
+            )
+            InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
+        },
         profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
-        activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)), // Active in last 7 days
+        activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
         whatsAppPhone = profile.whatsappPhone,
         contactPhone = profile.contactPhone ?: "",
     )
