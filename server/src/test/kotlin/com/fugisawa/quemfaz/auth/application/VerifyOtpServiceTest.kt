@@ -93,7 +93,7 @@ class VerifyOtpServiceTest {
         val code = "123456"
         val userId = UserId("u1")
         transaction {
-            userRepo.create(User(userId, "Test", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
+            userRepo.create(User(userId, "Test", "User", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
             identityRepo.create(UserPhoneAuthIdentity("i1", userId, phone, true, Instant.now(), Instant.now(), Instant.now()))
             otpRepo.create(OtpChallenge("c1", phone, "hashed_$code", Instant.now().plusSeconds(300), 0, 3, null, Instant.now()))
         }
@@ -129,7 +129,7 @@ class VerifyOtpServiceTest {
         val code = "123456"
         val userId = UserId("u1")
         transaction {
-            userRepo.create(User(userId, "Test", null, UserStatus.BLOCKED, Instant.now(), Instant.now()))
+            userRepo.create(User(userId, "Test", "User", null, UserStatus.BLOCKED, Instant.now(), Instant.now()))
             identityRepo.create(UserPhoneAuthIdentity("i1", userId, phone, true, Instant.now(), Instant.now(), Instant.now()))
             otpRepo.create(OtpChallenge("c1", phone, "hashed_$code", Instant.now().plusSeconds(300), 0, 3, null, Instant.now()))
         }

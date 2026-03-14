@@ -68,19 +68,22 @@ class SearchProfessionalsService(
             results =
                 ranked.map { profile ->
                     val user = userRepository.findById(profile.userId)
-                    mapToResponse(profile, user?.name, user?.photoUrl)
+                    mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl)
                 },
         )
     }
 
     private fun mapToResponse(
         profile: ProfessionalProfile,
-        userName: String?,
+        firstName: String,
+        lastName: String,
         userPhotoUrl: String?,
     ): ProfessionalProfileResponse =
         ProfessionalProfileResponse(
             id = profile.id.value,
-            name = userName,
+            firstName = firstName,
+            lastName = lastName,
+            knownName = profile.knownName,
             photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
             description = profile.normalizedDescription ?: "",
             cityName = profile.cityName ?: "",
@@ -94,5 +97,6 @@ class SearchProfessionalsService(
             activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
             whatsAppPhone = profile.whatsappPhone,
             contactPhone = profile.contactPhone ?: "",
+            portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
         )
 }

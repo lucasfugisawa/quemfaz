@@ -5,7 +5,7 @@ import com.fugisawa.quemfaz.infrastructure.images.ImageStorageService
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
-import io.ktor.http.content.readAllParts
+import io.ktor.http.content.forEachPart
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
@@ -28,31 +28,51 @@ fun Route.imageRoutes() {
         authenticate("auth-jwt") {
             post("/upload") {
                 val multipart = call.receiveMultipart()
-                val parts = multipart.readAllParts()
-                val filePart = parts.filterIsInstance<PartData.FileItem>().firstOrNull()
-                    ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("message" to "Missing image part"))
+                var mimeError = false
+                var sizeError = false
+                var missingPart = true
+                var uploadResult: Pair<ByteArray, String>? = null
 
-                val contentType = filePart.contentType?.toString()
-                if (contentType !in ALLOWED_CONTENT_TYPES) {
-                    filePart.dispose()
-                    return@post call.respond(
+                multipart.forEachPart { part ->
+                    if (part is PartData.FileItem && uploadResult == null && !mimeError) {
+                        missingPart = false
+                        val contentType = part.contentType?.toString()
+                        if (contentType !in ALLOWED_CONTENT_TYPES) {
+                            mimeError = true
+                            part.dispose()
+                        } else {
+                            val bytes = part.provider().readRemaining().readByteArray()
+                            part.dispose()
+                            if (bytes.size > MAX_BYTES) {
+                                sizeError = true
+                            } else {
+                                uploadResult = bytes to contentType!!
+                            }
+                        }
+                    } else {
+                        part.dispose()
+                    }
+                }
+
+                when {
+                    missingPart -> return@post call.respond(
+                        HttpStatusCode.BadRequest,
+                        mapOf("message" to "Missing image part"),
+                    )
+                    mimeError -> return@post call.respond(
                         HttpStatusCode.BadRequest,
                         mapOf("message" to "Unsupported image type. Allowed: image/jpeg, image/png, image/webp"),
                     )
-                }
-
-                val bytes = filePart.provider().readRemaining().readByteArray()
-                filePart.dispose()
-
-                if (bytes.size > MAX_BYTES) {
-                    return@post call.respond(
+                    sizeError -> return@post call.respond(
                         HttpStatusCode.BadRequest,
                         mapOf("message" to "Image exceeds maximum size of 5 MB"),
                     )
+                    else -> {
+                        val (bytes, contentType) = uploadResult!!
+                        val url = imageStorageService.store(bytes, contentType)
+                        call.respond(UploadImageResponse(url = url))
+                    }
                 }
-
-                val url = imageStorageService.store(bytes, contentType!!)
-                call.respond(UploadImageResponse(url = url))
             }
         }
 

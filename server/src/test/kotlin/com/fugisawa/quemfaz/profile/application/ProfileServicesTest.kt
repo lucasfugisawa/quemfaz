@@ -99,7 +99,6 @@ class ProfileServicesTest {
                 neighborhoods = listOf("Centro"),
                 contactPhone = "16999999999",
                 whatsAppPhone = "16999999999",
-                photoUrl = null,
                 portfolioPhotoUrls = emptyList(),
             )
 
@@ -132,7 +131,6 @@ class ProfileServicesTest {
                 neighborhoods = listOf("Centro"),
                 contactPhone = "16999999999",
                 whatsAppPhone = null,
-                photoUrl = null,
                 portfolioPhotoUrls = emptyList(),
             ),
         )
@@ -148,7 +146,6 @@ class ProfileServicesTest {
                     neighborhoods = listOf("Centro", "Vila Nova"),
                     contactPhone = "16988888888",
                     whatsAppPhone = "16988888888",
-                    photoUrl = null,
                     portfolioPhotoUrls = emptyList(),
                 ),
             )
@@ -184,7 +181,6 @@ class ProfileServicesTest {
                     neighborhoods = emptyList(),
                     contactPhone = "16999999999",
                     whatsAppPhone = null,
-                    photoUrl = null,
                     portfolioPhotoUrls = emptyList(),
                 ),
             )
@@ -233,7 +229,6 @@ class ProfileServicesTest {
                     neighborhoods = emptyList(),
                     contactPhone = "16999999999",
                     whatsAppPhone = null,
-                    photoUrl = null,
                     portfolioPhotoUrls = emptyList(),
                 ),
             )
