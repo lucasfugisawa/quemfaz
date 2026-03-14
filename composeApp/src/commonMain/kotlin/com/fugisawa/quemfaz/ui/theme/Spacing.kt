@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.ui.theme
 import androidx.compose.ui.unit.dp
 
 object Spacing {
+    val none = 0.dp
     val screenEdge = 24.dp
     val sectionGap = 32.dp
     val formFieldGap = 16.dp

@@ -12,6 +12,7 @@ import com.fugisawa.quemfaz.session.SessionManager
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
+import com.fugisawa.quemfaz.ui.theme.Spacing
 import org.koin.compose.koinInject
 
 @Composable
@@ -26,9 +27,43 @@ fun OnboardingScreens(
     onFinish: () -> Unit,
 ) {
     var inputText by remember { mutableStateOf("") }
+    var currentStep by remember { mutableStateOf(1) }
+
+    // Update currentStep whenever uiState changes to a non-Loading, non-terminal state.
+    // During Loading, currentStep stays frozen so the indicator doesn't flicker.
+    LaunchedEffect(uiState) {
+        currentStep = when (uiState) {
+            is OnboardingUiState.Idle -> 1
+            is OnboardingUiState.NeedsClarification -> 1
+            is OnboardingUiState.DraftReady -> 2
+            is OnboardingUiState.PhotoRequired -> 3
+            is OnboardingUiState.KnownName -> 4
+            is OnboardingUiState.Loading,
+            is OnboardingUiState.Published,
+            is OnboardingUiState.Error -> currentStep  // no change
+        }
+    }
 
     Scaffold { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(24.dp)) {
+            // Step indicator — visible for all active steps, hidden for terminal states
+            val showStepIndicator = uiState !is OnboardingUiState.Published &&
+                                    uiState !is OnboardingUiState.Error
+            if (showStepIndicator) {
+                Text(
+                    text = "Step $currentStep of 4",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
+
+            // Offset content below the step indicator to avoid overlap
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = if (showStepIndicator) Spacing.lg else Spacing.none)
+            ) {
             when (uiState) {
                 is OnboardingUiState.Idle -> {
                     Column(modifier = Modifier.fillMaxSize()) {
@@ -255,8 +290,9 @@ fun OnboardingScreens(
                     }
                 }
             }
-        }
-    }
+        }               // end Column
+    }                   // end Box
+}                       // end Scaffold
 }
 
 // ── Previews ──
