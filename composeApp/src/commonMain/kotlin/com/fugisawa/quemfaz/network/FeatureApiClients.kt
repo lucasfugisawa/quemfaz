@@ -130,11 +130,13 @@ class FeatureApiClients(private val apiClient: ApiClient) {
     suspend fun getFavorites(): FavoritesListResponse =
         apiClient.client.get("/favorites").body()
 
-    suspend fun addFavorite(profileId: String): SimpleSuccessResponse =
-        apiClient.client.post("/favorites/$profileId").body()
+    suspend fun addFavorite(profileId: String) {
+        apiClient.client.post("/favorites/$profileId")
+    }
 
-    suspend fun removeFavorite(profileId: String): SimpleSuccessResponse =
-        apiClient.client.delete("/favorites/$profileId").body()
+    suspend fun removeFavorite(profileId: String) {
+        apiClient.client.delete("/favorites/$profileId")
+    }
 
     // Engagement
     suspend fun trackContactClick(request: TrackContactClickRequest): SimpleSuccessResponse =
