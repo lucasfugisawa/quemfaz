@@ -1,13 +1,19 @@
 package com.fugisawa.quemfaz.screens
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.theme.AppTheme
@@ -81,14 +87,9 @@ fun OtpVerificationScreen(
             
             Spacer(modifier = Modifier.height(Spacing.xl))
             
-            OutlinedTextField(
+            OtpInputRow(
                 value = otp,
-                onValueChange = { if (it.length <= 6) otp = it },
-                label = { Text("6-digit Code") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = MaterialTheme.shapes.medium,
-                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center, letterSpacing = 8.sp)
+                onValueChange = { otp = it }
             )
             
             Spacer(modifier = Modifier.height(Spacing.lg))
@@ -204,6 +205,76 @@ fun ProfilePhotoScreen(
                 Text("Skip for now")
             }
         }
+    }
+}
+
+@Composable
+private fun OtpInputRow(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val focusRequester = remember { FocusRequester() }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { focusRequester.requestFocus() }
+    ) {
+        // Visual boxes — one per digit
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+        ) {
+            repeat(6) { index ->
+                val isCurrent = index == value.length  // cursor position
+                val isFilled = index < value.length
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(Spacing.ctaButtonHeight)
+                        .border(
+                            // Border widths (1dp/2dp) are structural atomic constants;
+                            // no AppSpacing token exists at this scale — used directly.
+                            width = if (isCurrent) 2.dp else 1.dp,
+                            color = when {
+                                isCurrent || isFilled -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.outline
+                            },
+                            shape = MaterialTheme.shapes.small
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = value.getOrNull(index)?.toString() ?: "",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
+            }
+        }
+
+        // Hidden BasicTextField captures actual keyboard input.
+        // matchParentSize() + alpha(0f) makes it cover the visual area without being visible.
+        BasicTextField(
+            value = value,
+            onValueChange = { new ->
+                // Accept only digits, max 6 characters
+                if (new.length <= 6 && new.all { it.isDigit() }) {
+                    onValueChange(new)
+                }
+            },
+            modifier = Modifier
+                .matchParentSize()
+                .alpha(0f)
+                .focusRequester(focusRequester),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            decorationBox = {}  // No visual decoration — purely functional
+        )
+    }
+
+    // Request focus automatically when this composable enters the composition
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
     }
 }
 
