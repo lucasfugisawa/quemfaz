@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
+import com.fugisawa.quemfaz.platform.rememberImagePickerLauncher
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
@@ -17,7 +18,8 @@ fun MyProfileScreen(
     currentUser: UserProfileResponse?,
     uiState: AuthUiState,
     hydrationFailed: Boolean,
-    onSaveProfile: (name: String, photoUrl: String?) -> Unit,
+    onSaveName: (firstName: String, lastName: String) -> Unit,
+    onSavePhoto: (data: ByteArray, mimeType: String) -> Unit,
     onNavigateToFavorites: () -> Unit,
     onChangeCity: () -> Unit,
     onManageProfessionalProfile: () -> Unit,
@@ -39,15 +41,19 @@ fun MyProfileScreen(
         return
     }
 
-    var name by remember(currentUser.id) { mutableStateOf(currentUser.name ?: "") }
-    var photoUrl by remember(currentUser.id) { mutableStateOf(currentUser.photoUrl ?: "") }
+    var firstName by remember(currentUser.id) { mutableStateOf(currentUser.firstName) }
+    var lastName by remember(currentUser.id) { mutableStateOf(currentUser.lastName) }
     val isSaving = uiState is AuthUiState.Loading
+
+    val imagePicker = rememberImagePickerLauncher { data, mimeType ->
+        onSavePhoto(data, mimeType)
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             ProfileAvatar(
-                name = name.ifBlank { currentUser.name },
-                photoUrl = photoUrl.ifBlank { null },
+                name = "$firstName $lastName".trim().ifBlank { currentUser.firstName },
+                photoUrl = currentUser.photoUrl,
                 size = 64.dp
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -64,9 +70,9 @@ fun MyProfileScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
+            value = firstName,
+            onValueChange = { firstName = it },
+            label = { Text("First name") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             shape = MaterialTheme.shapes.medium
@@ -75,9 +81,9 @@ fun MyProfileScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = photoUrl,
-            onValueChange = { photoUrl = it },
-            label = { Text("Photo URL") },
+            value = lastName,
+            onValueChange = { lastName = it },
+            label = { Text("Last name") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             shape = MaterialTheme.shapes.medium
@@ -86,16 +92,26 @@ fun MyProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { onSaveProfile(name, photoUrl.ifBlank { null }) },
-            enabled = name.isNotBlank() && !isSaving,
+            onClick = { onSaveName(firstName, lastName) },
+            enabled = firstName.isNotBlank() && lastName.isNotBlank() && !isSaving,
             modifier = Modifier.fillMaxWidth().height(48.dp),
             shape = MaterialTheme.shapes.medium
         ) {
             if (isSaving) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
             } else {
-                Text("Save")
+                Text("Save name")
             }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedButton(
+            onClick = { imagePicker.launch() },
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Text("Change photo")
         }
 
         if (uiState is AuthUiState.Error) {
@@ -134,7 +150,7 @@ private fun MyProfileLoadingPreview() {
     AppTheme {
         MyProfileScreen(
             currentUser = null, uiState = AuthUiState.Idle, hydrationFailed = false,
-            onSaveProfile = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
+            onSaveName = { _, _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
             onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
         )
     }
@@ -146,7 +162,7 @@ private fun MyProfileHydrationFailedPreview() {
     AppTheme {
         MyProfileScreen(
             currentUser = null, uiState = AuthUiState.Idle, hydrationFailed = true,
-            onSaveProfile = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
+            onSaveName = { _, _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
             onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
         )
     }
@@ -158,7 +174,7 @@ private fun MyProfileContentPreview() {
     AppTheme {
         MyProfileScreen(
             currentUser = PreviewSamples.sampleUser, uiState = AuthUiState.Idle, hydrationFailed = false,
-            onSaveProfile = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
+            onSaveName = { _, _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
             onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
         )
     }
@@ -170,7 +186,7 @@ private fun MyProfileSavingPreview() {
     AppTheme {
         MyProfileScreen(
             currentUser = PreviewSamples.sampleUser, uiState = AuthUiState.Loading, hydrationFailed = false,
-            onSaveProfile = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
+            onSaveName = { _, _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
             onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
         )
     }
@@ -182,7 +198,7 @@ private fun MyProfileErrorPreview() {
     AppTheme {
         MyProfileScreen(
             currentUser = PreviewSamples.sampleUser, uiState = AuthUiState.Error("Failed to save profile."), hydrationFailed = false,
-            onSaveProfile = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
+            onSaveName = { _, _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
             onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
         )
     }
@@ -194,7 +210,7 @@ private fun MyProfileMinimalUserPreview() {
     AppTheme {
         MyProfileScreen(
             currentUser = PreviewSamples.sampleUserMinimal, uiState = AuthUiState.Idle, hydrationFailed = false,
-            onSaveProfile = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
+            onSaveName = { _, _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
             onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
         )
     }

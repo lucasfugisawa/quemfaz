@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import com.fugisawa.quemfaz.di.appModule
 import com.fugisawa.quemfaz.navigation.Screen
 import com.fugisawa.quemfaz.network.ApiClient
+import com.fugisawa.quemfaz.platform.rememberImagePickerLauncher
 import com.fugisawa.quemfaz.screens.*
 import com.fugisawa.quemfaz.session.AuthState
 import com.fugisawa.quemfaz.session.SessionManager
@@ -115,38 +116,57 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
 fun AuthFlow(navigateTo: (Screen) -> Unit) {
     val viewModel: AuthViewModel = koinInject()
     val uiState by viewModel.uiState.collectAsState()
+    val sessionManager: SessionManager = koinInject()
+    val currentUser by sessionManager.currentUser.collectAsState()
 
     var currentAuthStep by remember { mutableStateOf("phone") }
     var phoneForOtp by remember { mutableStateOf("") }
 
+    val imagePicker = rememberImagePickerLauncher { data, mimeType ->
+        viewModel.submitPhoto(data, mimeType)
+    }
+
     when (currentAuthStep) {
         "phone" -> {
             PhoneLoginScreen(
-                onSendOtp = {
-                    phoneForOtp = it
-                    viewModel.startOtp(it)
-                },
-                uiState = uiState
+                onSendOtp = { phoneForOtp = it; viewModel.startOtp(it) },
+                uiState = uiState,
             )
-            if (uiState is AuthUiState.OtpSent) {
-                currentAuthStep = "otp"
-            }
+            if (uiState is AuthUiState.OtpSent) currentAuthStep = "otp"
         }
         "otp" -> {
             OtpVerificationScreen(
                 phone = phoneForOtp,
                 onVerifyOtp = { viewModel.verifyOtp(phoneForOtp, it) },
-                uiState = uiState
+                uiState = uiState,
             )
-            if (uiState is AuthUiState.ProfileCompletionRequired) {
-                currentAuthStep = "profile"
-            }
+            if (uiState is AuthUiState.ProfileCompletionRequired) currentAuthStep = "name"
         }
-        "profile" -> {
-            CompleteUserProfileScreen(
-                onComplete = { name, photo -> viewModel.completeProfile(name, photo) },
-                uiState = uiState
+        "name" -> {
+            NameInputScreen(
+                onSubmitName = { firstName, lastName -> viewModel.submitName(firstName, lastName) },
+                uiState = uiState,
             )
+            if (uiState is AuthUiState.PhotoUploadRequired) currentAuthStep = "photo"
+        }
+        "photo" -> {
+            val displayName = currentUser?.let { "${it.firstName} ${it.lastName}" } ?: ""
+            ProfilePhotoScreen(
+                currentPhotoUrl = currentUser?.photoUrl,
+                displayName = displayName,
+                headline = "Add a profile photo",
+                showSkip = true,
+                isLoading = uiState is AuthUiState.Loading,
+                error = (uiState as? AuthUiState.Error)?.message,
+                onPickImage = { imagePicker.launch() },
+                onSkip = { viewModel.skipPhoto() },
+            )
+        }
+    }
+
+    if (uiState is AuthUiState.Success) {
+        LaunchedEffect(Unit) {
+            navigateTo(Screen.Home)
         }
     }
 }
@@ -293,7 +313,8 @@ fun MainFlow(
                         currentUser = currentUser,
                         uiState = authUiState,
                         hydrationFailed = hydrationFailed,
-                        onSaveProfile = { name, photo -> authViewModel.completeProfile(name, photo) },
+                        onSaveName = { firstName, lastName -> authViewModel.submitName(firstName, lastName) },
+                        onSavePhoto = { data, mimeType -> authViewModel.submitPhoto(data, mimeType) },
                         onNavigateToFavorites = { navigateToTab(Screen.Favorites) },
                         onChangeCity = { navigateTo(Screen.CitySelection) },
                         onManageProfessionalProfile = { navigateTo(Screen.EditProfessionalProfile) },
