@@ -29,8 +29,30 @@ object ProfessionalProfilesTable : Table("professional_profiles") {
     val contactPhone = varchar("contact_phone", 50).nullable()
     val whatsappPhone = varchar("whatsapp_phone", 50).nullable()
     val cityName = varchar("city_name", 255).nullable()
-    val completeness = customEnumeration("completeness", "profile_completeness", { ProfileCompleteness.valueOf(it as String) }, { it.name })
-    val status = customEnumeration("status", "profile_status", { ProfessionalProfileStatus.valueOf(it as String) }, { it.name })
+    val completeness =
+        customEnumeration(
+            "completeness",
+            "profile_completeness",
+            { ProfileCompleteness.valueOf(it as String) },
+            {
+                val pgObject = org.postgresql.util.PGobject()
+                pgObject.type = "profile_completeness"
+                pgObject.value = it.name
+                pgObject
+            },
+        )
+    val status =
+        customEnumeration(
+            "status",
+            "profile_status",
+            { ProfessionalProfileStatus.valueOf(it as String) },
+            {
+                val pgObject = org.postgresql.util.PGobject()
+                pgObject.type = "profile_status"
+                pgObject.value = it.name
+                pgObject
+            },
+        )
     val lastActiveAt = timestamp("last_active_at").nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
@@ -48,7 +70,18 @@ object ProfessionalProfileNeighborhoodsTable : Table("professional_profile_neigh
 object ProfessionalProfileServicesTable : Table("professional_profile_services") {
     val professionalProfileId = varchar("professional_profile_id", 128) references ProfessionalProfilesTable.id
     val serviceId = varchar("service_id", 128)
-    val matchLevel = customEnumeration("match_level", "service_match_level", { ServiceMatchLevel.valueOf(it as String) }, { it.name })
+    val matchLevel =
+        customEnumeration(
+            "match_level",
+            "service_match_level",
+            { ServiceMatchLevel.valueOf(it as String) },
+            {
+                val pgObject = org.postgresql.util.PGobject()
+                pgObject.type = "service_match_level"
+                pgObject.value = it.name
+                pgObject
+            },
+        )
 
     override val primaryKey = PrimaryKey(professionalProfileId, serviceId)
 }
