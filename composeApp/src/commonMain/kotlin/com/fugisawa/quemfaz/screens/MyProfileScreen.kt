@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
@@ -23,9 +24,9 @@ fun MyProfileScreen(
     onLogout: () -> Unit
 ) {
     if (currentUser == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (hydrationFailed) {
-                Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Error loading profile", color = MaterialTheme.colorScheme.error)
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(onClick = onRetry) { Text("Retry") }
