@@ -87,6 +87,7 @@ class ConfirmProfessionalProfileService(
             ProfessionalProfile(
                 id = profileId,
                 userId = userId,
+                knownName = null,
                 description = request.normalizedDescription,
                 normalizedDescription = request.normalizedDescription,
                 contactPhone = request.contactPhone,

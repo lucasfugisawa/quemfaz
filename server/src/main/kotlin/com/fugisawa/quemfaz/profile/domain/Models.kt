@@ -8,6 +8,7 @@ import java.time.Instant
 data class ProfessionalProfile(
     val id: ProfessionalProfileId,
     val userId: UserId,
+    val knownName: String?,
     val description: String?,
     val normalizedDescription: String?,
     val contactPhone: String?,
@@ -60,4 +61,6 @@ interface ProfessionalProfileRepository {
         id: ProfessionalProfileId,
         status: ProfessionalProfileStatus,
     ): Boolean
+
+    fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean
 }

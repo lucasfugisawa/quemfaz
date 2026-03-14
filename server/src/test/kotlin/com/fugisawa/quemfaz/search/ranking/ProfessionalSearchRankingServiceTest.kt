@@ -24,6 +24,7 @@ class ProfessionalSearchRankingServiceTest {
     ) = ProfessionalProfile(
         id = ProfessionalProfileId(id),
         userId = UserId("user-$id"),
+        knownName = null,
         description = "Description $id",
         normalizedDescription = "Description $id",
         contactPhone = "123456",

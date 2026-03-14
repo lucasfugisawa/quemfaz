@@ -141,6 +141,7 @@ class ModerationServiceTest {
     ) = ProfessionalProfile(
         id,
         userId,
+        null,
         "Desc",
         "Desc",
         "123",

@@ -25,6 +25,7 @@ import java.time.Instant
 object ProfessionalProfilesTable : Table("professional_profiles") {
     val id = varchar("id", 128)
     val userId = varchar("user_id", 128)
+    val knownName = varchar("known_name", 255).nullable()
     val description = text("description").nullable()
     val normalizedDescription = text("normalized_description").nullable()
     val contactPhone = varchar("contact_phone", 50).nullable()
@@ -121,6 +122,7 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
             val exists = ProfessionalProfilesTable.selectAll().where { ProfessionalProfilesTable.id eq profile.id.value }.any()
             if (exists) {
                 ProfessionalProfilesTable.update({ ProfessionalProfilesTable.id eq profile.id.value }) {
+                    it[knownName] = profile.knownName
                     it[description] = profile.description
                     it[normalizedDescription] = profile.normalizedDescription
                     it[contactPhone] = profile.contactPhone
@@ -135,6 +137,7 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
                 ProfessionalProfilesTable.insert {
                     it[id] = profile.id.value
                     it[userId] = profile.userId.value
+                    it[knownName] = profile.knownName
                     it[description] = profile.description
                     it[normalizedDescription] = profile.normalizedDescription
                     it[contactPhone] = profile.contactPhone
@@ -231,6 +234,14 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
             } > 0
         }
 
+    override fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean =
+        transaction {
+            ProfessionalProfilesTable.update({ ProfessionalProfilesTable.id eq id.value }) {
+                it[ProfessionalProfilesTable.knownName] = knownName
+                it[updatedAt] = Instant.now()
+            } > 0
+        }
+
     private fun mapProfile(row: ResultRow): ProfessionalProfile {
         val profileId = row[ProfessionalProfilesTable.id]
         val neighborhoods =
@@ -266,6 +277,7 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
         return ProfessionalProfile(
             id = ProfessionalProfileId(profileId),
             userId = UserId(row[ProfessionalProfilesTable.userId]),
+            knownName = row[ProfessionalProfilesTable.knownName],
             description = row[ProfessionalProfilesTable.description],
             normalizedDescription = row[ProfessionalProfilesTable.normalizedDescription],
             contactPhone = row[ProfessionalProfilesTable.contactPhone],

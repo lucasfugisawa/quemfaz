@@ -148,6 +148,7 @@ class FavoriteServicesTest {
     ) = ProfessionalProfile(
         id,
         userId,
+        null,
         "Desc",
         "Desc",
         "123",

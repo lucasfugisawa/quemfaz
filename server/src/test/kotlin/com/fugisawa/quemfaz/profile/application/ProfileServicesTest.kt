@@ -190,6 +190,7 @@ class ProfileServicesTest {
             ProfessionalProfile(
                 profileId,
                 userId,
+                null,
                 "Desc",
                 "Desc",
                 "123",
@@ -244,6 +245,7 @@ class ProfileServicesTest {
             ProfessionalProfile(
                 profileId,
                 userId,
+                null,
                 "Desc",
                 "Desc",
                 "123",

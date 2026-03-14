@@ -94,6 +94,7 @@ class SearchProfessionalsServiceTest {
             ProfessionalProfile(
                 id = ProfessionalProfileId("p1"),
                 userId = UserId("u1"),
+                knownName = null,
                 description = "Desc",
                 normalizedDescription = "Desc",
                 contactPhone = "123",
