@@ -8,22 +8,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
+import com.fugisawa.quemfaz.session.SessionManager
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
+import org.koin.compose.koinInject
 
 @Composable
 fun OnboardingScreens(
     uiState: OnboardingUiState,
     onCreateDraft: (String) -> Unit,
-    onConfirm: (String, List<String>, String?, List<String>, String, String?) -> Unit,
+    onProceedFromDraft: (CreateProfessionalProfileDraftResponse) -> Unit,
+    onPickPhoto: (draft: CreateProfessionalProfileDraftResponse) -> Unit,
+    onSubmitKnownName: (knownName: String?, draft: CreateProfessionalProfileDraftResponse) -> Unit,
     onSubmitClarifications: (String, List<ClarificationAnswer>) -> Unit,
     onSkipClarification: (CreateProfessionalProfileDraftResponse) -> Unit,
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
 ) {
     var inputText by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") }
-    var photoUrl by remember { mutableStateOf("") }
 
     Scaffold { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(24.dp)) {
@@ -32,9 +34,9 @@ fun OnboardingScreens(
                     Column(modifier = Modifier.fillMaxSize()) {
                         Text("Become a professional", style = MaterialTheme.typography.headlineLarge)
                         Text("Describe your services in your own words. We'll help you organize them.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        
+
                         Spacer(modifier = Modifier.height(32.dp))
-                        
+
                         OutlinedTextField(
                             value = inputText,
                             onValueChange = { inputText = it },
@@ -42,9 +44,9 @@ fun OnboardingScreens(
                             placeholder = { Text("e.g. I am a residential painter with 10 years of experience. I work in Batatais and Ribeirão Preto. I also do small wall repairs.") },
                             shape = MaterialTheme.shapes.medium
                         )
-                        
+
                         Spacer(modifier = Modifier.height(24.dp))
-                        
+
                         Button(
                             onClick = { onCreateDraft(inputText) },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -121,9 +123,9 @@ fun OnboardingScreens(
                     Column(modifier = Modifier.fillMaxSize()) {
                         Text("Review your profile", style = MaterialTheme.typography.headlineLarge)
                         Text("This is how customers will see your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        
+
                         Spacer(modifier = Modifier.height(32.dp))
-                        
+
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -131,9 +133,9 @@ fun OnboardingScreens(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text("Description:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                                 Text(draft.normalizedDescription, style = MaterialTheme.typography.bodyLarge)
-                                
+
                                 Spacer(modifier = Modifier.height(16.dp))
-                                
+
                                 Text("Interpreted services:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                                 @OptIn(ExperimentalLayoutApi::class)
                                 FlowRow(
@@ -149,49 +151,68 @@ fun OnboardingScreens(
                                 }
                             }
                         }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        OutlinedTextField(
-                            value = phoneNumber,
-                            onValueChange = { phoneNumber = it },
-                            label = { Text("Phone number") },
-                            placeholder = { Text("e.g. +55 11 99999-9999") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            shape = MaterialTheme.shapes.medium
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        OutlinedTextField(
-                            value = photoUrl,
-                            onValueChange = { photoUrl = it },
-                            label = { Text("Profile Photo URL (Optional)") },
-                            placeholder = { Text("https://example.com/photo.jpg") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            shape = MaterialTheme.shapes.medium
-                        )
 
                         Spacer(modifier = Modifier.weight(1f))
 
                         Button(
-                            onClick = {
-                                onConfirm(
-                                    draft.normalizedDescription,
-                                    draft.interpretedServices.map { it.serviceId },
-                                    draft.cityName,
-                                    draft.neighborhoods,
-                                    phoneNumber,
-                                    photoUrl.ifBlank { null }
-                                )
-                            },
-                            enabled = phoneNumber.isNotBlank(),
+                            onClick = { onProceedFromDraft(draft) },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Text("Confirm and Publish", style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                }
+                is OnboardingUiState.PhotoRequired -> {
+                    val sessionManager: SessionManager = koinInject()
+                    val currentUser by sessionManager.currentUser.collectAsState()
+                    val displayName = currentUser?.let { "${it.firstName} ${it.lastName}" } ?: ""
+
+                    ProfilePhotoScreen(
+                        currentPhotoUrl = currentUser?.photoUrl,
+                        displayName = displayName,
+                        headline = "Add a profile photo so clients can recognize you.",
+                        showSkip = false,
+                        isLoading = false,
+                        error = null,
+                        onPickImage = { onPickPhoto(uiState.draft) },
+                        onSkip = null,
+                    )
+                }
+                is OnboardingUiState.KnownName -> {
+                    var knownNameInput by remember { mutableStateOf("") }
+
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(0.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Text("Do you have a known name?", style = MaterialTheme.typography.headlineMedium)
+                        Text(
+                            "If clients know you by a nickname or trade name, enter it here.",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+
+                        OutlinedTextField(
+                            value = knownNameInput,
+                            onValueChange = { knownNameInput = it },
+                            label = { Text("Known name (optional)") },
+                            placeholder = { Text("e.g. Joãozinho da Tinta") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                        )
+
+                        Button(
+                            onClick = { onSubmitKnownName(knownNameInput.trim().ifBlank { null }, uiState.draft) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Continue")
+                        }
+
+                        TextButton(
+                            onClick = { onSubmitKnownName(null, uiState.draft) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Skip")
                         }
                     }
                 }
@@ -204,9 +225,9 @@ fun OnboardingScreens(
                         Text("🎉", style = MaterialTheme.typography.displayLarge)
                         Text("Profile Published!", style = MaterialTheme.typography.headlineMedium)
                         Text("You're now visible to customers.", style = MaterialTheme.typography.bodyMedium)
-                        
+
                         Spacer(modifier = Modifier.height(32.dp))
-                        
+
                         Button(
                             onClick = onFinish,
                             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -225,9 +246,9 @@ fun OnboardingScreens(
                         Text("❌", style = MaterialTheme.typography.displayLarge)
                         Text("Something went wrong", style = MaterialTheme.typography.headlineSmall)
                         Text(uiState.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
-                        
+
                         Spacer(modifier = Modifier.height(24.dp))
-                        
+
                         Button(onClick = { onCreateDraft(inputText) }) {
                             Text("Retry")
                         }
@@ -243,13 +264,13 @@ fun OnboardingScreens(
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onConfirm = { _, _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onConfirm = { _, _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
 }
 
 @LightDarkScreenPreview
@@ -258,7 +279,7 @@ private fun OnboardingDraftReadyPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.DraftReady(PreviewSamples.sampleDraftResponse),
-            onCreateDraft = {}, onConfirm = { _, _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
+            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
         )
     }
 }
@@ -269,7 +290,7 @@ private fun OnboardingPublishedPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
-            onCreateDraft = {}, onConfirm = { _, _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
+            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
         )
     }
 }
@@ -280,7 +301,7 @@ private fun OnboardingErrorPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
-            onCreateDraft = {}, onConfirm = { _, _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
+            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
         )
     }
 }
