@@ -44,7 +44,6 @@ class EditProfessionalProfileViewModel(
         neighborhoods: List<String>,
         contactPhone: String,
         whatsAppPhone: String,
-        photoUrl: String?
     ) {
         val current = when (val s = _uiState.value) {
             is EditProfileUiState.Ready -> s.profile
@@ -62,7 +61,6 @@ class EditProfessionalProfileViewModel(
                         neighborhoods = neighborhoods,
                         contactPhone = contactPhone,
                         whatsAppPhone = whatsAppPhone.ifBlank { null },
-                        photoUrl = photoUrl,
                         portfolioPhotoUrls = current.portfolioPhotoUrls
                     )
                 )

@@ -352,8 +352,8 @@ fun MainFlow(
                     }
                     EditProfessionalProfileScreen(
                         uiState = uiState,
-                        onSave = { desc, city, neighborhoods, contact, whatsapp, photo ->
-                            viewModel.saveProfile(desc, city, neighborhoods, contact, whatsapp, photo)
+                        onSave = { desc, city, neighborhoods, contact, whatsapp ->
+                            viewModel.saveProfile(desc, city, neighborhoods, contact, whatsapp)
                         },
                         onNavigateBack = navigateBack,
                         onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }
