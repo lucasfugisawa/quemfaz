@@ -3,6 +3,8 @@ package com.fugisawa.quemfaz.auth.application
 import com.fugisawa.quemfaz.auth.domain.OtpChallengeRepository
 import com.fugisawa.quemfaz.auth.domain.OtpHasher
 import com.fugisawa.quemfaz.auth.domain.PhoneNormalizer
+import com.fugisawa.quemfaz.auth.domain.RefreshToken
+import com.fugisawa.quemfaz.auth.domain.RefreshTokenRepository
 import com.fugisawa.quemfaz.auth.domain.User
 import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentity
 import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
@@ -21,6 +23,7 @@ class VerifyOtpService(
     private val userRepository: UserRepository,
     private val userPhoneAuthIdentityRepository: UserPhoneAuthIdentityRepository,
     private val otpChallengeRepository: OtpChallengeRepository,
+    private val refreshTokenRepository: RefreshTokenRepository,
     private val otpHasher: OtpHasher,
     private val tokenService: TokenService,
 ) {
@@ -53,6 +56,16 @@ class VerifyOtpService(
                     return@transaction VerifyOtpResult.Blocked
                 } else {
                     val token = tokenService.generateToken(user.id)
+                    val refreshTokenValue = tokenService.generateRefreshToken()
+                    val refreshToken =
+                        RefreshToken(
+                            token = refreshTokenValue,
+                            userId = user.id,
+                            expiresAt = Instant.now().plusMillis(tokenService.getRefreshTokenExpiration()),
+                            createdAt = Instant.now(),
+                        )
+                    refreshTokenRepository.create(refreshToken)
+
                     return@transaction VerifyOtpResult.Success(
                         response =
                             VerifyOtpResponse(
@@ -61,6 +74,7 @@ class VerifyOtpService(
                                 isNewUser = false,
                                 requiresProfileCompletion = user.name == null,
                                 token = token,
+                                refreshToken = refreshTokenValue,
                             ),
                         token = token,
                     )
@@ -92,6 +106,16 @@ class VerifyOtpService(
                 userPhoneAuthIdentityRepository.create(newIdentity)
 
                 val token = tokenService.generateToken(userId)
+                val refreshTokenValue = tokenService.generateRefreshToken()
+                val refreshToken =
+                    RefreshToken(
+                        token = refreshTokenValue,
+                        userId = userId,
+                        expiresAt = Instant.now().plusMillis(tokenService.getRefreshTokenExpiration()),
+                        createdAt = Instant.now(),
+                    )
+                refreshTokenRepository.create(refreshToken)
+
                 return@transaction VerifyOtpResult.Success(
                     response =
                         VerifyOtpResponse(
@@ -100,6 +124,7 @@ class VerifyOtpService(
                             isNewUser = true,
                             requiresProfileCompletion = true,
                             token = token,
+                            refreshToken = refreshTokenValue,
                         ),
                     token = token,
                 )

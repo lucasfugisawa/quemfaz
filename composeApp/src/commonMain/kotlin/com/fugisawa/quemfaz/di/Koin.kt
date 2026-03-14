@@ -17,8 +17,15 @@ import org.koin.dsl.module
 val appModule = module {
     single<Settings> { Settings() }
     single<SessionStorage> { SettingsSessionStorage(get()) }
-    single { SessionManager(get(), get()) }
-    single { (baseUrl: String) -> ApiClient(get(), baseUrl, onUnauthorized = { get<SessionManager>().logout() }) }
+    single { SessionManager(get(), get(), getApiClient = { get<ApiClient>() }) }
+    single { (baseUrl: String) ->
+        ApiClient(
+            sessionStorage = get(),
+            baseUrl = baseUrl,
+            onUnauthorized = { get<SessionManager>().logout() },
+            onTokenRefreshed = { token, refreshToken -> get<SessionManager>().updateTokens(token, refreshToken) }
+        )
+    }
     single { FeatureApiClients(get()) }
 
     factory { AuthViewModel(get(), get()) }

@@ -11,9 +11,11 @@ import com.fugisawa.quemfaz.core.id.UserId
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
@@ -66,6 +68,16 @@ object OtpChallengesTable : Table("otp_challenges") {
     val createdAt = timestamp("created_at")
 
     override val primaryKey = PrimaryKey(id)
+}
+
+object RefreshTokensTable : Table("refresh_tokens") {
+    val token = varchar("token", 255)
+    val userId = varchar("user_id", 128) references UsersTable.id
+    val expiresAt = timestamp("expires_at")
+    val createdAt = timestamp("created_at")
+    val revokedAt = timestamp("revoked_at").nullable()
+
+    override val primaryKey = PrimaryKey(token)
 }
 
 class ExposedUserRepository : UserRepository {
@@ -247,5 +259,58 @@ class ExposedOtpChallengeRepository : OtpChallengeRepository {
             maxAttempts = it[OtpChallengesTable.maxAttempts],
             consumedAt = it[OtpChallengesTable.consumedAt],
             createdAt = it[OtpChallengesTable.createdAt],
+        )
+}
+
+class ExposedRefreshTokenRepository : com.fugisawa.quemfaz.auth.domain.RefreshTokenRepository {
+    override fun create(refreshToken: com.fugisawa.quemfaz.auth.domain.RefreshToken): com.fugisawa.quemfaz.auth.domain.RefreshToken =
+        transaction {
+            RefreshTokensTable.insert {
+                it[token] = refreshToken.token
+                it[userId] = refreshToken.userId.value
+                it[expiresAt] = refreshToken.expiresAt
+                it[createdAt] = refreshToken.createdAt
+                it[revokedAt] = refreshToken.revokedAt
+            }
+            refreshToken
+        }
+
+    override fun findByToken(token: String): com.fugisawa.quemfaz.auth.domain.RefreshToken? =
+        transaction {
+            RefreshTokensTable
+                .selectAll()
+                .where { RefreshTokensTable.token eq token }
+                .map { mapRefreshToken(it) }
+                .singleOrNull()
+        }
+
+    override fun revokeByUserId(userId: UserId): Unit =
+        transaction {
+            RefreshTokensTable.update({ (RefreshTokensTable.userId eq userId.value) and (RefreshTokensTable.revokedAt.isNull()) }) {
+                it[revokedAt] = Instant.now()
+            }
+        }
+
+    override fun revokeByToken(token: String): Unit =
+        transaction {
+            RefreshTokensTable.update({ (RefreshTokensTable.token eq token) and (RefreshTokensTable.revokedAt.isNull()) }) {
+                it[revokedAt] = Instant.now()
+            }
+        }
+
+    override fun deleteExpired(now: Instant): Unit =
+        transaction {
+            RefreshTokensTable.deleteWhere {
+                expiresAt less now
+            }
+        }
+
+    private fun mapRefreshToken(it: ResultRow) =
+        com.fugisawa.quemfaz.auth.domain.RefreshToken(
+            token = it[RefreshTokensTable.token],
+            userId = UserId(it[RefreshTokensTable.userId]),
+            expiresAt = it[RefreshTokensTable.expiresAt],
+            createdAt = it[RefreshTokensTable.createdAt],
+            revokedAt = it[RefreshTokensTable.revokedAt],
         )
 }

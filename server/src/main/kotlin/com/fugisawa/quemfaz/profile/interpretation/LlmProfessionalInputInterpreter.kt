@@ -43,11 +43,9 @@ class LlmProfessionalInputInterpreter(
             interpretation.serviceIds
                 .mapNotNull { serviceId ->
                     CanonicalServices.findById(CanonicalServiceId(serviceId))
-                }
-                .map { canonical ->
+                }.map { canonical ->
                     InterpretedServiceDto(canonical.id.value, canonical.displayName, ServiceMatchLevel.PRIMARY.name)
-                }
-                .distinctBy { it.serviceId }
+                }.distinctBy { it.serviceId }
 
         val missingFields = mutableListOf<String>()
         val followUpQuestions = mutableListOf<String>()

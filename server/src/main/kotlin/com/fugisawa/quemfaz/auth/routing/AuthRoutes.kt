@@ -3,10 +3,13 @@ package com.fugisawa.quemfaz.auth.routing
 import com.fugisawa.quemfaz.auth.application.CompleteProfileResult
 import com.fugisawa.quemfaz.auth.application.CompleteUserProfileService
 import com.fugisawa.quemfaz.auth.application.GetAuthenticatedUserService
+import com.fugisawa.quemfaz.auth.application.RefreshTokenService
 import com.fugisawa.quemfaz.auth.application.StartOtpService
 import com.fugisawa.quemfaz.auth.application.VerifyOtpResult
 import com.fugisawa.quemfaz.auth.application.VerifyOtpService
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
+import com.fugisawa.quemfaz.contract.auth.LogoutRequest
+import com.fugisawa.quemfaz.contract.auth.RefreshTokenRequest
 import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.core.id.UserId
@@ -27,6 +30,7 @@ import org.koin.ktor.ext.inject
 fun Route.authRoutes() {
     val startOtpService by inject<StartOtpService>()
     val verifyOtpService by inject<VerifyOtpService>()
+    val refreshTokenService by inject<RefreshTokenService>()
     val completeUserProfileService by inject<CompleteUserProfileService>()
     val getAuthenticatedUserService by inject<GetAuthenticatedUserService>()
 
@@ -53,6 +57,23 @@ fun Route.authRoutes() {
                     call.respond(HttpStatusCode.Unauthorized, mapOf("message" to result.message))
                 }
             }
+        }
+
+        post("/refresh") {
+            val request = call.receive<RefreshTokenRequest>()
+            val response = refreshTokenService.refresh(request)
+            if (response.success) {
+                call.response.header(HttpHeaders.Authorization, "Bearer ${response.token}")
+                call.respond(response)
+            } else {
+                call.respond(HttpStatusCode.Unauthorized, response)
+            }
+        }
+
+        post("/logout") {
+            val request = call.receive<LogoutRequest>()
+            refreshTokenService.revoke(request.refreshToken)
+            call.respond(HttpStatusCode.OK, mapOf("success" to true))
         }
 
         authenticate("auth-jwt") {

@@ -43,3 +43,17 @@ data class OtpChallenge(
 
     fun isMaxAttemptsReached() = attemptCount >= maxAttempts
 }
+
+data class RefreshToken(
+    val token: String,
+    val userId: UserId,
+    val expiresAt: Instant,
+    val createdAt: Instant,
+    val revokedAt: Instant? = null,
+) {
+    fun isExpired(now: Instant = Instant.now()) = expiresAt.isBefore(now)
+
+    fun isRevoked() = revokedAt != null
+
+    fun isValid(now: Instant = Instant.now()) = !isExpired(now) && !isRevoked()
+}

@@ -45,3 +45,15 @@ interface OtpChallengeRepository {
 
     fun incrementAttemptCount(id: String): Int
 }
+
+interface RefreshTokenRepository {
+    fun create(refreshToken: RefreshToken): RefreshToken
+
+    fun findByToken(token: String): RefreshToken?
+
+    fun revokeByUserId(userId: UserId)
+
+    fun revokeByToken(token: String)
+
+    fun deleteExpired(now: Instant)
+}

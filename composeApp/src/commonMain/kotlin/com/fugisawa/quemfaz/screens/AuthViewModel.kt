@@ -57,7 +57,8 @@ class AuthViewModel(
                 val response = apiClients.verifyOtp(VerifyOtpRequest(phoneNumber, otpCode))
                 if (response.success) {
                     val token = response.token
-                    sessionManager.setAuthenticated(token)
+                    val refreshToken = response.refreshToken
+                    sessionManager.setAuthenticated(token, refreshToken)
 
                     if (response.requiresProfileCompletion) {
                         _uiState.value = AuthUiState.ProfileCompletionRequired

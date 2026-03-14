@@ -26,7 +26,21 @@ data class VerifyOtpResponse(
     val userId: String,
     val isNewUser: Boolean,
     val requiresProfileCompletion: Boolean,
-    val token: String
+    val token: String,
+    val refreshToken: String
+)
+
+@Serializable
+data class RefreshTokenRequest(
+    val refreshToken: String
+)
+
+@Serializable
+data class RefreshTokenResponse(
+    val success: Boolean,
+    val token: String,
+    val refreshToken: String,
+    val message: String? = null
 )
 
 @Serializable
@@ -43,4 +57,9 @@ data class UserProfileResponse(
     val photoUrl: String?,
     val cityName: String?,
     val status: String
+)
+
+@Serializable
+data class LogoutRequest(
+    val refreshToken: String
 )
