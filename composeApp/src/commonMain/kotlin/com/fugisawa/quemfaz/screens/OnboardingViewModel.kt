@@ -2,8 +2,10 @@ package com.fugisawa.quemfaz.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.profile.*
 import com.fugisawa.quemfaz.network.FeatureApiClients
+import com.fugisawa.quemfaz.session.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,12 +19,15 @@ sealed class OnboardingUiState {
         val draft: CreateProfessionalProfileDraftResponse,
     ) : OnboardingUiState()
     data class DraftReady(val draft: CreateProfessionalProfileDraftResponse) : OnboardingUiState()
+    data class PhotoRequired(val draft: CreateProfessionalProfileDraftResponse) : OnboardingUiState()
+    data class KnownName(val draft: CreateProfessionalProfileDraftResponse) : OnboardingUiState()
     data class Published(val profile: ProfessionalProfileResponse) : OnboardingUiState()
     data class Error(val message: String) : OnboardingUiState()
 }
 
 class OnboardingViewModel(
-    private val apiClients: FeatureApiClients
+    private val apiClients: FeatureApiClients,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<OnboardingUiState>(OnboardingUiState.Idle)
@@ -68,27 +73,43 @@ class OnboardingViewModel(
         _uiState.value = OnboardingUiState.DraftReady(draft)
     }
 
-    fun confirmProfile(
-        normalizedDescription: String,
-        selectedServiceIds: List<String>,
-        cityName: String?,
-        neighborhoods: List<String>,
-        contactPhone: String,
-        photoUrl: String?
-    ) {
+    fun proceedFromDraft(draft: CreateProfessionalProfileDraftResponse) {
+        val hasPhoto = sessionManager.currentUser.value?.photoUrl != null
+        _uiState.value = if (hasPhoto) OnboardingUiState.KnownName(draft) else OnboardingUiState.PhotoRequired(draft)
+    }
+
+    fun submitPhoto(data: ByteArray, mimeType: String, draft: CreateProfessionalProfileDraftResponse) {
         viewModelScope.launch {
             _uiState.value = OnboardingUiState.Loading
             try {
+                val uploadResponse = apiClients.uploadImage(data, mimeType)
+                val userResponse = apiClients.setProfilePhoto(
+                    SetProfilePhotoRequest(photoUrl = uploadResponse.url)
+                )
+                sessionManager.setCurrentUser(userResponse)
+                _uiState.value = OnboardingUiState.KnownName(draft)
+            } catch (e: Exception) {
+                _uiState.value = OnboardingUiState.Error(e.message ?: "Failed to upload photo")
+            }
+        }
+    }
+
+    fun submitKnownName(knownName: String?, draft: CreateProfessionalProfileDraftResponse) {
+        viewModelScope.launch {
+            _uiState.value = OnboardingUiState.Loading
+            try {
+                if (!knownName.isNullOrBlank()) {
+                    apiClients.setKnownName(SetKnownNameRequest(knownName = knownName.trim()))
+                }
                 val response = apiClients.confirmProfile(
                     ConfirmProfessionalProfileRequest(
-                        normalizedDescription = normalizedDescription,
-                        selectedServiceIds = selectedServiceIds,
-                        cityName = cityName,
-                        neighborhoods = neighborhoods,
-                        contactPhone = contactPhone,
-                        whatsAppPhone = contactPhone, // Same for simplicity in MVP
-                        photoUrl = photoUrl,
-                        portfolioPhotoUrls = emptyList()
+                        normalizedDescription = draft.normalizedDescription,
+                        selectedServiceIds = draft.interpretedServices.map { it.serviceId },
+                        cityName = draft.cityName,
+                        neighborhoods = draft.neighborhoods,
+                        contactPhone = "",
+                        whatsAppPhone = null,
+                        portfolioPhotoUrls = emptyList(),
                     )
                 )
                 _uiState.value = OnboardingUiState.Published(response)
