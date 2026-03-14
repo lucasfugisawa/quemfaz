@@ -227,7 +227,7 @@ Migrating to S3 later = implement `S3ImageStorageService`, change this one Koin 
 ```
 POST /auth/profile                    → CompleteUserProfileService
 POST /auth/photo                      → SetProfilePhotoService
-POST /api/images/upload               → validate size+type → ImageStorageService.store  (multipart/form-data)
+POST /api/images/upload               → validate size+type → ImageStorageService.store  (multipart/form-data); /api/images/upload must generate unguessable IDs (like ULID or UUID)
 GET  /api/images/{id}                 → ImageStorageService.retrieve
 POST /professional-profile/known-name → SetKnownNameService
 ```
