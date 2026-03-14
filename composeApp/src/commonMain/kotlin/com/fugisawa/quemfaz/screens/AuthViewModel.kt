@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
+import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.network.FeatureApiClients
@@ -19,6 +20,7 @@ sealed class AuthUiState {
     object Loading : AuthUiState()
     data class OtpSent(val phone: String) : AuthUiState()
     object ProfileCompletionRequired : AuthUiState()
+    object PhotoUploadRequired : AuthUiState()
     object Success : AuthUiState()
     data class Error(val message: String) : AuthUiState()
 }
@@ -82,17 +84,43 @@ class AuthViewModel(
         }
     }
 
-    fun completeProfile(name: String, photoUrl: String?) {
+    fun submitName(firstName: String, lastName: String) {
+        if (firstName.isBlank() || lastName.isBlank()) {
+            _uiState.value = AuthUiState.Error("First name and last name are required")
+            return
+        }
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             try {
-                val response = apiClients.completeProfile(CompleteUserProfileRequest(name, photoUrl))
+                val response = apiClients.submitName(
+                    CompleteUserProfileRequest(firstName.trim(), lastName.trim())
+                )
                 sessionManager.setCurrentUser(response)
-                _uiState.value = AuthUiState.Success
+                _uiState.value = AuthUiState.PhotoUploadRequired
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.message ?: "Unknown error")
+                _uiState.value = AuthUiState.Error(e.message ?: "Failed to save name")
             }
         }
+    }
+
+    fun submitPhoto(data: ByteArray, mimeType: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            try {
+                val uploadResponse = apiClients.uploadImage(data, mimeType)
+                val userResponse = apiClients.setProfilePhoto(
+                    SetProfilePhotoRequest(photoUrl = uploadResponse.url)
+                )
+                sessionManager.setCurrentUser(userResponse)
+                _uiState.value = AuthUiState.Success
+            } catch (e: Exception) {
+                _uiState.value = AuthUiState.Error(e.message ?: "Failed to upload photo")
+            }
+        }
+    }
+
+    fun skipPhoto() {
+        _uiState.value = AuthUiState.Success
     }
 
     fun logout() {
