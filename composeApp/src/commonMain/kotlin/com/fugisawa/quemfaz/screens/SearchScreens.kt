@@ -67,7 +67,11 @@ fun ProfessionalCard(
     ) {
         Column(modifier = Modifier.padding(Spacing.md)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                ProfileAvatar(name = profile.name, size = 56.dp)
+                ProfileAvatar(
+                    name = profile.name,
+                    photoUrl = profile.photoUrl,
+                    size = 56.dp
+                )
                 Spacer(modifier = Modifier.width(Spacing.sm + Spacing.xs))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(profile.name ?: "Anonymous", style = MaterialTheme.typography.titleMedium)

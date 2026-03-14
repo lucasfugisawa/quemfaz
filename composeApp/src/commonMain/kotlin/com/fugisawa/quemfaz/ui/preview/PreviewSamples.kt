@@ -25,7 +25,7 @@ object PreviewSamples {
     val sampleProfile = ProfessionalProfileResponse(
         id = "prof-1",
         name = "Carlos Silva",
-        photoUrl = null,
+        photoUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=256&h=256&auto=format&fit=crop",
         description = "Experienced plumber with 10+ years in residential and commercial projects. Available on weekends.",
         cityName = "São Paulo",
         neighborhoods = listOf("Vila Mariana", "Moema"),
@@ -98,7 +98,7 @@ object PreviewSamples {
         id = "user-1",
         phoneNumber = "+55 11 99999-1234",
         name = "Lucas Fugisawa",
-        photoUrl = null,
+        photoUrl = "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=256&h=256&auto=format&fit=crop",
         cityName = "São Paulo",
         status = "ACTIVE",
         hasProfessionalProfile = false,

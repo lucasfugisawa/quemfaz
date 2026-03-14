@@ -16,13 +16,14 @@ import com.fugisawa.quemfaz.ui.theme.AppTheme
 fun OnboardingScreens(
     uiState: OnboardingUiState,
     onCreateDraft: (String) -> Unit,
-    onConfirm: (String, List<String>, String?, List<String>, String) -> Unit,
+    onConfirm: (String, List<String>, String?, List<String>, String, String?) -> Unit,
     onSubmitClarifications: (String, List<ClarificationAnswer>) -> Unit,
     onSkipClarification: (CreateProfessionalProfileDraftResponse) -> Unit,
     onFinish: () -> Unit
 ) {
     var inputText by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
+    var photoUrl by remember { mutableStateOf("") }
 
     Scaffold { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(24.dp)) {
@@ -161,6 +162,18 @@ fun OnboardingScreens(
                             shape = MaterialTheme.shapes.medium
                         )
 
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        OutlinedTextField(
+                            value = photoUrl,
+                            onValueChange = { photoUrl = it },
+                            label = { Text("Profile Photo URL (Optional)") },
+                            placeholder = { Text("https://example.com/photo.jpg") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = MaterialTheme.shapes.medium
+                        )
+
                         Spacer(modifier = Modifier.weight(1f))
 
                         Button(
@@ -170,7 +183,8 @@ fun OnboardingScreens(
                                     draft.interpretedServices.map { it.serviceId },
                                     draft.cityName,
                                     draft.neighborhoods,
-                                    phoneNumber
+                                    phoneNumber,
+                                    photoUrl.ifBlank { null }
                                 )
                             },
                             enabled = phoneNumber.isNotBlank(),
@@ -229,13 +243,13 @@ fun OnboardingScreens(
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onConfirm = { _, _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onConfirm = { _, _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
 }
 
 @LightDarkScreenPreview
@@ -244,7 +258,7 @@ private fun OnboardingDraftReadyPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.DraftReady(PreviewSamples.sampleDraftResponse),
-            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
+            onCreateDraft = {}, onConfirm = { _, _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
         )
     }
 }
@@ -255,7 +269,7 @@ private fun OnboardingPublishedPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
-            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
+            onCreateDraft = {}, onConfirm = { _, _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
         )
     }
 }
@@ -266,7 +280,7 @@ private fun OnboardingErrorPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
-            onCreateDraft = {}, onConfirm = { _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
+            onCreateDraft = {}, onConfirm = { _, _, _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
         )
     }
 }

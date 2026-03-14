@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
+import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
@@ -43,9 +44,22 @@ fun MyProfileScreen(
     val isSaving = uiState is AuthUiState.Loading
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("My Profile", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(currentUser.phoneNumber, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ProfileAvatar(
+                name = name.ifBlank { currentUser.name },
+                photoUrl = photoUrl.ifBlank { null },
+                size = 64.dp
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text("My Profile", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    currentUser.phoneNumber,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 

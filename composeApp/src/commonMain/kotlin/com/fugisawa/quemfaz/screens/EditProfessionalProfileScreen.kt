@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
@@ -17,7 +18,7 @@ import com.fugisawa.quemfaz.ui.theme.AppTheme
 @Composable
 fun EditProfessionalProfileScreen(
     uiState: EditProfileUiState,
-    onSave: (description: String, city: String, neighborhoods: List<String>, contactPhone: String, whatsAppPhone: String) -> Unit,
+    onSave: (description: String, city: String, neighborhoods: List<String>, contactPhone: String, whatsAppPhone: String, photoUrl: String?) -> Unit,
     onNavigateBack: () -> Unit,
     onGoToOnboarding: () -> Unit
 ) {
@@ -98,13 +99,14 @@ private fun EditProfileForm(
     profile: ProfessionalProfileResponse,
     isSaving: Boolean,
     isSaved: Boolean,
-    onSave: (description: String, city: String, neighborhoods: List<String>, contactPhone: String, whatsAppPhone: String) -> Unit
+    onSave: (description: String, city: String, neighborhoods: List<String>, contactPhone: String, whatsAppPhone: String, photoUrl: String?) -> Unit
 ) {
     var description by remember(profile.id) { mutableStateOf(profile.description) }
     var city by remember(profile.id) { mutableStateOf(profile.cityName) }
     var neighborhoodsText by remember(profile.id) { mutableStateOf(profile.neighborhoods.joinToString(", ")) }
     var contactPhone by remember(profile.id) { mutableStateOf(profile.contactPhone) }
     var whatsAppPhone by remember(profile.id) { mutableStateOf(profile.whatsAppPhone ?: "") }
+    var photoUrl by remember(profile.id) { mutableStateOf(profile.photoUrl ?: "") }
 
     Column(
         modifier = Modifier
@@ -112,14 +114,35 @@ private fun EditProfileForm(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        if (profile.services.isNotEmpty()) {
-            Text(
-                "Services: ${profile.services.joinToString(", ") { it.displayName }}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ProfileAvatar(
+                name = profile.name,
+                photoUrl = photoUrl.ifBlank { null },
+                size = 64.dp
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            if (profile.services.isNotEmpty()) {
+                Text(
+                    "Services: ${profile.services.joinToString(", ") { it.displayName }}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = photoUrl,
+            onValueChange = { photoUrl = it },
+            label = { Text("Profile Photo URL") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            shape = MaterialTheme.shapes.medium
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = description,
@@ -190,7 +213,7 @@ private fun EditProfileForm(
                     .split(",")
                     .map { it.trim() }
                     .filter { it.isNotBlank() }
-                onSave(description, city, neighborhoods, contactPhone, whatsAppPhone)
+                onSave(description, city, neighborhoods, contactPhone, whatsAppPhone, photoUrl.ifBlank { null })
             },
             enabled = !isSaving,
             modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -210,13 +233,13 @@ private fun EditProfileForm(
 @LightDarkScreenPreview
 @Composable
 private fun EditProfileLoadingPreview() {
-    AppTheme { EditProfessionalProfileScreen(uiState = EditProfileUiState.Loading, onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}) }
+    AppTheme { EditProfessionalProfileScreen(uiState = EditProfileUiState.Loading, onSave = { _, _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun EditProfileNoProfilePreview() {
-    AppTheme { EditProfessionalProfileScreen(uiState = EditProfileUiState.NoProfile, onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}) }
+    AppTheme { EditProfessionalProfileScreen(uiState = EditProfileUiState.NoProfile, onSave = { _, _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}) }
 }
 
 @LightDarkScreenPreview
@@ -225,7 +248,7 @@ private fun EditProfileReadyPreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile),
-            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -236,7 +259,7 @@ private fun EditProfileSavingPreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Saving(PreviewSamples.sampleProfile),
-            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -247,7 +270,7 @@ private fun EditProfileSavedPreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Saved(PreviewSamples.sampleProfile),
-            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -258,7 +281,7 @@ private fun EditProfileErrorPreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Error("Failed to load profile. Please try again later."),
-            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }

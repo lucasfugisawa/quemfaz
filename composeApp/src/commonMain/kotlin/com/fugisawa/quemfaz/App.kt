@@ -208,9 +208,11 @@ fun MainFlow(
             when (currentScreen) {
                 is Screen.Home -> {
                     HomeScreen(
+                        currentUser = currentUser,
                         currentCity = currentCity,
                         showEarnMoneyCard = showEarnMoneyCard,
                         onCityClick = { navigateTo(Screen.CitySelection) },
+                        onProfileClick = { navigateToTab(Screen.MyProfile) },
                         onSearch = { query ->
                             currentQuery = query
                             homeViewModel.search(query)
@@ -305,8 +307,8 @@ fun MainFlow(
                     OnboardingScreens(
                         uiState = uiState,
                         onCreateDraft = { viewModel.createDraft(it) },
-                        onConfirm = { desc, services, city, neighborhoods, phone ->
-                            viewModel.confirmProfile(desc, services, city, neighborhoods, phone)
+                        onConfirm = { desc, services, city, neighborhoods, phone, photo ->
+                            viewModel.confirmProfile(desc, services, city, neighborhoods, phone, photo)
                         },
                         onSubmitClarifications = { desc, answers ->
                             viewModel.submitClarifications(desc, answers)
@@ -323,8 +325,8 @@ fun MainFlow(
                     }
                     EditProfessionalProfileScreen(
                         uiState = uiState,
-                        onSave = { desc, city, neighborhoods, contactPhone, whatsAppPhone ->
-                            viewModel.saveProfile(desc, city, neighborhoods, contactPhone, whatsAppPhone)
+                        onSave = { desc, city, neighborhoods, contact, whatsapp, photo ->
+                            viewModel.saveProfile(desc, city, neighborhoods, contact, whatsapp, photo)
                         },
                         onNavigateBack = navigateBack,
                         onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }

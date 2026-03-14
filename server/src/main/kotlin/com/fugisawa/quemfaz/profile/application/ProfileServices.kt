@@ -103,9 +103,13 @@ class ConfirmProfessionalProfileService(
             )
 
         val savedProfile = profileRepository.save(profile)
-        logger.info("Professional profile ${savedProfile.id.value} published for user ${userId.value}")
 
-        return mapToResponse(savedProfile, user.name, user.photoUrl)
+        // Update user photoUrl if provided and different
+        if (request.photoUrl != null && request.photoUrl != user.photoUrl) {
+            userRepository.updateProfile(userId, user.name ?: "", request.photoUrl)
+        }
+
+        return mapToResponse(savedProfile, user.name, request.photoUrl ?: user.photoUrl)
     }
 }
 
@@ -194,7 +198,13 @@ class UpdateProfessionalProfileService(
             )
 
         val saved = profileRepository.save(updated)
-        return UpdateProfileResult.Success(mapToResponse(saved, user.name, user.photoUrl))
+
+        // Update user photoUrl if provided and different
+        if (request.photoUrl != null && request.photoUrl != user.photoUrl) {
+            userRepository.updateProfile(userId, user.name ?: "", request.photoUrl)
+        }
+
+        return UpdateProfileResult.Success(mapToResponse(saved, user.name, request.photoUrl ?: user.photoUrl))
     }
 }
 

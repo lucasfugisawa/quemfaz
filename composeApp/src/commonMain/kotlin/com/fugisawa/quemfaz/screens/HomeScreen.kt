@@ -8,15 +8,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
+import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    currentUser: UserProfileResponse?,
     currentCity: String?,
     showEarnMoneyCard: Boolean,
     onCityClick: () -> Unit,
+    onProfileClick: () -> Unit,
     onSearch: (String) -> Unit,
     onOfferServices: () -> Unit
 ) {
@@ -38,6 +43,16 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
+                },
+                actions = {
+                    ProfileAvatar(
+                        name = currentUser?.name,
+                        photoUrl = currentUser?.photoUrl,
+                        size = 32.dp,
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .clickable { onProfileClick() }
+                    )
                 }
             )
         }
@@ -118,9 +133,11 @@ fun HomeScreen(
 private fun HomeScreenWithCityPreview() {
     AppTheme {
         HomeScreen(
+            currentUser = PreviewSamples.sampleUser,
             currentCity = "São Paulo",
             showEarnMoneyCard = true,
             onCityClick = {},
+            onProfileClick = {},
             onSearch = {},
             onOfferServices = {}
         )
@@ -132,9 +149,11 @@ private fun HomeScreenWithCityPreview() {
 private fun HomeScreenNoCityPreview() {
     AppTheme {
         HomeScreen(
+            currentUser = PreviewSamples.sampleUser,
             currentCity = null,
             showEarnMoneyCard = true,
             onCityClick = {},
+            onProfileClick = {},
             onSearch = {},
             onOfferServices = {}
         )
@@ -146,9 +165,11 @@ private fun HomeScreenNoCityPreview() {
 private fun HomeScreenProfessionalPreview() {
     AppTheme {
         HomeScreen(
+            currentUser = PreviewSamples.sampleUser,
             currentCity = "São Paulo",
             showEarnMoneyCard = false,
             onCityClick = {},
+            onProfileClick = {},
             onSearch = {},
             onOfferServices = {}
         )

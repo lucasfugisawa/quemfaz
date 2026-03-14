@@ -20,6 +20,7 @@ postgresql = "42.7.10"
 flyway = "12.1.0"
 exposed = "0.60.0"
 testcontainers = "2.0.3"
+coil = "3.1.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -52,6 +53,8 @@ koinTestJunit5 = { module = "io.insert-koin:koin-test-junit5", version.ref = "ko
 testcontainersPostgresql = { module = "org.testcontainers:postgresql", version = "1.21.4" }
 testcontainersJunitJupiter = { module = "org.testcontainers:junit-jupiter", version = "1.21.4" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

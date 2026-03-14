@@ -73,7 +73,8 @@ class OnboardingViewModel(
         selectedServiceIds: List<String>,
         cityName: String?,
         neighborhoods: List<String>,
-        contactPhone: String
+        contactPhone: String,
+        photoUrl: String?
     ) {
         viewModelScope.launch {
             _uiState.value = OnboardingUiState.Loading
@@ -86,7 +87,7 @@ class OnboardingViewModel(
                         neighborhoods = neighborhoods,
                         contactPhone = contactPhone,
                         whatsAppPhone = contactPhone, // Same for simplicity in MVP
-                        photoUrl = null,
+                        photoUrl = photoUrl,
                         portfolioPhotoUrls = emptyList()
                     )
                 )

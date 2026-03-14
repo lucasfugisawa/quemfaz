@@ -133,6 +133,7 @@ fun ProfileHeader(
     Row(verticalAlignment = Alignment.CenterVertically) {
         ProfileAvatar(
             name = profile.name,
+            photoUrl = profile.photoUrl,
             size = 80.dp,
             textStyle = MaterialTheme.typography.headlineLarge
         )
