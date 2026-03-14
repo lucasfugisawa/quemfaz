@@ -8,7 +8,7 @@ import org.w3c.files.FileReader
 import org.w3c.files.get
 
 actual class ImagePickerLauncher(
-    private val launchFn: () -> Unit,
+    internal val launchFn: () -> Unit,
 )
 
 @Composable

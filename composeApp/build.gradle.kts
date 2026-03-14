@@ -61,6 +61,7 @@ kotlin {
         androidMain.dependencies {
             implementation("io.ktor:ktor-client-okhttp:3.4.1")
             implementation(libs.compose.uiTooling)
+            implementation(libs.androidx.activity.compose)
         }
         iosMain.dependencies {
             implementation("io.ktor:ktor-client-darwin:3.4.1")

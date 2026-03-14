@@ -14,7 +14,7 @@ import platform.Foundation.NSData
 import platform.UniformTypeIdentifiers.UTTypeImage
 
 actual class ImagePickerLauncher(
-    private val launchFn: () -> Unit,
+    internal val launchFn: () -> Unit,
 )
 
 @OptIn(ExperimentalForeignApi::class)

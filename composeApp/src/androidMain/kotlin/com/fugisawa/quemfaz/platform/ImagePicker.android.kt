@@ -2,13 +2,14 @@ package com.fugisawa.quemfaz.platform
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
 actual class ImagePickerLauncher(
-    private val launchFn: () -> Unit,
+    internal val launchFn: () -> Unit,
 )
 
 @Composable
@@ -27,7 +28,7 @@ actual fun rememberImagePickerLauncher(
     return remember {
         ImagePickerLauncher {
             launcher.launch(
-                ActivityResultContracts.PickVisualMedia.ImageOnly
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
             )
         }
     }

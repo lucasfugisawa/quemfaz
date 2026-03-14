@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import com.fugisawa.quemfaz.di.appModule
 import com.fugisawa.quemfaz.navigation.Screen
 import com.fugisawa.quemfaz.network.ApiClient
+import com.fugisawa.quemfaz.platform.launch
 import com.fugisawa.quemfaz.platform.rememberImagePickerLauncher
 import com.fugisawa.quemfaz.screens.*
 import com.fugisawa.quemfaz.session.AuthState
