@@ -53,14 +53,15 @@ data class ConfirmProfessionalProfileRequest(
     val neighborhoods: List<String>,
     val contactPhone: String,
     val whatsAppPhone: String?,
-    val photoUrl: String?,
     val portfolioPhotoUrls: List<String>
 )
 
 @Serializable
 data class ProfessionalProfileResponse(
     val id: String,
-    val name: String?,
+    val firstName: String,
+    val lastName: String,
+    val knownName: String?,
     val photoUrl: String?,
     val description: String,
     val cityName: String,
@@ -71,4 +72,9 @@ data class ProfessionalProfileResponse(
     val whatsAppPhone: String?,
     val contactPhone: String,
     val portfolioPhotoUrls: List<String> = emptyList()
+)
+
+@Serializable
+data class SetKnownNameRequest(
+    val knownName: String?,
 )
