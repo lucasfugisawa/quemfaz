@@ -11,6 +11,7 @@ import com.fugisawa.quemfaz.favorites.routing.favoriteRoutes
 import com.fugisawa.quemfaz.infrastructure.database.DatabaseFactory
 import com.fugisawa.quemfaz.moderation.routing.moderationRoutes
 import com.fugisawa.quemfaz.profile.routing.profileRoutes
+import com.fugisawa.quemfaz.images.routing.imageRoutes
 import com.fugisawa.quemfaz.search.routing.searchRoutes
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -98,5 +99,6 @@ fun Application.module(koinModules: List<org.koin.core.module.Module>? = null) {
         favoriteRoutes()
         engagementRoutes()
         moderationRoutes()
+        imageRoutes()
     }
 }
