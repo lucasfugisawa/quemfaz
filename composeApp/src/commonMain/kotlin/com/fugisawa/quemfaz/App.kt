@@ -193,6 +193,13 @@ fun MainFlow(
     val snackbarHostState = remember { SnackbarHostState() }
     val homeViewModel: HomeViewModel = koinInject()
     val searchUiState by homeViewModel.searchUiState.collectAsState()
+    val favoritedProfileIds by homeViewModel.favoritedProfileIds.collectAsState()
+
+    LaunchedEffect(homeViewModel) {
+        homeViewModel.toastMessage.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     // Auth-related state collected once here — all screens in this shell share the same owner.
     val currentUser by sessionManager.currentUser.collectAsState()
@@ -285,6 +292,8 @@ fun MainFlow(
                         SearchResultsScreen(
                             query = currentQuery,
                             uiState = searchUiState,
+                            favoritedProfileIds = favoritedProfileIds,
+                            onFavoriteToggle = { profileId -> homeViewModel.toggleFavoriteFromSearch(profileId) },
                             onProfileClick = { id ->
                                 currentProfileId = id
                                 navigateTo(Screen.ProfessionalProfile)

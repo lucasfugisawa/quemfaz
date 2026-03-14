@@ -3,6 +3,9 @@ package com.fugisawa.quemfaz.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,6 +28,8 @@ import com.fugisawa.quemfaz.ui.theme.Spacing
 fun SearchResultsScreen(
     query: String,
     uiState: SearchUiState,
+    favoritedProfileIds: Set<String> = emptySet(),
+    onFavoriteToggle: (profileId: String) -> Unit = {},
     onProfileClick: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
@@ -37,15 +42,32 @@ fun SearchResultsScreen(
                 }
             }
             is SearchUiState.Success -> {
-                if (uiState.response.results.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No professionals found.")
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Interpreted services banner — shown when AI mapped the query to services
+                    if (uiState.response.interpretedServices.isNotEmpty()) {
+                        Text(
+                            text = "Showing results for: ${uiState.response.interpretedServices.joinToString(" · ") { it.displayName }}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm)
+                        )
                     }
-                } else {
-                    LazyColumn(contentPadding = PaddingValues(Spacing.md)) {
-                        items(uiState.response.results) { profile ->
-                            ProfessionalCard(profile, onClick = { onProfileClick(profile.id) })
-                            Spacer(modifier = Modifier.height(Spacing.sm))
+
+                    if (uiState.response.results.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("No professionals found.")
+                        }
+                    } else {
+                        LazyColumn(contentPadding = PaddingValues(Spacing.md)) {
+                            items(uiState.response.results) { profile ->
+                                ProfessionalCard(
+                                    profile = profile,
+                                    onClick = { onProfileClick(profile.id) },
+                                    isFavorited = profile.id in favoritedProfileIds,
+                                    onFavoriteToggle = { onFavoriteToggle(profile.id) }
+                                )
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+                            }
                         }
                     }
                 }
@@ -59,7 +81,9 @@ fun SearchResultsScreen(
 @Composable
 fun ProfessionalCard(
     profile: ProfessionalProfileResponse,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isFavorited: Boolean = false,
+    onFavoriteToggle: (() -> Unit)? = null
 ) {
     Card(
         onClick = onClick,
@@ -81,6 +105,17 @@ fun ProfessionalCard(
                             profile.neighborhoods.take(2).joinToString(" · "),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                // Inline favorite button — only shown when a toggle callback is provided
+                if (onFavoriteToggle != null) {
+                    IconButton(onClick = onFavoriteToggle) {
+                        Icon(
+                            imageVector = if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = if (isFavorited) "Remove from favorites" else "Add to favorites",
+                            tint = if (isFavorited) MaterialTheme.colorScheme.primary
+                                   else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
