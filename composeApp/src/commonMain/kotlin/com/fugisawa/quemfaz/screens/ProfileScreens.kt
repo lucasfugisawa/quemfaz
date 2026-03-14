@@ -2,13 +2,18 @@ package com.fugisawa.quemfaz.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.domain.moderation.ReportReason
@@ -57,14 +62,36 @@ fun ProfessionalProfileScreen(
             }
             is ProfileUiState.Content -> {
                 val profile = uiState.profile
+
+                // Scrollable content — bottom padding prevents content from hiding behind sticky bar
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(Spacing.md)
+                        .padding(start = Spacing.md, end = Spacing.md, top = Spacing.md, bottom = 88.dp)
                 ) {
                     ProfileHeader(profile, uiState.isFavorite, onFavoriteToggle)
                     Spacer(modifier = Modifier.height(Spacing.sm))
+
+                    // Portfolio photos strip — only shown when photos are available
+                    if (profile.portfolioPhotoUrls.isNotEmpty()) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            contentPadding = PaddingValues(vertical = Spacing.xs)
+                        ) {
+                            items(profile.portfolioPhotoUrls, key = { it }) { url ->
+                                AsyncImage(
+                                    model = url,
+                                    contentDescription = "Portfolio photo ${profile.portfolioPhotoUrls.indexOf(url) + 1} of ${profile.portfolioPhotoUrls.size}",
+                                    modifier = Modifier
+                                        .size(96.dp)
+                                        .clip(MaterialTheme.shapes.medium),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                    }
 
                     if (profile.neighborhoods.isNotEmpty()) {
                         Text(
@@ -95,28 +122,40 @@ fun ProfessionalProfileScreen(
                         Spacer(modifier = Modifier.height(Spacing.lg))
                     }
 
-                    Row(modifier = Modifier.fillMaxWidth()) {
+                    TextButton(
+                        onClick = { showReportDialog = true },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("Report Profile", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+
+                // Sticky contact bar — pinned to the bottom of the AppScreen Box (BoxScope.align)
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                    shadowElevation = 8.dp,
+                    tonalElevation = 2.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    ) {
                         Button(
                             onClick = { onContactClick(ContactChannelDto.WHATSAPP) },
                             modifier = Modifier.weight(1f)
                         ) {
                             Text("WhatsApp")
                         }
-                        Spacer(modifier = Modifier.width(Spacing.sm))
                         Button(
                             onClick = { onContactClick(ContactChannelDto.PHONE_CALL) },
                             modifier = Modifier.weight(1f)
                         ) {
                             Text("Call")
                         }
-                    }
-                    Spacer(modifier = Modifier.height(Spacing.md))
-
-                    TextButton(
-                        onClick = { showReportDialog = true },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) {
-                        Text("Report Profile", color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
