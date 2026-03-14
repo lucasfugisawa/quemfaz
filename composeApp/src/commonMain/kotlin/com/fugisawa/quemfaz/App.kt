@@ -325,12 +325,18 @@ fun MainFlow(
                 is Screen.OnboardingStart -> {
                     val viewModel: OnboardingViewModel = koinInject()
                     val uiState by viewModel.uiState.collectAsState()
+
+                    val imagePicker = rememberImagePickerLauncher { data, mimeType ->
+                        val draft = (uiState as? OnboardingUiState.PhotoRequired)?.draft ?: return@rememberImagePickerLauncher
+                        viewModel.submitPhoto(data, mimeType, draft)
+                    }
+
                     OnboardingScreens(
                         uiState = uiState,
                         onCreateDraft = { viewModel.createDraft(it) },
-                        onConfirm = { desc, services, city, neighborhoods, phone, photo ->
-                            viewModel.confirmProfile(desc, services, city, neighborhoods, phone, photo)
-                        },
+                        onProceedFromDraft = { draft -> viewModel.proceedFromDraft(draft) },
+                        onPickPhoto = { _ -> imagePicker.launch() },
+                        onSubmitKnownName = { knownName, draft -> viewModel.submitKnownName(knownName, draft) },
                         onSubmitClarifications = { desc, answers ->
                             viewModel.submitClarifications(desc, answers)
                         },
