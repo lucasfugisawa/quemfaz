@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.config
 import com.fugisawa.quemfaz.auth.application.CompleteUserProfileService
 import com.fugisawa.quemfaz.auth.application.GetAuthenticatedUserService
 import com.fugisawa.quemfaz.auth.application.RefreshTokenService
+import com.fugisawa.quemfaz.auth.application.SetProfilePhotoService
 import com.fugisawa.quemfaz.auth.application.StartOtpService
 import com.fugisawa.quemfaz.auth.application.VerifyOtpService
 import com.fugisawa.quemfaz.auth.domain.OtpChallengeRepository
@@ -130,6 +131,7 @@ val infrastructureModule =
         single { RefreshTokenService(get(), get()) }
         single { CompleteUserProfileService(get(), get(), get()) }
         single { GetAuthenticatedUserService(get(), get(), get()) }
+        single { SetProfilePhotoService(get(), get(), get()) }
 
         // Professional Profile Repositories
         single<ProfessionalProfileRepository> { ExposedProfessionalProfileRepository() }

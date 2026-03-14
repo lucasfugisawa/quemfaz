@@ -4,12 +4,15 @@ import com.fugisawa.quemfaz.auth.application.CompleteProfileResult
 import com.fugisawa.quemfaz.auth.application.CompleteUserProfileService
 import com.fugisawa.quemfaz.auth.application.GetAuthenticatedUserService
 import com.fugisawa.quemfaz.auth.application.RefreshTokenService
+import com.fugisawa.quemfaz.auth.application.SetPhotoResult
+import com.fugisawa.quemfaz.auth.application.SetProfilePhotoService
 import com.fugisawa.quemfaz.auth.application.StartOtpService
 import com.fugisawa.quemfaz.auth.application.VerifyOtpResult
 import com.fugisawa.quemfaz.auth.application.VerifyOtpService
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
 import com.fugisawa.quemfaz.contract.auth.LogoutRequest
 import com.fugisawa.quemfaz.contract.auth.RefreshTokenRequest
+import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.core.id.UserId
@@ -33,6 +36,7 @@ fun Route.authRoutes() {
     val refreshTokenService by inject<RefreshTokenService>()
     val completeUserProfileService by inject<CompleteUserProfileService>()
     val getAuthenticatedUserService by inject<GetAuthenticatedUserService>()
+    val setProfilePhotoService by inject<SetProfilePhotoService>()
 
     route("/auth") {
         post("/start-otp") {
@@ -87,6 +91,22 @@ fun Route.authRoutes() {
                 when (val result = completeUserProfileService.completeProfile(UserId(userId), request)) {
                     is CompleteProfileResult.Success -> call.respond(result.response)
                     is CompleteProfileResult.Failure -> call.respond(HttpStatusCode.BadRequest, mapOf("message" to result.message))
+                }
+            }
+
+            post("/photo") {
+                val principal = call.principal<JWTPrincipal>()
+                val userId = principal?.payload?.getClaim("userId")?.asString()
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized)
+
+                val request = call.receive<SetProfilePhotoRequest>()
+                when (val result = setProfilePhotoService.execute(UserId(userId), request)) {
+                    is SetPhotoResult.Success    -> call.respond(result.response)
+                    is SetPhotoResult.NotFound   -> call.respond(HttpStatusCode.NotFound)
+                    is SetPhotoResult.InvalidUrl -> call.respond(
+                        HttpStatusCode.BadRequest,
+                        mapOf("message" to "photoUrl must be a server-issued image URL"),
+                    )
                 }
             }
 
