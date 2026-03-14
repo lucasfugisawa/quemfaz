@@ -54,6 +54,7 @@ interface ProfessionalProfileRepository {
     fun save(profile: ProfessionalProfile): ProfessionalProfile
 
     fun listPublishedByCity(cityName: String): List<ProfessionalProfile>
+    fun search(serviceIds: List<String>, cityName: String?): List<ProfessionalProfile>
 
     fun updateStatus(
         id: ProfessionalProfileId,

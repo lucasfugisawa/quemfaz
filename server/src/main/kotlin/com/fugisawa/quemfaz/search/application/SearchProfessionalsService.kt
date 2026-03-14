@@ -34,7 +34,7 @@ class SearchProfessionalsService(
     ): SearchProfessionalsResponse {
         // 1. Interpret query
         val interpreted = interpreter.interpret(request.query, request.cityName)
-        val city = interpreted.cityName ?: request.cityName ?: throw IllegalArgumentException("City context required for search")
+        val city = interpreted.cityName ?: request.cityName // City might be null if not provided and not identified
 
         // 2. Persist query for analytics
         val searchQuery =
@@ -51,8 +51,8 @@ class SearchProfessionalsService(
             )
         searchQueryRepository.create(searchQuery)
 
-        // 3. Retrieve candidate profiles in city
-        val candidates = profileRepository.listPublishedByCity(city)
+        // 3. Retrieve candidate profiles
+        val candidates = profileRepository.search(interpreted.serviceIds, city)
 
         // 4. Rank profiles
         val ranked = rankingService.rank(candidates, interpreted)

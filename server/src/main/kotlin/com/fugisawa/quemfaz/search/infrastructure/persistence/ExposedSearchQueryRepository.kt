@@ -16,7 +16,7 @@ object SearchQueriesTable : Table("search_queries") {
     val userId = varchar("user_id", 128).nullable()
     val originalQuery = text("original_query")
     val normalizedQuery = text("normalized_query")
-    val cityName = varchar("city_name", 255)
+    val cityName = varchar("city_name", 255).nullable()
     val neighborhoodsJson = jsonb<List<String>>("neighborhoods_json", Json)
     val interpretedServiceIdsJson = jsonb<List<String>>("interpreted_service_ids_json", Json)
     val inputMode = varchar("input_mode", 50)

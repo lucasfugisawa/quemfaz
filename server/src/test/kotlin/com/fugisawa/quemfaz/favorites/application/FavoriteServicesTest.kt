@@ -58,6 +58,11 @@ class FavoriteServicesTest {
                     it.status == ProfessionalProfileStatus.PUBLISHED
             }
 
+        override fun search(
+            serviceIds: List<String>,
+            cityName: String?,
+        ): List<ProfessionalProfile> = emptyList()
+
         override fun updateStatus(
             id: ProfessionalProfileId,
             status: ProfessionalProfileStatus,

@@ -48,6 +48,15 @@ class SearchProfessionalsServiceTest {
                     it.status == ProfessionalProfileStatus.PUBLISHED
             }
 
+        override fun search(
+            serviceIds: List<String>,
+            cityName: String?,
+        ): List<ProfessionalProfile> =
+            profiles.filter { profile ->
+                profile.status == ProfessionalProfileStatus.PUBLISHED &&
+                    profile.services.any { it.serviceId in serviceIds }
+            }
+
         override fun updateStatus(
             id: ProfessionalProfileId,
             status: ProfessionalProfileStatus,

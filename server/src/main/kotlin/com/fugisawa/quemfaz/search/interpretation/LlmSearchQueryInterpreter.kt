@@ -82,8 +82,8 @@ class LlmSearchQueryInterpreter(
             Rules:
             - identify the requested service and map it to a canonical service ID from the catalog
             - the "serviceId" field must contain only an ID value from the catalog
-            - extract city if present
-            - extract neighborhoods if present
+            - extract city if present. If no city is mentioned, set it to null.
+            - extract neighborhoods if present. If no neighborhood is mentioned, return an empty list.
             - do not invent information
             """.trimIndent()
     }

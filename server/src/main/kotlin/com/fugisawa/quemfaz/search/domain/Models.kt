@@ -9,7 +9,7 @@ data class SearchQuery(
     val userId: UserId?,
     val originalQuery: String,
     val normalizedQuery: String,
-    val cityName: String,
+    val cityName: String?,
     val neighborhoods: List<String>,
     val interpretedServiceIds: List<String>,
     val inputMode: InputMode,

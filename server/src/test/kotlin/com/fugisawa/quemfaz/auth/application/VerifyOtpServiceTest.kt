@@ -47,9 +47,18 @@ class VerifyOtpServiceTest {
         ): Boolean = hash == "hashed_$otpCode"
     }
 
+    private class FakeRefreshTokenRepository : com.fugisawa.quemfaz.auth.domain.RefreshTokenRepository {
+        override fun create(refreshToken: com.fugisawa.quemfaz.auth.domain.RefreshToken): com.fugisawa.quemfaz.auth.domain.RefreshToken = refreshToken
+        override fun findByToken(token: String): com.fugisawa.quemfaz.auth.domain.RefreshToken? = null
+        override fun revokeByUserId(userId: UserId) {}
+        override fun revokeByToken(token: String) {}
+        override fun deleteExpired(now: Instant) {}
+    }
+
     private val userRepo = ExposedUserRepository()
     private val identityRepo = ExposedUserPhoneAuthIdentityRepository()
     private val otpRepo = ExposedOtpChallengeRepository()
+    private val refreshTokenRepo = FakeRefreshTokenRepository()
     private val hasher = FakeOtpHasher()
     private val tokenService =
         TokenService(
@@ -57,7 +66,7 @@ class VerifyOtpServiceTest {
                 .JwtConfig("secret", "issuer", "audience", 3600000),
         )
 
-    private val service = VerifyOtpService(userRepo, identityRepo, otpRepo, hasher, tokenService)
+    private val service = VerifyOtpService(userRepo, identityRepo, otpRepo, refreshTokenRepo, hasher, tokenService)
 
     @Test
     fun `should verify correctly and create new user on first login`() {

@@ -11,6 +11,7 @@ import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus
 import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
@@ -186,6 +187,37 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
                     (ProfessionalProfilesTable.cityName eq cityName) and
                         (ProfessionalProfilesTable.status eq ProfessionalProfileStatus.PUBLISHED)
                 }.map { mapProfile(it) }
+        }
+
+    override fun search(
+        serviceIds: List<String>,
+        cityName: String?,
+    ): List<ProfessionalProfile> =
+        transaction {
+            val profilesWithServices =
+                ProfessionalProfileServicesTable
+                    .selectAll()
+                    .where { ProfessionalProfileServicesTable.serviceId inList serviceIds }
+                    .map { it[ProfessionalProfileServicesTable.professionalProfileId] }
+                    .distinct()
+
+            if (profilesWithServices.isEmpty()) return@transaction emptyList()
+
+            val query =
+                ProfessionalProfilesTable
+                    .selectAll()
+                    .where {
+                        (ProfessionalProfilesTable.id inList profilesWithServices) and
+                            (ProfessionalProfilesTable.status eq ProfessionalProfileStatus.PUBLISHED)
+                    }
+
+            if (cityName != null) {
+                // We don't filter strictly by city to allow "nearby" or "no city" profiles to appear in ranking.
+                // But we could optimize by loading only profiles from the same city + those with null city.
+                // query.andWhere { (ProfessionalProfilesTable.cityName eq cityName) or (ProfessionalProfilesTable.cityName.isNull()) }
+            }
+
+            query.map { mapProfile(it) }
         }
 
     override fun updateStatus(
