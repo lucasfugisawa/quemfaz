@@ -3,13 +3,27 @@ package com.fugisawa.quemfaz.integration
 import com.fugisawa.quemfaz.config.AppConfig
 import com.fugisawa.quemfaz.config.ConfigLoader
 import com.fugisawa.quemfaz.config.DatabaseConfig
+import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
+import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
+import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
+import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
+import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
+import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftRequest
+import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
+import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.infrastructure.database.DatabaseFactory
 import com.fugisawa.quemfaz.module
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.install
 import io.ktor.server.config.MapApplicationConfig
@@ -126,4 +140,62 @@ abstract class BaseIntegrationTest {
                 }
             }
         }
+
+    protected suspend fun ApplicationTestBuilder.obtainAuthToken(phone: String): String {
+        val client = createTestClient()
+        client.post("/auth/start-otp") {
+            contentType(ContentType.Application.Json)
+            setBody(StartOtpRequest(phoneNumber = phone))
+        }
+        val verifyResponse = client.post("/auth/verify-otp") {
+            contentType(ContentType.Application.Json)
+            setBody(VerifyOtpRequest(phoneNumber = phone, otpCode = "123456"))
+        }
+        return verifyResponse.headers[HttpHeaders.Authorization]!!.removePrefix("Bearer ")
+    }
+
+    protected suspend fun ApplicationTestBuilder.completeNameStep(
+        token: String,
+        firstName: String,
+        lastName: String,
+    ) {
+        createTestClient(token).post("/auth/profile") {
+            contentType(ContentType.Application.Json)
+            setBody(CompleteUserProfileRequest(firstName = firstName, lastName = lastName))
+        }
+    }
+
+    protected suspend fun ApplicationTestBuilder.setUserPhoto(
+        token: String,
+        photoUrl: String,
+    ) {
+        createTestClient(token).post("/auth/photo") {
+            contentType(ContentType.Application.Json)
+            setBody(SetProfilePhotoRequest(photoUrl = photoUrl))
+        }
+    }
+
+    protected suspend fun ApplicationTestBuilder.createAndConfirmProfile(token: String) {
+        val client = createTestClient(token)
+        val draftResponse = client.post("/professional-profile/draft") {
+            contentType(ContentType.Application.Json)
+            setBody(CreateProfessionalProfileDraftRequest(
+                inputText = "Pintor residencial em São Paulo",
+                inputMode = InputMode.TEXT,
+            ))
+        }
+        val draft = draftResponse.body<CreateProfessionalProfileDraftResponse>()
+        client.post("/professional-profile/confirm") {
+            contentType(ContentType.Application.Json)
+            setBody(ConfirmProfessionalProfileRequest(
+                normalizedDescription = draft.normalizedDescription,
+                selectedServiceIds = draft.interpretedServices.map { it.serviceId },
+                cityName = "São Paulo",
+                neighborhoods = emptyList(),
+                contactPhone = "+5511999999999",
+                whatsAppPhone = "+5511999999999",
+                portfolioPhotoUrls = emptyList(),
+            ))
+        }
+    }
 }

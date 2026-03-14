@@ -8,11 +8,9 @@ interface UserRepository {
 
     fun findById(id: UserId): User?
 
-    fun updateProfile(
-        id: UserId,
-        name: String,
-        photoUrl: String?,
-    ): User?
+    fun updateName(id: UserId, firstName: String, lastName: String): User?
+
+    fun updatePhotoUrl(id: UserId, photoUrl: String): User?
 
     fun updateStatus(
         id: UserId,

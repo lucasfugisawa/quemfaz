@@ -5,7 +5,8 @@ import java.time.Instant
 
 data class User(
     val id: UserId,
-    val name: String?,
+    val firstName: String,
+    val lastName: String,
     val photoUrl: String?,
     val status: UserStatus,
     val createdAt: Instant,

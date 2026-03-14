@@ -25,7 +25,8 @@ import java.time.Instant
 
 object UsersTable : Table("users") {
     val id = varchar("id", 128)
-    val name = varchar("name", 255).nullable()
+    val firstName = varchar("first_name", 255)
+    val lastName  = varchar("last_name", 255)
     val photoUrl = varchar("photo_url", 1024).nullable()
     val status =
         customEnumeration(
@@ -85,7 +86,8 @@ class ExposedUserRepository : UserRepository {
         transaction {
             UsersTable.insert {
                 it[id] = user.id.value
-                it[name] = user.name
+                it[firstName] = user.firstName
+                it[lastName]  = user.lastName
                 it[photoUrl] = user.photoUrl
                 it[status] = user.status
                 it[createdAt] = user.createdAt
@@ -103,19 +105,23 @@ class ExposedUserRepository : UserRepository {
                 .singleOrNull()
         }
 
-    override fun updateProfile(
-        id: UserId,
-        name: String,
-        photoUrl: String?,
-    ): User? =
+    override fun updateName(id: UserId, firstName: String, lastName: String): User? =
         transaction {
-            val updated =
-                UsersTable.update({ UsersTable.id eq id.value }) {
-                    it[UsersTable.name] = name
-                    it[UsersTable.photoUrl] = photoUrl
-                    it[updatedAt] = Instant.now()
-                }
-            if (updated > 0) findById(id) else null
+            UsersTable.update({ UsersTable.id eq id.value }) {
+                it[UsersTable.firstName] = firstName
+                it[UsersTable.lastName]  = lastName
+                it[updatedAt]            = Instant.now()
+            }
+            findById(id)
+        }
+
+    override fun updatePhotoUrl(id: UserId, photoUrl: String): User? =
+        transaction {
+            UsersTable.update({ UsersTable.id eq id.value }) {
+                it[UsersTable.photoUrl] = photoUrl
+                it[updatedAt]          = Instant.now()
+            }
+            findById(id)
         }
 
     override fun updateStatus(
@@ -132,7 +138,8 @@ class ExposedUserRepository : UserRepository {
     private fun mapUser(it: ResultRow) =
         User(
             id = UserId(it[UsersTable.id]),
-            name = it[UsersTable.name],
+            firstName = it[UsersTable.firstName],
+            lastName  = it[UsersTable.lastName],
             photoUrl = it[UsersTable.photoUrl],
             status = it[UsersTable.status],
             createdAt = it[UsersTable.createdAt],
