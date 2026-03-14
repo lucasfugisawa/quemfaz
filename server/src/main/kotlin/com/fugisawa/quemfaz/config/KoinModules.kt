@@ -29,6 +29,8 @@ import com.fugisawa.quemfaz.favorites.application.RemoveFavoriteService
 import com.fugisawa.quemfaz.favorites.domain.FavoriteRepository
 import com.fugisawa.quemfaz.favorites.infrastructure.ExposedFavoriteRepository
 import com.fugisawa.quemfaz.infrastructure.database.DatabaseFactory
+import com.fugisawa.quemfaz.infrastructure.images.DatabaseImageStorageService
+import com.fugisawa.quemfaz.infrastructure.images.ImageStorageService
 import com.fugisawa.quemfaz.infrastructure.otp.DefaultOtpMessageComposer
 import com.fugisawa.quemfaz.infrastructure.otp.OtpCodeGenerator
 import com.fugisawa.quemfaz.infrastructure.otp.OtpMessageComposer
@@ -83,6 +85,9 @@ val infrastructureModule =
             factory.runMigrations(ds)
             ds
         }
+
+        // Image Storage (temporary DB-backed implementation — replace binding to migrate to S3)
+        single<ImageStorageService> { DatabaseImageStorageService() }
 
         single<SmsSender> {
             val config = get<AppConfig>()
