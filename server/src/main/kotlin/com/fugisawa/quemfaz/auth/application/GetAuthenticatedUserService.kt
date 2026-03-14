@@ -22,7 +22,8 @@ class GetAuthenticatedUserService(
         return UserProfileResponse(
             id = user.id.value,
             phoneNumber = phoneIdentity?.phoneNumber ?: "",
-            name = user.name,
+            firstName = user.firstName,
+            lastName = user.lastName,
             photoUrl = user.photoUrl,
             cityName = null,
             status = user.status.name,
