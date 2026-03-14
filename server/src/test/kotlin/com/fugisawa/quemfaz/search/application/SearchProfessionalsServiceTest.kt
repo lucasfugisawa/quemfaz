@@ -61,18 +61,18 @@ class SearchProfessionalsServiceTest {
             id: ProfessionalProfileId,
             status: ProfessionalProfileStatus,
         ): Boolean = false
+
+        override fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean = false
     }
 
     private class FakeUserRepository : UserRepository {
         override fun create(user: User): User = user
 
-        override fun findById(id: UserId): User = User(id, "User ${id.value}", null, UserStatus.ACTIVE, Instant.now(), Instant.now())
+        override fun findById(id: UserId): User = User(id, "User", id.value, null, UserStatus.ACTIVE, Instant.now(), Instant.now())
 
-        override fun updateProfile(
-            id: UserId,
-            name: String,
-            photoUrl: String?,
-        ): User? = null
+        override fun updateName(id: UserId, firstName: String, lastName: String): User? = null
+
+        override fun updatePhotoUrl(id: UserId, photoUrl: String): User? = null
 
         override fun updateStatus(
             id: UserId,

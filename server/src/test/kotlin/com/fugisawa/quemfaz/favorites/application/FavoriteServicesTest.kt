@@ -71,6 +71,8 @@ class FavoriteServicesTest {
             profiles[id.value] = p.copy(status = status)
             return true
         }
+
+        override fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean = false
     }
 
     private class FakeUserRepository : UserRepository {
@@ -78,11 +80,9 @@ class FavoriteServicesTest {
 
         override fun findById(id: UserId): User? = null
 
-        override fun updateProfile(
-            id: UserId,
-            name: String,
-            photoUrl: String?,
-        ): User? = null
+        override fun updateName(id: UserId, firstName: String, lastName: String): User? = null
+
+        override fun updatePhotoUrl(id: UserId, photoUrl: String): User? = null
 
         override fun updateStatus(
             id: UserId,
