@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.profile.routing
 import com.fugisawa.quemfaz.contract.profile.ClarifyDraftRequest
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftRequest
+import com.fugisawa.quemfaz.contract.profile.SetKnownNameRequest
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
 import com.fugisawa.quemfaz.core.id.UserId
 import com.fugisawa.quemfaz.profile.application.ClarifyProfessionalProfileDraftService
@@ -10,6 +11,8 @@ import com.fugisawa.quemfaz.profile.application.ConfirmProfessionalProfileServic
 import com.fugisawa.quemfaz.profile.application.CreateProfessionalProfileDraftService
 import com.fugisawa.quemfaz.profile.application.GetMyProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.GetPublicProfessionalProfileService
+import com.fugisawa.quemfaz.profile.application.SetKnownNameResult
+import com.fugisawa.quemfaz.profile.application.SetKnownNameService
 import com.fugisawa.quemfaz.profile.application.UpdateProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.UpdateProfileResult
 import io.ktor.http.HttpStatusCode
@@ -33,6 +36,7 @@ fun Route.profileRoutes() {
     val getMyProfileService by inject<GetMyProfessionalProfileService>()
     val getPublicProfileService by inject<GetPublicProfessionalProfileService>()
     val updateProfileService by inject<UpdateProfessionalProfileService>()
+    val setKnownNameService by inject<SetKnownNameService>()
 
     route("/professional-profile") {
         // Public route
@@ -124,6 +128,22 @@ fun Route.profileRoutes() {
                             mapOf("message" to "Profile is blocked and cannot be updated"),
                         )
                     }
+                }
+            }
+
+            put("/known-name") {
+                val principal = call.principal<JWTPrincipal>()
+                val userId =
+                    principal?.payload?.getClaim("userId")?.asString()
+                        ?: return@put call.respond(HttpStatusCode.Unauthorized)
+
+                val request = call.receive<SetKnownNameRequest>()
+                return@put when (setKnownNameService.execute(UserId(userId), request)) {
+                    SetKnownNameResult.Success -> call.respond(HttpStatusCode.NoContent)
+                    SetKnownNameResult.NotFound -> call.respond(
+                        HttpStatusCode.NotFound,
+                        mapOf("message" to "Profile not found"),
+                    )
                 }
             }
         }
