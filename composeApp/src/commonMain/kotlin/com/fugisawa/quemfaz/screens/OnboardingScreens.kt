@@ -159,7 +159,7 @@ fun OnboardingScreens(
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Text("Confirm and Publish", style = MaterialTheme.typography.titleMedium)
+                            Text("Looks good, continue", style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 }

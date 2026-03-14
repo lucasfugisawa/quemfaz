@@ -77,7 +77,7 @@ fun HomeScreen(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search services (e.g. Plumber)") },
+                placeholder = { Text("Plumber, tutor, cleaner, electrician...") },
                 leadingIcon = { Text("🔍", modifier = Modifier.padding(start = 8.dp)) },
                 trailingIcon = {
                     IconButton(onClick = { /* Voice placeholder */ }, enabled = false) {
