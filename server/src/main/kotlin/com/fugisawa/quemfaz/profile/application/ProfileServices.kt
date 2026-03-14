@@ -225,4 +225,5 @@ private fun mapToResponse(
         activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
         whatsAppPhone = profile.whatsappPhone,
         contactPhone = profile.contactPhone ?: "",
+        portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
     )
