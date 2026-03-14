@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
@@ -114,44 +115,93 @@ fun OtpVerificationScreen(
 }
 
 @Composable
-fun CompleteUserProfileScreen(
-    onComplete: (String, String?) -> Unit,
-    uiState: AuthUiState
+fun NameInputScreen(
+    onSubmitName: (firstName: String, lastName: String) -> Unit,
+    uiState: AuthUiState,
 ) {
-    var name by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
 
-    Box(modifier = Modifier.fillMaxSize().padding(Spacing.screenEdge)) {
-        Column(
-            modifier = Modifier.align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(Spacing.screenEdge),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md),
+    ) {
+        Text("What's your name?", style = MaterialTheme.typography.headlineMedium)
+
+        OutlinedTextField(
+            value = firstName,
+            onValueChange = { firstName = it },
+            label = { Text("First name") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+        )
+        OutlinedTextField(
+            value = lastName,
+            onValueChange = { lastName = it },
+            label = { Text("Last name") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+        )
+
+        if (uiState is AuthUiState.Error) {
+            Text(uiState.message, color = MaterialTheme.colorScheme.error)
+        }
+
+        Button(
+            onClick = { onSubmitName(firstName, lastName) },
+            enabled = firstName.isNotBlank() && lastName.isNotBlank() && uiState !is AuthUiState.Loading,
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Finish Profile", style = MaterialTheme.typography.headlineLarge)
-            Text("Tell us how we should call you.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (uiState is AuthUiState.Loading) CircularProgressIndicator(Modifier.size(20.dp))
+            else Text("Continue")
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(Spacing.xl))
-            
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Full Name") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = MaterialTheme.shapes.medium
-            )
-            
-            Spacer(modifier = Modifier.height(Spacing.lg))
-            
-            Button(
-                onClick = { onComplete(name, null) },
-                enabled = name.isNotBlank() && uiState !is AuthUiState.Loading,
-                modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                if (uiState is AuthUiState.Loading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
-                } else {
-                    Text("Let's go!", style = MaterialTheme.typography.titleMedium)
-                }
+@Composable
+fun ProfilePhotoScreen(
+    currentPhotoUrl: String?,
+    displayName: String,
+    headline: String,
+    showSkip: Boolean,
+    isLoading: Boolean,
+    error: String?,
+    onPickImage: () -> Unit,
+    onSkip: (() -> Unit)?,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(Spacing.screenEdge),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Spacing.md),
+    ) {
+        Text(headline, style = MaterialTheme.typography.headlineMedium)
+
+        ProfileAvatar(
+            name = displayName,
+            photoUrl = currentPhotoUrl,
+            size = 96.dp,
+        )
+
+        if (error != null) {
+            Text(error, color = MaterialTheme.colorScheme.error)
+        }
+
+        Button(
+            onClick = onPickImage,
+            enabled = !isLoading,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            if (isLoading) CircularProgressIndicator(Modifier.size(20.dp))
+            else Text("Choose photo")
+        }
+
+        if (showSkip && onSkip != null) {
+            TextButton(onClick = onSkip) {
+                Text("Skip for now")
             }
         }
     }
@@ -191,12 +241,12 @@ private fun OtpVerificationErrorPreview() {
 
 @LightDarkScreenPreview
 @Composable
-private fun CompleteUserProfileIdlePreview() {
-    AppTheme { CompleteUserProfileScreen(onComplete = { _, _ -> }, uiState = AuthUiState.ProfileCompletionRequired) }
+private fun NameInputIdlePreview() {
+    AppTheme { NameInputScreen(onSubmitName = { _, _ -> }, uiState = AuthUiState.ProfileCompletionRequired) }
 }
 
 @LightDarkScreenPreview
 @Composable
-private fun CompleteUserProfileLoadingPreview() {
-    AppTheme { CompleteUserProfileScreen(onComplete = { _, _ -> }, uiState = AuthUiState.Loading) }
+private fun NameInputLoadingPreview() {
+    AppTheme { NameInputScreen(onSubmitName = { _, _ -> }, uiState = AuthUiState.Loading) }
 }
