@@ -45,15 +45,21 @@ data class RefreshTokenResponse(
 
 @Serializable
 data class CompleteUserProfileRequest(
-    val name: String,
-    val photoUrl: String?
+    val firstName: String,
+    val lastName: String
+)
+
+@Serializable
+data class SetProfilePhotoRequest(
+    val photoUrl: String
 )
 
 @Serializable
 data class UserProfileResponse(
     val id: String,
     val phoneNumber: String,
-    val name: String?,
+    val firstName: String,
+    val lastName: String,
     val photoUrl: String?,
     val cityName: String?,
     val status: String,
