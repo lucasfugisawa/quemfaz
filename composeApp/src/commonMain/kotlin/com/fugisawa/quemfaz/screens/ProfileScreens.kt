@@ -35,7 +35,7 @@ fun ProfessionalProfileScreen(
 ) {
     var showReportDialog by remember { mutableStateOf(false) }
 
-    val title = (uiState as? ProfileUiState.Content)?.profile?.name ?: "Professional"
+    val title = (uiState as? ProfileUiState.Content)?.profile?.let { it.knownName ?: "${it.firstName} ${it.lastName}" } ?: "Professional"
 
     if (showReportDialog) {
         ReportDialog(
@@ -132,14 +132,14 @@ fun ProfileHeader(
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         ProfileAvatar(
-            name = profile.name,
+            name = profile.knownName ?: "${profile.firstName} ${profile.lastName}",
             photoUrl = profile.photoUrl,
             size = 80.dp,
             textStyle = MaterialTheme.typography.headlineLarge
         )
         Spacer(modifier = Modifier.width(Spacing.md))
         Column(modifier = Modifier.weight(1f)) {
-            Text(profile.name ?: "Anonymous", style = MaterialTheme.typography.headlineSmall)
+            Text(profile.knownName ?: "${profile.firstName} ${profile.lastName}", style = MaterialTheme.typography.headlineSmall)
             Text(profile.cityName, style = MaterialTheme.typography.bodyMedium)
         }
         IconButton(onClick = onFavoriteToggle) {

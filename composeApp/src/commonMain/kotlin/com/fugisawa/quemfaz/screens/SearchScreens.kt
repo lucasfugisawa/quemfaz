@@ -68,13 +68,13 @@ fun ProfessionalCard(
         Column(modifier = Modifier.padding(Spacing.md)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ProfileAvatar(
-                    name = profile.name,
+                    name = profile.knownName ?: "${profile.firstName} ${profile.lastName}",
                     photoUrl = profile.photoUrl,
                     size = 56.dp
                 )
                 Spacer(modifier = Modifier.width(Spacing.sm + Spacing.xs))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(profile.name ?: "Anonymous", style = MaterialTheme.typography.titleMedium)
+                    Text(profile.knownName ?: "${profile.firstName} ${profile.lastName}", style = MaterialTheme.typography.titleMedium)
                     Text(profile.cityName, style = MaterialTheme.typography.bodySmall)
                     if (profile.neighborhoods.isNotEmpty()) {
                         Text(

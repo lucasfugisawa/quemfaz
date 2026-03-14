@@ -46,7 +46,7 @@ fun HomeScreen(
                 },
                 actions = {
                     ProfileAvatar(
-                        name = currentUser?.name,
+                        name = currentUser?.let { "${it.firstName} ${it.lastName}" },
                         photoUrl = currentUser?.photoUrl,
                         size = 32.dp,
                         modifier = Modifier
