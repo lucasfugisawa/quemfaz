@@ -31,7 +31,7 @@ val appModule = module {
     factory { AuthViewModel(get(), get()) }
     factory { HomeViewModel(get(), get()) }
     factory { ProfileViewModel(get()) }
-    factory { OnboardingViewModel(get()) }
+    factory { OnboardingViewModel(get(), get()) }
     factory { FavoritesViewModel(get()) }
     factory { EditProfessionalProfileViewModel(get()) }
 }
