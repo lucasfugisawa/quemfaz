@@ -65,6 +65,7 @@ class HomeViewModel(
         if (query.isBlank()) return
         lastQuery = query
         currentPage = 0
+        isLoadingMore = false
         _accumulatedResults.value = emptyList()
         executeSearch(page = 0)
     }
