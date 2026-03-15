@@ -24,6 +24,15 @@ import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 import org.koin.compose.koinInject
 
+private fun OnboardingUiState.stepIndex() = when (this) {
+    is OnboardingUiState.Idle -> 1
+    is OnboardingUiState.NeedsClarification -> 1
+    is OnboardingUiState.DraftReady -> 2
+    is OnboardingUiState.PhotoRequired -> 3
+    is OnboardingUiState.KnownName -> 4
+    else -> -1
+}
+
 @Composable
 fun OnboardingScreens(
     uiState: OnboardingUiState,
@@ -103,7 +112,9 @@ fun OnboardingScreens(
                     if (isLoadingOrTerminal) {
                         fadeIn() togetherWith fadeOut()
                     } else {
-                        slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                        val forward = targetState.stepIndex() >= initialState.stepIndex()
+                        slideInHorizontally { if (forward) it else -it } togetherWith
+                            slideOutHorizontally { if (forward) -it else it }
                     }
                 },
                 label = "onboardingContent",
