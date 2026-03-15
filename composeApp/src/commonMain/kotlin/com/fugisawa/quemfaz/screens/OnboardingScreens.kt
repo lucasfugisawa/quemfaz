@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.domain.city.SupportedCities
 import com.fugisawa.quemfaz.session.SessionManager
 import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
@@ -43,6 +44,7 @@ private fun OnboardingUiState.stepIndex() = when (this) {
 fun OnboardingScreens(
     uiState: OnboardingUiState,
     selectedCity: String?,
+    catalog: CatalogResponse?,
     onCreateDraft: (String) -> Unit,
     onSelectCity: (String) -> Unit,
     onProceedFromDraft: (CreateProfessionalProfileDraftResponse) -> Unit,
@@ -247,11 +249,22 @@ fun OnboardingScreens(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            ServiceCategoryPicker(
-                                selectedServiceIds = manualSelectedServices,
-                                onSelectionChanged = { manualSelectedServices = it },
-                                modifier = Modifier.weight(1f),
-                            )
+                            if (catalog != null) {
+                                ServiceCategoryPicker(
+                                    categories = catalog.categories,
+                                    services = catalog.services,
+                                    selectedServiceIds = manualSelectedServices,
+                                    onSelectionChanged = { manualSelectedServices = it },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier.weight(1f),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
 
                             Spacer(modifier = Modifier.height(16.dp))
 
@@ -450,13 +463,13 @@ fun OnboardingScreens(
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, selectedCity = null, onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, selectedCity = null, catalog = null, onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, catalog = null, onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
@@ -466,6 +479,7 @@ private fun OnboardingDraftReadyPreview() {
         OnboardingScreens(
             uiState = OnboardingUiState.DraftReady(PreviewSamples.sampleDraftResponse),
             selectedCity = "Franca",
+            catalog = null,
             onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
@@ -478,6 +492,7 @@ private fun OnboardingPublishedPreview() {
         OnboardingScreens(
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
             selectedCity = null,
+            catalog = null,
             onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
@@ -490,6 +505,7 @@ private fun OnboardingErrorPreview() {
         OnboardingScreens(
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
             selectedCity = null,
+            catalog = null,
             onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }

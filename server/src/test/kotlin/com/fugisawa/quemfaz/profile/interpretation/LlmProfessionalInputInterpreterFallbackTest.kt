@@ -19,35 +19,38 @@ class LlmProfessionalInputInterpreterFallbackTest {
     private val mockSignalRepository: SignalRepository = mock()
     private val mockProvisionalServiceCreator: ProvisionalServiceCreator = mock()
 
+    private val electricianEntry = CatalogEntry(
+        id = "repair-electrician",
+        displayName = "Eletricista",
+        description = "Serviços elétricos",
+        categoryId = "REPAIR",
+        aliases = listOf("eletricista", "elétrico"),
+        status = CatalogServiceStatus.ACTIVE,
+    )
+    private val paintResidentialEntry = CatalogEntry(
+        id = "paint-residential",
+        displayName = "Pintura Residencial",
+        description = "Pintura de residências",
+        categoryId = "CONSTRUCTION",
+        aliases = listOf("pintor", "pintura residencial"),
+        status = CatalogServiceStatus.ACTIVE,
+    )
+    private val paintCommercialEntry = CatalogEntry(
+        id = "paint-commercial",
+        displayName = "Pintura Comercial",
+        description = "Pintura de estabelecimentos comerciais",
+        categoryId = "CONSTRUCTION",
+        aliases = listOf("pintor comercial", "pintura comercial"),
+        status = CatalogServiceStatus.ACTIVE,
+    )
+
     init {
-        whenever(mockCatalogService.getActiveServices()).thenReturn(
-            listOf(
-                CatalogEntry(
-                    id = "repair-electrician",
-                    displayName = "Eletricista",
-                    description = "Serviços elétricos",
-                    categoryId = "REPAIR",
-                    aliases = listOf("eletricista", "elétrico"),
-                    status = CatalogServiceStatus.ACTIVE,
-                ),
-                CatalogEntry(
-                    id = "paint-residential",
-                    displayName = "Pintura Residencial",
-                    description = "Pintura de residências",
-                    categoryId = "CONSTRUCTION",
-                    aliases = listOf("pintor", "pintura residencial"),
-                    status = CatalogServiceStatus.ACTIVE,
-                ),
-                CatalogEntry(
-                    id = "paint-commercial",
-                    displayName = "Pintura Comercial",
-                    description = "Pintura de estabelecimentos comerciais",
-                    categoryId = "CONSTRUCTION",
-                    aliases = listOf("pintor comercial", "pintura comercial"),
-                    status = CatalogServiceStatus.ACTIVE,
-                ),
-            )
-        )
+        val entries = listOf(electricianEntry, paintResidentialEntry, paintCommercialEntry)
+        whenever(mockCatalogService.getActiveServices()).thenReturn(entries)
+        // Mock search to simulate local matching behavior
+        whenever(mockCatalogService.search("Sou eletricista")).thenReturn(listOf(electricianEntry))
+        whenever(mockCatalogService.search("xyz abc 123")).thenReturn(emptyList())
+        whenever(mockCatalogService.search("pintor")).thenReturn(listOf(paintResidentialEntry, paintCommercialEntry))
     }
 
     /** LlmAgentService that always throws to simulate LLM failure */

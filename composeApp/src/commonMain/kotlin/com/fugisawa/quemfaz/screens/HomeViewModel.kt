@@ -6,8 +6,8 @@ import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsResponse
-import com.fugisawa.quemfaz.core.id.CanonicalServiceId
-import com.fugisawa.quemfaz.domain.service.CanonicalServices
+import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
+import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -32,7 +32,8 @@ sealed class SearchUiState {
 
 class HomeViewModel(
     private val apiClients: FeatureApiClients,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val catalogApiClient: CatalogApiClient,
 ) : ViewModel() {
 
     private data class CachedSearch(
@@ -76,7 +77,15 @@ class HomeViewModel(
 
     val supportedCities = listOf("Batatais", "Franca", "Ribeirão Preto")
 
+    private val _catalog = MutableStateFlow<CatalogResponse?>(null)
+    val catalog: StateFlow<CatalogResponse?> = _catalog.asStateFlow()
+
     init {
+        viewModelScope.launch {
+            try {
+                _catalog.value = catalogApiClient.getCatalog()
+            } catch (_: Exception) { }
+        }
         viewModelScope.launch {
             sessionManager.authState.drop(1).collect { state ->
                 if (state == com.fugisawa.quemfaz.session.AuthState.Unauthenticated ||
@@ -178,8 +187,8 @@ class HomeViewModel(
     }
 
     fun searchByServiceId(serviceId: String) {
-        val canonical = CanonicalServices.findById(CanonicalServiceId(serviceId))
-        val queryText = canonical?.displayName ?: serviceId
+        val catalogEntry = _catalog.value?.services?.find { it.id == serviceId }
+        val queryText = catalogEntry?.displayName ?: serviceId
         search(queryText)
     }
 

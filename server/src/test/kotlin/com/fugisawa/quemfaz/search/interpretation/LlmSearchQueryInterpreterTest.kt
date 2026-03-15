@@ -1,12 +1,15 @@
 package com.fugisawa.quemfaz.search.interpretation
 
+import com.fugisawa.quemfaz.catalog.application.CatalogEntry
 import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
+import com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus
 import com.fugisawa.quemfaz.catalog.domain.SignalRepository
 import com.fugisawa.quemfaz.llm.LlmAgentService
 import com.fugisawa.quemfaz.llm.SearchInterpretation
 import kotlinx.serialization.KSerializer
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import kotlin.test.assertEquals
@@ -17,8 +20,19 @@ class LlmSearchQueryInterpreterTest {
     private val mockSignalRepository: SignalRepository = mock()
     private val mockProvisionalServiceCreator: ProvisionalServiceCreator = mock()
 
+    private val paintEntry = CatalogEntry(
+        id = "paint-residential",
+        displayName = "Pintura Residencial",
+        description = "Pintura de residências",
+        categoryId = "CONSTRUCTION",
+        aliases = listOf("pintor", "pintura"),
+        status = CatalogServiceStatus.ACTIVE,
+    )
+
     init {
-        whenever(mockCatalogService.getActiveServices()).thenReturn(emptyList())
+        whenever(mockCatalogService.getActiveServices()).thenReturn(listOf(paintEntry))
+        whenever(mockCatalogService.findById("paint-residential")).thenReturn(paintEntry)
+        whenever(mockCatalogService.search(any())).thenReturn(emptyList())
     }
 
     private fun createFakeService(

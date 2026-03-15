@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.profile.*
-import com.fugisawa.quemfaz.core.id.CanonicalServiceId
-import com.fugisawa.quemfaz.domain.service.CanonicalServices
+import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
+import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +29,8 @@ sealed class OnboardingUiState {
 
 class OnboardingViewModel(
     private val apiClients: FeatureApiClients,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val catalogApiClient: CatalogApiClient,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<OnboardingUiState>(OnboardingUiState.Idle)
@@ -37,6 +38,17 @@ class OnboardingViewModel(
 
     private val _selectedCity = MutableStateFlow<String?>(null)
     val selectedCity: StateFlow<String?> = _selectedCity.asStateFlow()
+
+    private val _catalog = MutableStateFlow<CatalogResponse?>(null)
+    val catalog: StateFlow<CatalogResponse?> = _catalog.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            try {
+                _catalog.value = catalogApiClient.getCatalog()
+            } catch (_: Exception) { }
+        }
+    }
 
     fun initializeCity(mainScreenCity: String?) {
         if (_selectedCity.value == null) {
@@ -130,10 +142,10 @@ class OnboardingViewModel(
         selectedServiceIds: Set<String>,
     ) {
         val manualServices = selectedServiceIds.map { serviceId ->
-            val canonical = CanonicalServices.findById(CanonicalServiceId(serviceId))
+            val catalogEntry = _catalog.value?.services?.find { it.id == serviceId }
             InterpretedServiceDto(
                 serviceId = serviceId,
-                displayName = canonical?.displayName ?: serviceId,
+                displayName = catalogEntry?.displayName ?: serviceId,
                 matchLevel = "PRIMARY",
             )
         }

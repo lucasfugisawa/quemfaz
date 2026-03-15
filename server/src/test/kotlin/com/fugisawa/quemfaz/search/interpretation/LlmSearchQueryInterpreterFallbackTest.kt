@@ -8,6 +8,7 @@ import com.fugisawa.quemfaz.catalog.domain.SignalRepository
 import com.fugisawa.quemfaz.llm.LlmAgentService
 import kotlinx.serialization.KSerializer
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import kotlin.test.assertTrue
@@ -19,36 +20,38 @@ class LlmSearchQueryInterpreterFallbackTest {
     private val mockSignalRepository: SignalRepository = mock()
     private val mockProvisionalServiceCreator: ProvisionalServiceCreator = mock()
 
+    private val electricianEntry = CatalogEntry(
+        id = "repair-electrician",
+        displayName = "Eletricista",
+        description = "Serviços elétricos",
+        categoryId = "REPAIR",
+        aliases = listOf("eletricista", "elétrico"),
+        status = CatalogServiceStatus.ACTIVE,
+    )
+    private val cleanEntry = CatalogEntry(
+        id = "clean-house",
+        displayName = "Limpeza Residencial",
+        description = "Limpeza da casa",
+        categoryId = "CLEANING",
+        aliases = listOf("faxina", "diarista", "limpeza"),
+        status = CatalogServiceStatus.ACTIVE,
+    )
+    private val paintEntry = CatalogEntry(
+        id = "paint-residential",
+        displayName = "Pintura Residencial",
+        description = "Pintura de residências",
+        categoryId = "CONSTRUCTION",
+        aliases = listOf("pintor", "pintura"),
+        status = CatalogServiceStatus.ACTIVE,
+    )
+
     init {
-        // Provide catalog entries that the fallback local search uses
-        whenever(mockCatalogService.getActiveServices()).thenReturn(
-            listOf(
-                CatalogEntry(
-                    id = "repair-electrician",
-                    displayName = "Eletricista",
-                    description = "Serviços elétricos",
-                    categoryId = "REPAIR",
-                    aliases = listOf("eletricista", "elétrico"),
-                    status = CatalogServiceStatus.ACTIVE,
-                ),
-                CatalogEntry(
-                    id = "clean-house",
-                    displayName = "Limpeza Residencial",
-                    description = "Limpeza da casa",
-                    categoryId = "CLEANING",
-                    aliases = listOf("faxina", "diarista", "limpeza"),
-                    status = CatalogServiceStatus.ACTIVE,
-                ),
-                CatalogEntry(
-                    id = "paint-residential",
-                    displayName = "Pintura Residencial",
-                    description = "Pintura de residências",
-                    categoryId = "CONSTRUCTION",
-                    aliases = listOf("pintor", "pintura"),
-                    status = CatalogServiceStatus.ACTIVE,
-                ),
-            )
-        )
+        val entries = listOf(electricianEntry, cleanEntry, paintEntry)
+        whenever(mockCatalogService.getActiveServices()).thenReturn(entries)
+        // Mock search to simulate local matching behavior
+        whenever(mockCatalogService.search("eletricista")).thenReturn(listOf(electricianEntry))
+        whenever(mockCatalogService.search("pintor")).thenReturn(listOf(paintEntry))
+        whenever(mockCatalogService.search("xyz abc 123")).thenReturn(emptyList())
     }
 
     private class FailingLlmAgentService : LlmAgentService(timeoutMs = 1000L) {

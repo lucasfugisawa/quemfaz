@@ -181,6 +181,7 @@ fun MainFlow(
     val searchUiState by homeViewModel.searchUiState.collectAsState()
     val favoritedProfileIds by homeViewModel.favoritedProfileIds.collectAsState()
     val hasMoreResults by homeViewModel.hasMore.collectAsState()
+    val homeCatalog by homeViewModel.catalog.collectAsState()
 
     LaunchedEffect(homeViewModel) {
         homeViewModel.toastMessage.collect { message ->
@@ -297,6 +298,7 @@ fun MainFlow(
                         SearchResultsScreen(
                             query = currentQuery,
                             uiState = searchUiState,
+                            catalog = homeCatalog,
                             favoritedProfileIds = favoritedProfileIds,
                             onFavoriteToggle = { profileId -> homeViewModel.toggleFavoriteFromSearch(profileId) },
                             onProfileClick = { id ->
@@ -374,6 +376,7 @@ fun MainFlow(
                         val viewModel: OnboardingViewModel = koinInject()
                         val uiState by viewModel.uiState.collectAsState()
                         val selectedCity by viewModel.selectedCity.collectAsState()
+                        val onboardingCatalog by viewModel.catalog.collectAsState()
 
                         LaunchedEffect(currentCity) {
                             viewModel.initializeCity(currentCity)
@@ -387,6 +390,7 @@ fun MainFlow(
                         OnboardingScreens(
                             uiState = uiState,
                             selectedCity = selectedCity,
+                            catalog = onboardingCatalog,
                             onCreateDraft = { viewModel.createDraft(it) },
                             onSelectCity = { viewModel.selectCity(it) },
                             onProceedFromDraft = { draft -> viewModel.proceedFromDraft(draft) },

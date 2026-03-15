@@ -8,25 +8,27 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.fugisawa.quemfaz.domain.service.CanonicalServices
-import com.fugisawa.quemfaz.domain.service.ServiceCategory
+import com.fugisawa.quemfaz.contract.catalog.CatalogServiceDto
+import com.fugisawa.quemfaz.contract.catalog.ServiceCategoryDto
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @Composable
 fun ServiceCategoryPicker(
+    categories: List<ServiceCategoryDto>,
+    services: List<CatalogServiceDto>,
     selectedServiceIds: Set<String>,
     onSelectionChanged: (Set<String>) -> Unit,
     multiSelect: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
-    val servicesByCategory = remember {
-        ServiceCategory.entries.associateWith { category ->
-            CanonicalServices.findByCategory(category)
+    val servicesByCategory = remember(categories, services) {
+        categories.sortedBy { it.sortOrder }.associateWith { category ->
+            services.filter { it.categoryId == category.id }
         }.filter { it.value.isNotEmpty() }
     }
 
     LazyColumn(modifier = modifier) {
-        servicesByCategory.forEach { (category, services) ->
+        servicesByCategory.forEach { (category, categoryServices) ->
             item {
                 Text(
                     text = category.displayName,
@@ -38,17 +40,17 @@ fun ServiceCategoryPicker(
                     ),
                 )
             }
-            items(services) { service ->
-                val isSelected = service.id.value in selectedServiceIds
+            items(categoryServices) { service ->
+                val isSelected = service.id in selectedServiceIds
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
                             val newSelection = if (multiSelect) {
-                                if (isSelected) selectedServiceIds - service.id.value
-                                else selectedServiceIds + service.id.value
+                                if (isSelected) selectedServiceIds - service.id
+                                else selectedServiceIds + service.id
                             } else {
-                                setOf(service.id.value)
+                                setOf(service.id)
                             }
                             onSelectionChanged(newSelection)
                         }

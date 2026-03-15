@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
 import com.fugisawa.quemfaz.ui.components.ShimmerBox
@@ -48,6 +49,7 @@ import com.fugisawa.quemfaz.ui.theme.Spacing
 fun SearchResultsScreen(
     query: String,
     uiState: SearchUiState,
+    catalog: CatalogResponse? = null,
     favoritedProfileIds: Set<String> = emptySet(),
     onFavoriteToggle: (profileId: String) -> Unit = {},
     onProfileClick: (String) -> Unit,
@@ -114,15 +116,19 @@ fun SearchResultsScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm),
                             )
-                            ServiceCategoryPicker(
-                                selectedServiceIds = emptySet(),
-                                onSelectionChanged = { selected ->
-                                    selected.firstOrNull()?.let { serviceId ->
-                                        onCategorySelected(serviceId)
-                                    }
-                                },
-                                multiSelect = false,
-                            )
+                            if (catalog != null) {
+                                ServiceCategoryPicker(
+                                    categories = catalog.categories,
+                                    services = catalog.services,
+                                    selectedServiceIds = emptySet(),
+                                    onSelectionChanged = { selected ->
+                                        selected.firstOrNull()?.let { serviceId ->
+                                            onCategorySelected(serviceId)
+                                        }
+                                    },
+                                    multiSelect = false,
+                                )
+                            }
                         }
                     } else {
                         LazyColumn(contentPadding = PaddingValues(Spacing.md)) {
