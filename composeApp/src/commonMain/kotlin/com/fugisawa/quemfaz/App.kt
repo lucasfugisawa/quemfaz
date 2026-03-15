@@ -306,6 +306,7 @@ fun MainFlow(
                             onNavigateBack = navigateBack,
                             hasMore = hasMoreResults,
                             onLoadMore = { homeViewModel.loadMoreResults() },
+                            onCategorySelected = { serviceId -> homeViewModel.searchByServiceId(serviceId) },
                         )
                     }
                     is Screen.ProfessionalProfile -> {

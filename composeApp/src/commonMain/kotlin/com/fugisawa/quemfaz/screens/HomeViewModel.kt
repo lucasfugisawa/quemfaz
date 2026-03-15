@@ -6,6 +6,8 @@ import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsResponse
+import com.fugisawa.quemfaz.core.id.CanonicalServiceId
+import com.fugisawa.quemfaz.domain.service.CanonicalServices
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,7 +26,7 @@ import kotlinx.datetime.Clock
 sealed class SearchUiState {
     object Idle : SearchUiState()
     object Loading : SearchUiState()
-    data class Success(val response: SearchProfessionalsResponse) : SearchUiState()
+    data class Success(val response: SearchProfessionalsResponse, val llmUnavailable: Boolean = false) : SearchUiState()
     data class Error(val message: String) : SearchUiState()
 }
 
@@ -104,7 +106,8 @@ class HomeViewModel(
             _accumulatedResults.value = cached.accumulatedResults
             _hasMore.value = cached.hasMore
             _searchUiState.value = SearchUiState.Success(
-                cached.response.copy(results = cached.accumulatedResults)
+                cached.response.copy(results = cached.accumulatedResults),
+                llmUnavailable = cached.response.llmUnavailable,
             )
             return
         }
@@ -143,7 +146,8 @@ class HomeViewModel(
                 val hasMoreValue = accumulated.size < response.totalCount
                 _hasMore.value = hasMoreValue
                 _searchUiState.value = SearchUiState.Success(
-                    response.copy(results = accumulated)
+                    response.copy(results = accumulated),
+                    llmUnavailable = response.llmUnavailable,
                 )
 
                 // Store/update cache
@@ -171,6 +175,12 @@ class HomeViewModel(
                 if (page > 0) isLoadingMore = false
             }
         }
+    }
+
+    fun searchByServiceId(serviceId: String) {
+        val canonical = CanonicalServices.findById(CanonicalServiceId(serviceId))
+        val queryText = canonical?.displayName ?: serviceId
+        search(queryText)
     }
 
     fun toggleFavoriteFromSearch(profileId: String) {

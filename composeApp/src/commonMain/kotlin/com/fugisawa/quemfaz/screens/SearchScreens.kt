@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
 import com.fugisawa.quemfaz.ui.components.ShimmerBox
 import com.fugisawa.quemfaz.ui.components.AppScreen
 import com.fugisawa.quemfaz.ui.components.ErrorMessage
@@ -53,6 +54,7 @@ fun SearchResultsScreen(
     onNavigateBack: () -> Unit,
     hasMore: Boolean = false,
     onLoadMore: () -> Unit = {},
+    onCategorySelected: (serviceId: String) -> Unit = {},
 ) {
     AppScreen(title = "Results for \"$query\"", onNavigateBack = onNavigateBack) {
         when (uiState) {
@@ -86,11 +88,13 @@ fun SearchResultsScreen(
                     }
 
                     if (uiState.response.results.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(modifier = Modifier.fillMaxSize()) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(Spacing.sm),
-                                modifier = Modifier.padding(horizontal = Spacing.lg),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = Spacing.lg, vertical = Spacing.lg),
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Search,
@@ -105,6 +109,20 @@ fun SearchResultsScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
+                            Text(
+                                text = "Ou navegue por categoria",
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                            )
+                            ServiceCategoryPicker(
+                                selectedServiceIds = emptySet(),
+                                onSelectionChanged = { selected ->
+                                    selected.firstOrNull()?.let { serviceId ->
+                                        onCategorySelected(serviceId)
+                                    }
+                                },
+                                multiSelect = false,
+                            )
                         }
                     } else {
                         LazyColumn(contentPadding = PaddingValues(Spacing.md)) {
