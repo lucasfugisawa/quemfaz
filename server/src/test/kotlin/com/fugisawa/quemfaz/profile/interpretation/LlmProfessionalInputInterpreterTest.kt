@@ -34,7 +34,6 @@ class LlmProfessionalInputInterpreterTest {
             createFakeService(
                 OnboardingInterpretation(
                     serviceIds = listOf("paint-residential"),
-                    city = "Batatais",
                     needsClarification = false,
                 ),
             )
@@ -43,7 +42,6 @@ class LlmProfessionalInputInterpreterTest {
         val response = interpreter.interpret("Faço pintura residencial em Batatais no Centro", InputMode.TEXT)
 
         assertTrue(response.interpretedServices.any { it.serviceId == "paint-residential" })
-        assertEquals("Batatais", response.cityName)
         assertTrue(response.followUpQuestions.isEmpty())
         assertTrue(response.missingFields.isEmpty())
     }
@@ -54,9 +52,8 @@ class LlmProfessionalInputInterpreterTest {
             createFakeService(
                 OnboardingInterpretation(
                     serviceIds = listOf("paint-residential"),
-                    city = null,
                     needsClarification = true,
-                    clarificationQuestions = listOf("Em qual cidade você atende?", "Quais bairros?"),
+                    clarificationQuestions = listOf("Que tipo de pintura você faz?", "Trabalha com texturas?"),
                 ),
             )
         val interpreter = LlmProfessionalInputInterpreter(service)
@@ -65,7 +62,6 @@ class LlmProfessionalInputInterpreterTest {
 
         assertTrue(response.followUpQuestions.isNotEmpty())
         assertEquals(2, response.followUpQuestions.size)
-        assertTrue(response.missingFields.contains("city"))
     }
 
     @Test
@@ -74,7 +70,6 @@ class LlmProfessionalInputInterpreterTest {
             createFakeService(
                 OnboardingInterpretation(
                     serviceIds = listOf("paint-residential"),
-                    city = "Batatais",
                     needsClarification = false,
                 ),
             )
@@ -82,13 +77,11 @@ class LlmProfessionalInputInterpreterTest {
 
         val answers =
             listOf(
-                ClarificationAnswer("Em qual cidade você atende?", "Batatais"),
-                ClarificationAnswer("Quais bairros?", "Centro"),
+                ClarificationAnswer("Que tipo de pintura você faz?", "Residencial"),
             )
         val response = interpreter.interpretWithClarifications("Faço pintura", answers, InputMode.TEXT)
 
         assertTrue(response.interpretedServices.any { it.serviceId == "paint-residential" })
-        assertEquals("Batatais", response.cityName)
         assertTrue(response.followUpQuestions.isEmpty())
     }
 
@@ -101,7 +94,6 @@ class LlmProfessionalInputInterpreterTest {
 
         assertTrue(response.interpretedServices.isEmpty())
         assertTrue(response.missingFields.contains("services"))
-        assertTrue(response.missingFields.contains("city"))
         assertTrue(response.followUpQuestions.isNotEmpty())
     }
 }

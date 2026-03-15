@@ -32,12 +32,11 @@ class LlmSearchQueryInterpreterTest {
             createFakeService(
                 SearchInterpretation(
                     serviceId = "paint-residential",
-                    city = "Batatais",
                 ),
             )
         val interpreter = LlmSearchQueryInterpreter(service)
 
-        val result = interpreter.interpret("pintor residencial em Batatais Centro", null)
+        val result = interpreter.interpret("pintor residencial em Batatais Centro", "Batatais")
 
         assertTrue(result.serviceIds.contains("paint-residential"))
         assertEquals("Batatais", result.cityName)
@@ -49,7 +48,6 @@ class LlmSearchQueryInterpreterTest {
             createFakeService(
                 SearchInterpretation(
                     serviceId = "paint-residential",
-                    city = null,
                 ),
             )
         val interpreter = LlmSearchQueryInterpreter(service)
