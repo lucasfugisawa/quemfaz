@@ -9,6 +9,7 @@ object Spacing {
     val formFieldGap = 16.dp
     val ctaButtonHeight = 56.dp
     val smallButtonHeight = 48.dp
+    val divider = 0.5.dp
     val xs = 4.dp
     val sm = 8.dp
     val md = 16.dp

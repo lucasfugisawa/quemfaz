@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -14,7 +15,6 @@ import com.fugisawa.quemfaz.ui.theme.Spacing
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
 import com.fugisawa.quemfaz.di.appModule
 import com.fugisawa.quemfaz.domain.moderation.ReportReason
@@ -401,7 +401,10 @@ fun MainFlow(
                             Text(city, style = MaterialTheme.typography.bodyLarge)
                         },
                         trailingContent = {
-                            Text("›", style = MaterialTheme.typography.headlineSmall)
+                            Icon(
+                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                            )
                         },
                         modifier = Modifier.clickable {
                             homeViewModel.selectCity(city)
@@ -410,7 +413,7 @@ fun MainFlow(
                     )
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = Spacing.md),
-                        thickness = 0.5.dp,
+                        thickness = Spacing.divider,
                     )
                 }
             }
