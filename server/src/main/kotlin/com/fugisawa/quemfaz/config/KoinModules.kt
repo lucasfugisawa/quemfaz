@@ -39,6 +39,13 @@ import com.fugisawa.quemfaz.infrastructure.otp.RandomOtpCodeGenerator
 import com.fugisawa.quemfaz.infrastructure.sms.AwsSmsSender
 import com.fugisawa.quemfaz.infrastructure.sms.FakeSmsSender
 import com.fugisawa.quemfaz.infrastructure.sms.SmsSender
+import com.fugisawa.quemfaz.catalog.application.CatalogService
+import com.fugisawa.quemfaz.catalog.domain.CatalogRepository
+import com.fugisawa.quemfaz.catalog.domain.SignalRepository
+import com.fugisawa.quemfaz.catalog.domain.SystemConfigRepository
+import com.fugisawa.quemfaz.catalog.infrastructure.persistence.ExposedCatalogRepository
+import com.fugisawa.quemfaz.catalog.infrastructure.persistence.ExposedSignalRepository
+import com.fugisawa.quemfaz.catalog.infrastructure.persistence.ExposedSystemConfigRepository
 import com.fugisawa.quemfaz.llm.LlmAgentService
 import com.fugisawa.quemfaz.moderation.application.CreateProfileReportService
 import com.fugisawa.quemfaz.moderation.application.ModerationService
@@ -139,6 +146,12 @@ val infrastructureModule =
 
         // LLM Agent Service
         single { LlmAgentService(timeoutMs = get<AppConfig>().llm.timeoutMs) }
+
+        // Catalog
+        single<CatalogRepository> { ExposedCatalogRepository() }
+        single<SignalRepository> { ExposedSignalRepository() }
+        single<SystemConfigRepository> { ExposedSystemConfigRepository() }
+        single { CatalogService(get(), get()) }
 
         // Professional Profile Interpretation
         single<ProfessionalInputInterpreter> { LlmProfessionalInputInterpreter(get()) }
