@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.profile.*
+import com.fugisawa.quemfaz.core.id.CanonicalServiceId
+import com.fugisawa.quemfaz.domain.service.CanonicalServices
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,10 +42,12 @@ class OnboardingViewModel(
                 val response = apiClients.createDraft(
                     CreateProfessionalProfileDraftRequest(inputText, InputMode.TEXT)
                 )
-                if (response.followUpQuestions.isNotEmpty()) {
-                    _uiState.value = OnboardingUiState.NeedsClarification(inputText, response)
-                } else {
+                if (response.llmUnavailable || response.followUpQuestions.isEmpty()) {
+                    // LLM was unavailable OR no clarification needed — go straight to draft review.
+                    // If services are empty, the UI will show manual selection.
                     _uiState.value = OnboardingUiState.DraftReady(response)
+                } else {
+                    _uiState.value = OnboardingUiState.NeedsClarification(inputText, response)
                 }
             } catch (e: Exception) {
                 _uiState.value = OnboardingUiState.Error(e.message ?: "Failed to create draft")
@@ -58,10 +62,10 @@ class OnboardingViewModel(
                 val response = apiClients.clarifyDraft(
                     ClarifyDraftRequest(originalDescription, answers)
                 )
-                if (response.followUpQuestions.isNotEmpty()) {
-                    _uiState.value = OnboardingUiState.NeedsClarification(originalDescription, response)
-                } else {
+                if (response.llmUnavailable || response.followUpQuestions.isEmpty()) {
                     _uiState.value = OnboardingUiState.DraftReady(response)
+                } else {
+                    _uiState.value = OnboardingUiState.NeedsClarification(originalDescription, response)
                 }
             } catch (e: Exception) {
                 _uiState.value = OnboardingUiState.Error(e.message ?: "Failed to process clarifications")
@@ -106,6 +110,22 @@ class OnboardingViewModel(
                 _uiState.value = OnboardingUiState.Error(e.message ?: "Failed to upload photo")
             }
         }
+    }
+
+    fun proceedWithManualServices(
+        draft: CreateProfessionalProfileDraftResponse,
+        selectedServiceIds: Set<String>,
+    ) {
+        val manualServices = selectedServiceIds.map { serviceId ->
+            val canonical = CanonicalServices.findById(CanonicalServiceId(serviceId))
+            InterpretedServiceDto(
+                serviceId = serviceId,
+                displayName = canonical?.displayName ?: serviceId,
+                matchLevel = "PRIMARY",
+            )
+        }
+        val updatedDraft = draft.copy(interpretedServices = manualServices)
+        proceedFromDraft(updatedDraft)
     }
 
     fun submitKnownName(knownName: String?, draft: CreateProfessionalProfileDraftResponse) {
