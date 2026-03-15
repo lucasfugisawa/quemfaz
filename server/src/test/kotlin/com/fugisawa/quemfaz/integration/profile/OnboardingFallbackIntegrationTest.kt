@@ -46,4 +46,17 @@ class OnboardingFallbackIntegrationTest : BaseIntegrationTest() {
         assertTrue(draft.interpretedServices.isNotEmpty(), "Should have locally matched services")
         assertTrue(draft.followUpQuestions.isEmpty(), "Should not trigger clarification on LLM failure")
     }
+
+    @Test
+    fun `draft response includes editedDescription field`() = integrationTestApplication {
+        val token = obtainAuthToken("+5511900000061")
+        val authedClient = createTestClient(token)
+        val response = authedClient.post("/professional-profile/draft") {
+            contentType(ContentType.Application.Json)
+            setBody(CreateProfessionalProfileDraftRequest("faço pintura de casa e comércio", InputMode.TEXT))
+        }
+        assertEquals(HttpStatusCode.OK, response.status)
+        val draft = response.body<CreateProfessionalProfileDraftResponse>()
+        assertTrue(draft.editedDescription.isNotBlank(), "editedDescription should not be blank")
+    }
 }
