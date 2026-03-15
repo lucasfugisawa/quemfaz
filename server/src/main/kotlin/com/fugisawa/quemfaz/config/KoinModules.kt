@@ -39,6 +39,7 @@ import com.fugisawa.quemfaz.infrastructure.otp.RandomOtpCodeGenerator
 import com.fugisawa.quemfaz.infrastructure.sms.AwsSmsSender
 import com.fugisawa.quemfaz.infrastructure.sms.FakeSmsSender
 import com.fugisawa.quemfaz.infrastructure.sms.SmsSender
+import com.fugisawa.quemfaz.catalog.application.AdminCatalogService
 import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
 import com.fugisawa.quemfaz.catalog.domain.CatalogRepository
@@ -154,6 +155,7 @@ val infrastructureModule =
         single<SystemConfigRepository> { ExposedSystemConfigRepository() }
         single { CatalogService(get(), get()) }
         single { ProvisionalServiceCreator(get(), get(), get(), get()) }
+        single { AdminCatalogService(get(), get(), get()) }
 
         // Professional Profile Interpretation
         single<ProfessionalInputInterpreter> { LlmProfessionalInputInterpreter(get(), get(), get(), get()) }

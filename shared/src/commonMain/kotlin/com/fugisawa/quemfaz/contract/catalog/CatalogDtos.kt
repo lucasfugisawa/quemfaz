@@ -24,3 +24,22 @@ data class CatalogServiceDto(
     val categoryId: String,
     val aliases: List<String>,
 )
+
+@Serializable
+data class PendingServiceResponse(
+    val id: String,
+    val displayName: String,
+    val description: String,
+    val categoryId: String,
+    val aliases: List<String>,
+    val signalCount: Int,
+    val sources: List<String>,
+    val cities: List<String>,
+    val createdAt: String,
+)
+
+@Serializable
+data class ReviewServiceRequest(
+    val reason: String = "",
+    val mergeIntoServiceId: String? = null,
+)

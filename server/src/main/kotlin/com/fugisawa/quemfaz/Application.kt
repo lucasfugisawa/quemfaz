@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.fugisawa.quemfaz.auth.routing.authRoutes
+import com.fugisawa.quemfaz.catalog.routing.adminCatalogRoutes
 import com.fugisawa.quemfaz.catalog.routing.catalogRoutes
 import com.fugisawa.quemfaz.config.AppConfig
 import com.fugisawa.quemfaz.config.configModule
@@ -102,5 +103,6 @@ fun Application.module(koinModules: List<org.koin.core.module.Module>? = null) {
         moderationRoutes()
         imageRoutes()
         catalogRoutes()
+        adminCatalogRoutes()
     }
 }
