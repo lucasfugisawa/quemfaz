@@ -17,6 +17,7 @@ data class OnboardingInterpretation(
     val needsClarification: Boolean,
     val clarificationQuestions: List<String> = emptyList(),
     val unmatchedDescriptions: List<UnmatchedDescription> = emptyList(),
+    val editedDescription: String = "",
 )
 
 @Serializable
