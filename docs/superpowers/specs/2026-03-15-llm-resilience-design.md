@@ -43,7 +43,13 @@ The onboarding flow uses a three-step pipeline:
 
 This means: **LLM failure does not crash the onboarding flow.** Instead, the user enters a clarification loop. However, the clarification itself also calls the LLM — so if the LLM is fully down, the user enters an infinite fallback→clarification→fallback loop. There is no escape path that bypasses the LLM entirely.
 
-**Required fix:** The system must distinguish between normal clarification (LLM responded but needs more info) and LLM failure (LLM is unavailable). On LLM failure, the flow must bypass clarification entirely and engage fallback mechanisms. See section 4.
+**Required fix — clarification vs. failure:** The system must distinguish between normal clarification (LLM responded but needs more info) and LLM failure (LLM is unavailable). On LLM failure, the flow must bypass clarification entirely and engage fallback mechanisms. See section 4.
+
+**Required fix — neighborhoods:** The current `OnboardingInterpretation` includes `neighborhoods` and the LLM system prompt instructs the model to "extract neighborhoods if present." Neighborhoods must be removed from the interpretation model, the LLM system prompt, and the onboarding UI. See product decision #1.
+
+**Required fix — city extraction from text:** The current LLM prompt asks the model to extract city from the user's free-text description, and the fallback adds `"city"` to `missingFields`. City extraction from text must be removed — city is now handled exclusively by the structured picker (see product decision #4). The LLM prompt should no longer attempt to extract city. The `missingFields` fallback should only include `"services"`.
+
+**Edge case — LLM returns empty services:** If the LLM call succeeds (no exception, valid JSON, `needsClarification: false`) but returns an empty `serviceIds` list, this is NOT an LLM failure — it is the LLM saying "I don't understand this input." This case should still trigger local text matching as a second attempt (Tier 2). If local matching also returns no results, route to manual service selection (Tier 3). The clarification loop should only be entered when the LLM explicitly sets `needsClarification: true`.
 
 ### 1.2 Search Flow
 
@@ -65,6 +71,8 @@ The search flow uses a three-stage pipeline:
 
 **Result:** Search degrades silently. Users get broad, less relevant results instead of an error.
 
+**Required fix — neighborhoods:** The current `SearchInterpretation` includes `neighborhoods` and the LLM system prompt instructs the model to "extract neighborhoods if present." The ranking factor for neighborhood match (30pts) must also be removed. Neighborhoods must be removed from the search interpretation model, the LLM system prompt, and the ranking logic. See product decision #1.
+
 ### 1.3 Service Catalog
 
 Both flows depend on a predefined canonical services catalog (`CanonicalServices.kt`): **23 services across 8 categories** (Cleaning, Repairs, Painting, Garden, Events, Beauty, Moving & Assembly, Other). Each service has an ID, Portuguese display name, description, and aliases. The LLM system prompts include the full catalog, constraining the LLM to only return valid IDs.
@@ -75,7 +83,9 @@ Both flows use `LlmAgentService`, which wraps the OpenAI API via the `ai.koog.pr
 
 **Current timeout behavior:** There is no explicit server-side timeout on the LLM call — it relies on the underlying HTTP client's default behavior. The client-side HTTP timeout is 60 seconds total.
 
-**Required change:** LLM calls must have short, configurable timeouts at the application level. The current 60-second client-side timeout is too slow for onboarding and search flows, which must feel responsive. The system should fail fast and engage fallback mechanisms rather than making the user wait. Timeout values must not be hardcoded — they should be configurable (e.g., via application configuration or environment variables) so they can be tuned without code changes.
+**Required change:** LLM calls must have short, configurable timeouts at the application level. The current 60-second client-side timeout is too slow for onboarding and search flows, which must feel responsive. The system should fail fast and engage fallback mechanisms rather than making the user wait. Timeout values must not be hardcoded — they should be configurable (e.g., via application configuration or environment variables) so they can be tuned without code changes. Reasonable starting values are in the range of 5-10 seconds — long enough for a normal LLM response, short enough that fallback engages quickly.
+
+**Retry policy:** Zero retries. On LLM failure, the system should immediately engage the fallback chain (Tier 2: local matching → Tier 3: manual selection) rather than retrying the LLM call. Retries add latency without meaningfully improving reliability for the failure scenarios that matter most (outages, rate limits, misconfiguration). If the LLM is experiencing transient network issues, the next user action will naturally retry. This can be revisited if monitoring data shows a high rate of transient single-call failures.
 
 ---
 
@@ -285,12 +295,13 @@ The system uses a progressive fallback chain. Each tier is less intelligent but 
 1. User writes free-text description
 2. Server attempts LLM interpretation (short configurable timeout)
 3. **If LLM succeeds and needs clarification:** Normal clarification flow — user answers follow-up questions, LLM re-interprets
-4. **If LLM fails:** Server attempts `CanonicalServices.search()` on the input text
+4. **If LLM succeeds but returns empty services (no clarification):** The LLM understood the input but could not map it to canonical services. This is not an LLM failure — it is a legitimate "I don't understand." The server attempts `CanonicalServices.search()` as a second attempt. If matches found, present them. If no matches, route to manual selection. The clarification loop is not entered.
+5. **If LLM fails:** Server attempts `CanonicalServices.search()` on the input text
    - If matches found: present as interpreted services (same UI as LLM success path)
    - If no matches: route to manual service selection (grouped category browser)
    - **The clarification loop is never entered on LLM failure.** The server returns an `llmUnavailable` flag in the response. The client checks this flag and bypasses clarification, routing directly to either the matched-services confirmation or the manual selection screen. This is stateless — any single LLM failure triggers the fallback path.
-5. User reviews services and cities, then confirms
-6. City selection is handled by a structured picker throughout, independent of the LLM. The city currently selected on the main screen is pre-selected. The professional may add or remove cities from the platform's supported set. At least one city is required.
+6. User reviews services and cities, then confirms
+7. City selection is handled by a structured picker throughout, independent of the LLM. The city currently selected on the main screen is pre-selected. The professional may add or remove cities from the platform's supported set. At least one city is required.
 
 ### Search behavior
 
@@ -326,15 +337,14 @@ The system uses a progressive fallback chain. Each tier is less intelligent but 
 
 ### Implementation sequence
 
-1. Add short, configurable server-side timeout for LLM calls (application-level configuration, not hardcoded)
-2. Wire `CanonicalServices.search()` as the server-side fallback in both `LlmProfessionalInputInterpreter.fallbackResponse()` and `LlmSearchQueryInterpreter.fallbackResult()`
-3. Add `llmUnavailable` flag to onboarding and search response DTOs so the client can distinguish LLM failure from normal clarification
-4. Update client onboarding flow: when `llmUnavailable` is true, bypass clarification and route to either matched-services confirmation or manual selection
-5. Build the manual service selection UI (grouped category list, multi-select for onboarding, single-select for search)
-6. Update client search flow: when `llmUnavailable` is true and no local matches, show the category browser
-7. Remove neighborhoods from interpretation, ranking, data model, and UI
-8. Ensure city selection in onboarding uses a structured picker from supported cities, with the main-screen city pre-selected and support for multiple cities
-9. Add server-side logging and monitoring for all LLM failure events (outage, timeout, invalid response, rate limit, misconfiguration)
+1. **Remove neighborhoods** from interpretation models (`OnboardingInterpretation`, `SearchInterpretation`), LLM system prompts (both `LlmProfessionalInputInterpreter` and `LlmSearchQueryInterpreter`), ranking logic (`ProfessionalSearchRankingService` — remove neighborhood match factor), data model, and UI. Also remove city extraction from the onboarding LLM prompt — city is now handled by the structured picker only. This step should come first since it modifies the same files touched in subsequent steps.
+2. Add short, configurable server-side timeout for LLM calls (application-level configuration, not hardcoded; starting range: 5-10 seconds). Zero retries — fail fast and fall back.
+3. Wire `CanonicalServices.search()` as the server-side fallback in both `LlmProfessionalInputInterpreter.fallbackResponse()` and `LlmSearchQueryInterpreter.fallbackResult()`. Also handle the edge case where the LLM succeeds but returns empty services — apply local matching as a second attempt.
+4. Add `llmUnavailable` flag to onboarding and search response DTOs (shared contract change in `shared/contract/`) and update both server response construction and client consumption in the same step, per the project's shared-contract-change rule.
+5. Update client onboarding flow: when `llmUnavailable` is true, bypass clarification and route to either matched-services confirmation or manual selection
+6. Build the manual service selection UI (grouped category list, multi-select for onboarding, single-select for search)
+7. Ensure city selection in onboarding uses a structured picker from supported cities, with the main-screen city pre-selected and support for multiple cities
+8. Add server-side logging and monitoring for all LLM failure events (outage, timeout, invalid response, rate limit, misconfiguration). Monitoring specifics (structured log fields, metrics, alert thresholds) to be detailed in the implementation plan.
 
 ---
 
