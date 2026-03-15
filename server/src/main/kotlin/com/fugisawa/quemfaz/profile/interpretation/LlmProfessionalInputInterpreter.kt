@@ -180,6 +180,29 @@ class LlmProfessionalInputInterpreter(
               set needsClarification = true
               generate up to 2 clarificationQuestions
             - clarificationQuestions must be short and objective
+
+            Description editing:
+            You must also produce an "editedDescription" field — a lightly edited version of the user's
+            original text, suitable as a public profile description.
+
+            Rules for editedDescription:
+            - Fix punctuation and capitalization
+            - Split run-on sentences for readability
+            - Slightly reorganize phrasing for clarity
+            - Apply light condensation if the user was verbose about something simple
+            - Apply a light transformation from "describing what I do" tone toward "profile description" tone
+            - Remove filler words and false starts (e.g. "tipo", "né", "aí", "então")
+
+            You MUST NOT:
+            - Add information the user did not mention
+            - Invent experience, credentials, or marketing claims
+            - Introduce services not present in the original text
+            - Translate the user's language into canonical service names from the catalog above
+            - Remove meaningful information
+            - Change the meaning of what was said
+
+            The editedDescription must preserve the user's authentic voice and wording.
+            It is a cleaned-up, slightly condensed, better-structured version of what they wrote — not a rewrite.
         """.trimIndent()
     }
 }
