@@ -153,8 +153,10 @@ private data class CachedSearch(
     val timestamp: Long,  // kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
 )
 
-private val searchCache = LinkedHashMap<String, CachedSearch>(5, 0.75f, true)
+private val searchCache = mutableMapOf<String, CachedSearch>()
 ```
+
+**Note:** Uses `mutableMapOf` (KMP-safe) instead of `LinkedHashMap(capacity, loadFactor, accessOrder)` which is JVM-only. Eviction is by insertion order: when cache exceeds 5 entries, remove the oldest key (`searchCache.keys.first()`) before inserting the new entry. TTL is the primary eviction strategy; the 5-entry cap is a memory safety bound.
 
 **Cache key:** `"$query:$cityName"` (normalized lowercase).
 
@@ -163,7 +165,7 @@ private val searchCache = LinkedHashMap<String, CachedSearch>(5, 0.75f, true)
 **TTL:** 10 minutes. On `search(query)`:
 1. Compute cache key.
 2. If entry exists and `Clock.System.now().toEpochMilliseconds() - entry.timestamp < 600_000`: restore UI state from cache (set Success, restore accumulated results, page number, hasMore). Return without server call.
-3. Otherwise: fetch from server, store result in cache. Evict oldest entry if cache exceeds 5 entries.
+3. Otherwise: fetch from server, store result in cache. If cache exceeds 5 entries, remove `searchCache.keys.first()` before inserting.
 
 **`loadMoreResults()` updates the cache entry** — the cached entry is replaced with the new accumulated results and incremented page number.
 
