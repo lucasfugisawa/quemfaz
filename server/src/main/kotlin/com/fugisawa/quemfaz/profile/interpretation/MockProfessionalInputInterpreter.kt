@@ -29,9 +29,6 @@ class MockProfessionalInputInterpreter : ProfessionalInputInterpreter {
                     matches
                 }.distinctBy { it.serviceId }
 
-        val cities = listOf("Batatais", "Franca", "Ribeirão Preto")
-        val cityName = cities.find { normalizedText.contains(it.lowercase()) }
-
         val missingFields = mutableListOf<String>()
         val followUpQuestions = mutableListOf<String>()
 
@@ -40,18 +37,14 @@ class MockProfessionalInputInterpreter : ProfessionalInputInterpreter {
             followUpQuestions.add("Pode nos contar um pouco mais sobre os serviços que você oferece?")
         }
 
-        if (cityName == null) {
-            missingFields.add("city")
-            followUpQuestions.add("Em qual cidade você atende?")
-        }
-
         return CreateProfessionalProfileDraftResponse(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
             interpretedServices = interpretedServices,
-            cityName = cityName,
+            cityName = null,
             missingFields = missingFields,
             followUpQuestions = followUpQuestions.take(2),
             freeTextAliases = interpretedServices.map { it.displayName },
+            llmUnavailable = false,
         )
     }
 
