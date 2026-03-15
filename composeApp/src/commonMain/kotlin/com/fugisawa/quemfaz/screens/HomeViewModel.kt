@@ -21,7 +21,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.drop
-import kotlinx.datetime.Clock
+import kotlin.time.ComparableTimeMark
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeSource
 
 sealed class SearchUiState {
     object Idle : SearchUiState()
@@ -41,13 +43,13 @@ class HomeViewModel(
         val accumulatedResults: List<ProfessionalProfileResponse>,
         val currentPage: Int,
         val hasMore: Boolean,
-        val timestamp: Long,
+        val timestamp: ComparableTimeMark,
     )
 
     private val searchCache = mutableMapOf<String, CachedSearch>()
 
     companion object {
-        private const val CACHE_TTL_MS = 600_000L  // 10 minutes
+        private val CACHE_TTL = 10.minutes
         private const val CACHE_MAX_ENTRIES = 5
     }
 
@@ -106,8 +108,7 @@ class HomeViewModel(
         // Check cache
         val cacheKey = "${query.lowercase()}:${currentCity.value?.lowercase()}"
         val cached = searchCache[cacheKey]
-        val now = Clock.System.now().toEpochMilliseconds()
-        if (cached != null && now - cached.timestamp < CACHE_TTL_MS) {
+        if (cached != null && cached.timestamp.elapsedNow() < CACHE_TTL) {
             // Restore from cache
             lastQuery = query
             currentPage = cached.currentPage
@@ -169,7 +170,7 @@ class HomeViewModel(
                     accumulatedResults = accumulated,
                     currentPage = currentPage,
                     hasMore = hasMoreValue,
-                    timestamp = Clock.System.now().toEpochMilliseconds(),
+                    timestamp = TimeSource.Monotonic.markNow(),
                 )
 
                 // Load favorites to show inline favorite state on search results cards.

@@ -2,9 +2,8 @@ package com.fugisawa.quemfaz.profile.interpretation
 
 import com.fugisawa.quemfaz.catalog.application.CatalogEntry
 import com.fugisawa.quemfaz.catalog.application.CatalogService
-import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
+import com.fugisawa.quemfaz.catalog.application.SignalCaptureService
 import com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus
-import com.fugisawa.quemfaz.catalog.domain.SignalRepository
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.llm.LlmAgentService
 import kotlinx.serialization.KSerializer
@@ -16,8 +15,7 @@ import kotlin.test.assertTrue
 class LlmProfessionalInputInterpreterFallbackTest {
 
     private val mockCatalogService: CatalogService = mock()
-    private val mockSignalRepository: SignalRepository = mock()
-    private val mockProvisionalServiceCreator: ProvisionalServiceCreator = mock()
+    private val mockSignalCaptureService: SignalCaptureService = mock()
 
     private val electricianEntry = CatalogEntry(
         id = "repair-electrician",
@@ -65,8 +63,7 @@ class LlmProfessionalInputInterpreterFallbackTest {
     private val interpreter = LlmProfessionalInputInterpreter(
         FailingLlmAgentService(),
         mockCatalogService,
-        mockSignalRepository,
-        mockProvisionalServiceCreator,
+        mockSignalCaptureService,
     )
 
     @Test

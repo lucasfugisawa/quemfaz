@@ -10,8 +10,10 @@ class AdminCatalogService(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    fun listPendingServices(): List<PendingServiceView> {
+    fun listPendingServices(limit: Int = 50, offset: Int = 0): List<PendingServiceView> {
         val pending = catalogRepository.findServicesByStatus(CatalogServiceStatus.PENDING_REVIEW)
+            .drop(offset)
+            .take(limit)
         return pending.map { service ->
             val signals = signalRepository.findByProvisionalServiceId(service.id)
             PendingServiceView(
@@ -30,6 +32,7 @@ class AdminCatalogService(
             "Only pending_review services can be approved. Current status: ${service.status}"
         }
         catalogRepository.updateServiceStatus(serviceId, CatalogServiceStatus.ACTIVE, reviewedBy = reviewedBy)
+        catalogService.incrementVersion()
         catalogService.refreshCache()
         logger.info("Service approved: {} by {}", serviceId, reviewedBy)
     }
@@ -42,6 +45,7 @@ class AdminCatalogService(
         }
         catalogRepository.removeServiceFromProfiles(serviceId)
         catalogRepository.updateServiceStatus(serviceId, CatalogServiceStatus.REJECTED, reason, reviewedBy)
+        catalogService.incrementVersion()
         catalogService.refreshCache()
         logger.info("Service rejected: {} by {} — reason: {}", serviceId, reviewedBy, reason)
     }
@@ -59,6 +63,7 @@ class AdminCatalogService(
         }
         catalogRepository.migrateProfileServices(serviceId, mergeIntoServiceId)
         catalogRepository.updateServiceStatus(serviceId, CatalogServiceStatus.MERGED, reason, reviewedBy, mergeIntoServiceId)
+        catalogService.incrementVersion()
         catalogService.refreshCache()
         logger.info("Service merged: {} → {} by {} — reason: {}", serviceId, mergeIntoServiceId, reviewedBy, reason)
     }

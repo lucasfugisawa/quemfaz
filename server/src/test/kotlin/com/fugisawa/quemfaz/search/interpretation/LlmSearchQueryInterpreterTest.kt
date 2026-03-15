@@ -2,9 +2,8 @@ package com.fugisawa.quemfaz.search.interpretation
 
 import com.fugisawa.quemfaz.catalog.application.CatalogEntry
 import com.fugisawa.quemfaz.catalog.application.CatalogService
-import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
+import com.fugisawa.quemfaz.catalog.application.SignalCaptureService
 import com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus
-import com.fugisawa.quemfaz.catalog.domain.SignalRepository
 import com.fugisawa.quemfaz.llm.LlmAgentService
 import com.fugisawa.quemfaz.llm.SearchInterpretation
 import kotlinx.serialization.KSerializer
@@ -17,8 +16,7 @@ import kotlin.test.assertTrue
 
 class LlmSearchQueryInterpreterTest {
     private val mockCatalogService: CatalogService = mock()
-    private val mockSignalRepository: SignalRepository = mock()
-    private val mockProvisionalServiceCreator: ProvisionalServiceCreator = mock()
+    private val mockSignalCaptureService: SignalCaptureService = mock()
 
     private val paintEntry = CatalogEntry(
         id = "paint-residential",
@@ -60,7 +58,7 @@ class LlmSearchQueryInterpreterTest {
                     serviceIds = listOf("paint-residential"),
                 ),
             )
-        val interpreter = LlmSearchQueryInterpreter(service, mockCatalogService, mockSignalRepository, mockProvisionalServiceCreator)
+        val interpreter = LlmSearchQueryInterpreter(service, mockCatalogService, mockSignalCaptureService)
 
         val result = interpreter.interpret("pintor residencial em Batatais Centro", "Batatais")
 
@@ -76,7 +74,7 @@ class LlmSearchQueryInterpreterTest {
                     serviceIds = listOf("paint-residential"),
                 ),
             )
-        val interpreter = LlmSearchQueryInterpreter(service, mockCatalogService, mockSignalRepository, mockProvisionalServiceCreator)
+        val interpreter = LlmSearchQueryInterpreter(service, mockCatalogService, mockSignalCaptureService)
 
         val result = interpreter.interpret("pintor", "Franca")
 
@@ -86,7 +84,7 @@ class LlmSearchQueryInterpreterTest {
     @Test
     fun `should fallback gracefully on LLM failure`() {
         val service = createFakeService(exception = RuntimeException("API error"))
-        val interpreter = LlmSearchQueryInterpreter(service, mockCatalogService, mockSignalRepository, mockProvisionalServiceCreator)
+        val interpreter = LlmSearchQueryInterpreter(service, mockCatalogService, mockSignalCaptureService)
 
         val result = interpreter.interpret("pintor em Batatais", "Batatais")
 

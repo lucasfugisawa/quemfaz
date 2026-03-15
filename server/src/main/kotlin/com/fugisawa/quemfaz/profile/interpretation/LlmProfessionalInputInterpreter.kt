@@ -1,9 +1,7 @@
 package com.fugisawa.quemfaz.profile.interpretation
 
 import com.fugisawa.quemfaz.catalog.application.CatalogService
-import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
-import com.fugisawa.quemfaz.catalog.domain.SignalRepository
-import com.fugisawa.quemfaz.catalog.domain.UnmatchedServiceSignal
+import com.fugisawa.quemfaz.catalog.application.SignalCaptureService
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.InputMode
@@ -13,14 +11,11 @@ import com.fugisawa.quemfaz.llm.LlmAgentService
 import com.fugisawa.quemfaz.llm.OnboardingInterpretation
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
-import java.time.Instant
-import java.util.UUID
 
 class LlmProfessionalInputInterpreter(
     private val llmAgentService: LlmAgentService,
     private val catalogService: CatalogService,
-    private val signalRepository: SignalRepository,
-    private val provisionalServiceCreator: ProvisionalServiceCreator,
+    private val signalCaptureService: SignalCaptureService,
 ) : ProfessionalInputInterpreter {
     private val logger = LoggerFactory.getLogger(LlmProfessionalInputInterpreter::class.java)
 
@@ -29,14 +24,14 @@ class LlmProfessionalInputInterpreter(
         inputMode: InputMode,
     ): CreateProfessionalProfileDraftResponse =
         try {
-            val interpretation =
-                runBlocking {
+            runBlocking {
+                val interpretation =
                     llmAgentService.executeStructured<OnboardingInterpretation>(
                         systemPrompt = buildSystemPrompt(),
                         userMessage = "Description:\n$inputText",
                     )
-                }
-            mapToResponse(inputText, interpretation)
+                mapToResponse(inputText, interpretation)
+            }
         } catch (e: Exception) {
             logger.error(
                 "LLM interpretation failed [flow=onboarding, inputLength={}, errorType={}, message={}]. Engaging local matching fallback.",
@@ -47,7 +42,7 @@ class LlmProfessionalInputInterpreter(
             fallbackResponse(inputText)
         }
 
-    private fun mapToResponse(
+    private suspend fun mapToResponse(
         inputText: String,
         interpretation: OnboardingInterpretation,
     ): CreateProfessionalProfileDraftResponse {
@@ -82,7 +77,10 @@ class LlmProfessionalInputInterpreter(
         // Process unmatched descriptions — capture signals, collect blocked
         val blockedDescriptions = mutableListOf<String>()
         interpretation.unmatchedDescriptions.forEach { unmatched ->
-            captureSignal(unmatched.rawDescription, "onboarding", null, null, unmatched.safetyClassification, unmatched.safetyReason)
+            signalCaptureService.captureSignal(
+                unmatched.rawDescription, "onboarding", null, null,
+                unmatched.safetyClassification, unmatched.safetyReason,
+            )
             if (unmatched.safetyClassification == "unsafe") {
                 blockedDescriptions.add(unmatched.rawDescription)
             }
@@ -108,7 +106,9 @@ class LlmProfessionalInputInterpreter(
 
         // Capture signal if no matches found
         if (interpretedServices.isEmpty()) {
-            captureSignal(inputText, "onboarding", null, null, null, null)
+            runBlocking {
+                signalCaptureService.captureSignal(inputText, "onboarding", null, null, null, null)
+            }
         }
 
         return CreateProfessionalProfileDraftResponse(
@@ -128,16 +128,16 @@ class LlmProfessionalInputInterpreter(
         inputMode: InputMode,
     ): CreateProfessionalProfileDraftResponse =
         try {
-            val answersText = clarificationAnswers.joinToString("\n") { "Q: ${it.question}\nA: ${it.answer}" }
-            val userMessage = "Original description:\n$originalDescription\n\nClarification answers:\n$answersText"
-            val interpretation =
-                runBlocking {
+            runBlocking {
+                val answersText = clarificationAnswers.joinToString("\n") { "Q: ${it.question}\nA: ${it.answer}" }
+                val userMessage = "Original description:\n$originalDescription\n\nClarification answers:\n$answersText"
+                val interpretation =
                     llmAgentService.executeStructured<OnboardingInterpretation>(
                         systemPrompt = buildSystemPrompt(),
                         userMessage = userMessage,
                     )
-                }
-            mapToResponse(originalDescription, interpretation)
+                mapToResponse(originalDescription, interpretation)
+            }
         } catch (e: Exception) {
             logger.error(
                 "LLM interpretation failed [flow=onboarding, inputLength={}, errorType={}, message={}]. Engaging local matching fallback.",
@@ -147,39 +147,6 @@ class LlmProfessionalInputInterpreter(
             )
             fallbackResponse(originalDescription)
         }
-
-    private fun captureSignal(
-        rawDescription: String,
-        source: String,
-        userId: String?,
-        cityName: String?,
-        safetyClassification: String?,
-        safetyReason: String?,
-    ) {
-        try {
-            val provisionalId = provisionalServiceCreator.tryProvision(
-                rawDescription, source, userId, cityName, safetyClassification, safetyReason
-            )
-            val bestMatch = catalogService.search(rawDescription).firstOrNull()
-            signalRepository.create(
-                UnmatchedServiceSignal(
-                    id = UUID.randomUUID().toString(),
-                    rawDescription = rawDescription,
-                    source = source,
-                    userId = userId,
-                    bestMatchServiceId = bestMatch?.id,
-                    bestMatchConfidence = if (bestMatch != null) "low" else "none",
-                    provisionalServiceId = provisionalId,
-                    cityName = cityName,
-                    safetyClassification = safetyClassification,
-                    safetyReason = safetyReason,
-                    createdAt = Instant.now(),
-                ),
-            )
-        } catch (e: Exception) {
-            logger.error("Failed to capture unmatched service signal: {}", e.message)
-        }
-    }
 
     private fun buildSystemPrompt(): String {
         val catalog = catalogService.getActiveServices().joinToString("\n") { service ->

@@ -42,6 +42,7 @@ import com.fugisawa.quemfaz.infrastructure.sms.SmsSender
 import com.fugisawa.quemfaz.catalog.application.AdminCatalogService
 import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
+import com.fugisawa.quemfaz.catalog.application.SignalCaptureService
 import com.fugisawa.quemfaz.catalog.domain.CatalogRepository
 import com.fugisawa.quemfaz.catalog.domain.SignalRepository
 import com.fugisawa.quemfaz.catalog.domain.SystemConfigRepository
@@ -155,10 +156,11 @@ val infrastructureModule =
         single<SystemConfigRepository> { ExposedSystemConfigRepository() }
         single { CatalogService(get(), get()) }
         single { ProvisionalServiceCreator(get(), get(), get(), get()) }
+        single { SignalCaptureService(get(), get(), get()) }
         single { AdminCatalogService(get(), get(), get()) }
 
         // Professional Profile Interpretation
-        single<ProfessionalInputInterpreter> { LlmProfessionalInputInterpreter(get(), get(), get(), get()) }
+        single<ProfessionalInputInterpreter> { LlmProfessionalInputInterpreter(get(), get(), get()) }
 
         // Professional Profile Services
         single { CreateProfessionalProfileDraftService(get()) }
@@ -173,7 +175,7 @@ val infrastructureModule =
         single<SearchQueryRepository> { ExposedSearchQueryRepository() }
 
         // Search Interpretation
-        single<SearchQueryInterpreter> { LlmSearchQueryInterpreter(get(), get(), get(), get()) }
+        single<SearchQueryInterpreter> { LlmSearchQueryInterpreter(get(), get(), get()) }
 
         // Search Ranking
         single { ProfessionalSearchRankingService() }

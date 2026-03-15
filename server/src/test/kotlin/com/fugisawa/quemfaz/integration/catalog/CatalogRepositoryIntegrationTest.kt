@@ -6,6 +6,7 @@ import com.fugisawa.quemfaz.catalog.infrastructure.persistence.*
 import com.fugisawa.quemfaz.integration.BaseIntegrationTest
 import io.ktor.client.request.get
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 import java.util.UUID
 import org.junit.jupiter.api.Test
@@ -59,9 +60,14 @@ class CatalogRepositoryIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `signal repository creates and retrieves signals`() = integrationTestApplication {
+    fun `signal repository creates and retrieves by provisional service ID`() = integrationTestApplication {
         createTestClient().get("/")
-        val repo = ExposedSignalRepository()
+        val catalogRepo = ExposedCatalogRepository()
+        val signalRepo = ExposedSignalRepository()
+
+        // Use a real seeded service as the provisional service ID (FK constraint)
+        val provisionalId = "clean-house"
+
         val signal = UnmatchedServiceSignal(
             id = UUID.randomUUID().toString(),
             rawDescription = "instalo câmeras de segurança",
@@ -69,16 +75,23 @@ class CatalogRepositoryIntegrationTest : BaseIntegrationTest() {
             userId = null,
             bestMatchServiceId = "repair-electrician",
             bestMatchConfidence = "low",
-            provisionalServiceId = null,
+            provisionalServiceId = provisionalId,
             cityName = "São Paulo",
             safetyClassification = "safe",
             safetyReason = null,
             createdAt = Instant.now(),
         )
-        repo.create(signal)
-        // Retrieve by provisional service ID (null) should return empty
-        val signals = repo.findByProvisionalServiceId("some-id")
-        assertTrue(signals.isEmpty())
+        signalRepo.create(signal)
+
+        // Positive case: retrieve by the actual provisional service ID
+        val found = signalRepo.findByProvisionalServiceId(provisionalId)
+        assertTrue(found.isNotEmpty())
+        assertTrue(found.any { it.rawDescription == signal.rawDescription })
+        assertEquals("onboarding", found.first { it.rawDescription == signal.rawDescription }.source)
+
+        // Negative case: different provisional service ID returns empty
+        val notFound = signalRepo.findByProvisionalServiceId("nonexistent-id")
+        assertTrue(notFound.isEmpty())
     }
 
     @Test

@@ -2,7 +2,6 @@ package com.fugisawa.quemfaz.catalog.application
 
 import com.fugisawa.quemfaz.catalog.domain.*
 import com.fugisawa.quemfaz.llm.LlmAgentService
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -25,7 +24,7 @@ class ProvisionalServiceCreator(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    fun tryProvision(
+    suspend fun tryProvision(
         rawDescription: String,
         source: String,
         userId: String?,
@@ -83,6 +82,7 @@ class ProvisionalServiceCreator(
                 updatedAt = Instant.now(),
             )
             catalogRepository.createService(service)
+            catalogService.incrementVersion()
             catalogService.refreshCache()
             logger.info("Provisional service created: {} ({})", service.id, service.displayName)
             service.id
@@ -92,7 +92,7 @@ class ProvisionalServiceCreator(
         }
     }
 
-    private fun generateCandidate(rawDescription: String): CandidateServiceDefinition {
+    private suspend fun generateCandidate(rawDescription: String): CandidateServiceDefinition {
         val pendingServices = catalogRepository.findServicesByStatus(CatalogServiceStatus.PENDING_REVIEW)
         val pendingList = if (pendingServices.isNotEmpty()) {
             "\n\nExisting pending services (reuse if the description matches one of these):\n" +
@@ -121,11 +121,9 @@ class ProvisionalServiceCreator(
             - Do NOT create a service that significantly overlaps with an existing active service
         """.trimIndent()
 
-        return runBlocking {
-            llmAgentService.executeStructured<CandidateServiceDefinition>(
-                systemPrompt = prompt,
-                userMessage = rawDescription,
-            )
-        }
+        return llmAgentService.executeStructured<CandidateServiceDefinition>(
+            systemPrompt = prompt,
+            userMessage = rawDescription,
+        )
     }
 }

@@ -2,6 +2,15 @@ package com.fugisawa.quemfaz.catalog.application
 
 import com.fugisawa.quemfaz.catalog.domain.*
 import org.slf4j.LoggerFactory
+import java.text.Normalizer
+
+private data class CatalogSnapshot(
+    val categories: List<ServiceCategory>,
+    val activeServices: List<CatalogEntry>,
+    val allVisibleServices: List<CatalogEntry>,
+    val byId: Map<String, CatalogEntry>,
+    val version: String,
+)
 
 class CatalogService(
     private val catalogRepository: CatalogRepository,
@@ -9,65 +18,80 @@ class CatalogService(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Volatile private var cachedCategories: List<ServiceCategory> = emptyList()
-    @Volatile private var cachedActiveServices: List<CatalogEntry> = emptyList()
-    @Volatile private var cachedAllVisibleServices: List<CatalogEntry> = emptyList()
-    @Volatile private var byId: Map<String, CatalogEntry> = emptyMap()
-    @Volatile private var catalogVersion: String = ""
+    @Volatile
+    private var snapshot = CatalogSnapshot(
+        categories = emptyList(),
+        activeServices = emptyList(),
+        allVisibleServices = emptyList(),
+        byId = emptyMap(),
+        version = "",
+    )
 
     init {
         refreshCache()
     }
 
     fun refreshCache() {
-        cachedCategories = catalogRepository.findAllCategories()
+        val categories = catalogRepository.findAllCategories()
         val active = catalogRepository.findServicesByStatus(CatalogServiceStatus.ACTIVE)
         val pendingReview = catalogRepository.findServicesByStatus(CatalogServiceStatus.PENDING_REVIEW)
-        cachedActiveServices = active.map { it.toEntry() }
-        cachedAllVisibleServices = (active + pendingReview).map { it.toEntry() }
-        byId = cachedAllVisibleServices.associateBy { it.id }
-        catalogVersion = active.hashCode().toString(16)
-        logger.info("Catalog cache refreshed: {} active, {} pending_review", active.size, pendingReview.size)
+        val activeEntries = active.map { it.toEntry() }
+        val allVisible = (active + pendingReview).map { it.toEntry() }
+        val version = configRepository.get("catalog.version") ?: "0"
+
+        snapshot = CatalogSnapshot(
+            categories = categories,
+            activeServices = activeEntries,
+            allVisibleServices = allVisible,
+            byId = allVisible.associateBy { it.id },
+            version = version,
+        )
+        logger.info("Catalog cache refreshed: {} active, {} pending_review, version={}", active.size, pendingReview.size, version)
     }
 
-    fun getCategories(): List<ServiceCategory> = cachedCategories
+    fun getCategories(): List<ServiceCategory> = snapshot.categories
 
-    fun getActiveServices(): List<CatalogEntry> = cachedActiveServices
+    fun getActiveServices(): List<CatalogEntry> = snapshot.activeServices
 
-    fun getAllVisibleServices(): List<CatalogEntry> = cachedAllVisibleServices
+    fun getAllVisibleServices(): List<CatalogEntry> = snapshot.allVisibleServices
 
-    fun findById(id: String): CatalogEntry? = byId[id]
+    fun findById(id: String): CatalogEntry? = snapshot.byId[id]
 
-    fun getCatalogVersion(): String = catalogVersion
+    fun getCatalogVersion(): String = snapshot.version
 
     fun isAutoProvisioningEnabled(): Boolean =
         configRepository.get("catalog.auto-provisioning.enabled") == "true"
 
+    fun incrementVersion() {
+        val current = configRepository.get("catalog.version")?.toLongOrNull() ?: 0
+        configRepository.set("catalog.version", (current + 1).toString())
+    }
+
     /**
      * Weighted search across active services only (used for local matching fallback).
-     * Same scoring algorithm as the original CanonicalServices.search().
+     * Accent-insensitive matching for Portuguese text.
      */
     fun search(query: String): List<CatalogEntry> {
         if (query.isBlank()) return emptyList()
-        val lowerQuery = query.lowercase().trim()
+        val normalizedQuery = query.stripAccents().lowercase().trim()
         val results = mutableListOf<Pair<CatalogEntry, Int>>()
 
-        cachedActiveServices.forEach { service ->
+        snapshot.activeServices.forEach { service ->
             var score = 0
-            val lowerDisplayName = service.displayName.lowercase()
+            val normalizedDisplayName = service.displayName.stripAccents().lowercase()
 
-            if (lowerDisplayName == lowerQuery) score += 100
-            else if (lowerDisplayName.contains(lowerQuery)) score += 50
-            else if (lowerQuery.contains(lowerDisplayName)) score += 70
+            if (normalizedDisplayName == normalizedQuery) score += 100
+            else if (normalizedDisplayName.contains(normalizedQuery)) score += 50
+            else if (normalizedQuery.contains(normalizedDisplayName)) score += 70
 
             service.aliases.forEach { alias ->
-                val lowerAlias = alias.lowercase()
-                if (lowerAlias == lowerQuery) score += 80
-                else if (lowerAlias.contains(lowerQuery)) score += 40
-                else if (lowerQuery.contains(lowerAlias)) score += 60
+                val normalizedAlias = alias.stripAccents().lowercase()
+                if (normalizedAlias == normalizedQuery) score += 80
+                else if (normalizedAlias.contains(normalizedQuery)) score += 40
+                else if (normalizedQuery.contains(normalizedAlias)) score += 60
             }
 
-            if (service.description.lowercase().contains(lowerQuery)) score += 10
+            if (service.description.stripAccents().lowercase().contains(normalizedQuery)) score += 10
 
             if (score > 0) results.add(service to score)
         }
@@ -97,3 +121,7 @@ private fun CatalogServiceRecord.toEntry() = CatalogEntry(
     aliases = this.aliases,
     status = this.status,
 )
+
+private fun String.stripAccents(): String =
+    Normalizer.normalize(this, Normalizer.Form.NFD)
+        .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")

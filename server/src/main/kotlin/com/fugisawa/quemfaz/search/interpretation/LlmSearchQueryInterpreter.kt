@@ -1,22 +1,17 @@
 package com.fugisawa.quemfaz.search.interpretation
 
 import com.fugisawa.quemfaz.catalog.application.CatalogService
-import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
-import com.fugisawa.quemfaz.catalog.domain.SignalRepository
-import com.fugisawa.quemfaz.catalog.domain.UnmatchedServiceSignal
+import com.fugisawa.quemfaz.catalog.application.SignalCaptureService
 import com.fugisawa.quemfaz.llm.LlmAgentService
 import com.fugisawa.quemfaz.llm.SearchInterpretation
 import com.fugisawa.quemfaz.search.domain.InterpretedSearchQuery
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
-import java.time.Instant
-import java.util.UUID
 
 class LlmSearchQueryInterpreter(
     private val llmAgentService: LlmAgentService,
     private val catalogService: CatalogService,
-    private val signalRepository: SignalRepository,
-    private val provisionalServiceCreator: ProvisionalServiceCreator,
+    private val signalCaptureService: SignalCaptureService,
 ) : SearchQueryInterpreter {
     private val logger = LoggerFactory.getLogger(LlmSearchQueryInterpreter::class.java)
 
@@ -25,14 +20,14 @@ class LlmSearchQueryInterpreter(
         cityContext: String?,
     ): InterpretedSearchQuery =
         try {
-            val interpretation =
-                runBlocking {
+            runBlocking {
+                val interpretation =
                     llmAgentService.executeStructured<SearchInterpretation>(
                         systemPrompt = buildSystemPrompt(),
                         userMessage = "Query:\n$query",
                     )
-                }
-            mapToResult(query, cityContext, interpretation)
+                mapToResult(query, cityContext, interpretation)
+            }
         } catch (e: Exception) {
             logger.error(
                 "LLM interpretation failed [flow=search, query={}, cityContext={}, errorType={}, message={}]. Engaging local matching fallback.",
@@ -44,7 +39,7 @@ class LlmSearchQueryInterpreter(
             fallbackResult(query, cityContext)
         }
 
-    private fun mapToResult(
+    private suspend fun mapToResult(
         query: String,
         cityContext: String?,
         interpretation: SearchInterpretation,
@@ -66,7 +61,10 @@ class LlmSearchQueryInterpreter(
         // Process unmatched descriptions — capture signals, collect blocked
         val blockedDescriptions = mutableListOf<String>()
         interpretation.unmatchedDescriptions.forEach { unmatched ->
-            captureSignal(unmatched.rawDescription, "search", null, cityContext, unmatched.safetyClassification, unmatched.safetyReason)
+            signalCaptureService.captureSignal(
+                unmatched.rawDescription, "search", null, cityContext,
+                unmatched.safetyClassification, unmatched.safetyReason,
+            )
             if (unmatched.safetyClassification == "unsafe") {
                 blockedDescriptions.add(unmatched.rawDescription)
             }
@@ -92,7 +90,9 @@ class LlmSearchQueryInterpreter(
 
         // Capture signal if no matches found
         if (serviceIds.isEmpty()) {
-            captureSignal(query, "search", null, cityContext, null, null)
+            runBlocking {
+                signalCaptureService.captureSignal(query, "search", null, cityContext, null, null)
+            }
         }
 
         return InterpretedSearchQuery(
@@ -103,39 +103,6 @@ class LlmSearchQueryInterpreter(
             freeTextAliases = localMatches.take(1).map { it.displayName },
             llmUnavailable = true,
         )
-    }
-
-    private fun captureSignal(
-        rawDescription: String,
-        source: String,
-        userId: String?,
-        cityName: String?,
-        safetyClassification: String?,
-        safetyReason: String?,
-    ) {
-        try {
-            val provisionalId = provisionalServiceCreator.tryProvision(
-                rawDescription, source, userId, cityName, safetyClassification, safetyReason
-            )
-            val bestMatch = catalogService.search(rawDescription).firstOrNull()
-            signalRepository.create(
-                UnmatchedServiceSignal(
-                    id = UUID.randomUUID().toString(),
-                    rawDescription = rawDescription,
-                    source = source,
-                    userId = userId,
-                    bestMatchServiceId = bestMatch?.id,
-                    bestMatchConfidence = if (bestMatch != null) "low" else "none",
-                    provisionalServiceId = provisionalId,
-                    cityName = cityName,
-                    safetyClassification = safetyClassification,
-                    safetyReason = safetyReason,
-                    createdAt = Instant.now(),
-                ),
-            )
-        } catch (e: Exception) {
-            logger.error("Failed to capture unmatched service signal: {}", e.message)
-        }
     }
 
     private fun buildSystemPrompt(): String {

@@ -223,20 +223,10 @@ class ExposedSystemConfigRepository : SystemConfigRepository {
     }
 
     override fun set(key: String, value: String) = transaction {
-        val exists = SystemConfigurationTable
-            .selectAll()
-            .where { SystemConfigurationTable.key eq key }
-            .count() > 0
-        if (exists) {
-            SystemConfigurationTable.update({ SystemConfigurationTable.key eq key }) {
-                it[SystemConfigurationTable.value] = value
-                it[updatedAt] = Instant.now()
-            }
-        } else {
-            SystemConfigurationTable.insert {
-                it[SystemConfigurationTable.key] = key
-                it[SystemConfigurationTable.value] = value
-            }
+        SystemConfigurationTable.upsert(SystemConfigurationTable.key) {
+            it[SystemConfigurationTable.key] = key
+            it[SystemConfigurationTable.value] = value
+            it[updatedAt] = Instant.now()
         }
         Unit
     }
