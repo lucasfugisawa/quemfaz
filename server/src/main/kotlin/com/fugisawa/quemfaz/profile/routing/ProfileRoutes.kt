@@ -21,6 +21,7 @@ import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -44,6 +45,7 @@ fun Route.profileRoutes() {
             val profileId = call.parameters["profileId"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val response = getPublicProfileService.execute(ProfessionalProfileId(profileId))
             if (response != null) {
+                call.response.header("Cache-Control", "public, max-age=120")
                 call.respond(response)
             } else {
                 call.respond(HttpStatusCode.NotFound)
@@ -97,6 +99,7 @@ fun Route.profileRoutes() {
 
                 val response = getMyProfileService.execute(UserId(userId))
                 if (response != null) {
+                    call.response.header("Cache-Control", "private, no-cache")
                     call.respond(response)
                 } else {
                     call.respond(HttpStatusCode.NoContent)
