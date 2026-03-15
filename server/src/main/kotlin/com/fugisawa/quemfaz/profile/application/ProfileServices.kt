@@ -216,7 +216,7 @@ private fun mapToResponse(
         lastName = lastName,
         knownName = profile.knownName,
         photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
-        description = profile.normalizedDescription ?: "",
+        description = profile.description ?: "",
         cityName = profile.cityName ?: "",
         services = profile.services.map { svc ->
             val canonical = catalogService.findById(svc.serviceId)
