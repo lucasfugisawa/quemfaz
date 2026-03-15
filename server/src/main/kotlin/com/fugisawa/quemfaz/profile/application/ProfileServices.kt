@@ -95,7 +95,6 @@ class ConfirmProfessionalProfileService(
                 contactPhone = request.contactPhone,
                 whatsappPhone = request.whatsAppPhone,
                 cityName = request.cityName,
-                neighborhoods = request.neighborhoods,
                 services = services,
                 portfolioPhotos = portfolioPhotos,
                 completeness = completeness,
@@ -187,7 +186,6 @@ class UpdateProfessionalProfileService(
                 contactPhone = request.contactPhone,
                 whatsappPhone = request.whatsAppPhone,
                 cityName = request.cityName,
-                neighborhoods = request.neighborhoods,
                 services = services,
                 portfolioPhotos = portfolioPhotos,
                 completeness = completeness,
@@ -215,7 +213,7 @@ private fun mapToResponse(
         photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
         description = profile.normalizedDescription ?: "",
         cityName = profile.cityName ?: "",
-        neighborhoods = profile.neighborhoods,
+        neighborhoods = emptyList(),
         services = profile.services.map { svc ->
             val canonical = CanonicalServices.findById(
                 com.fugisawa.quemfaz.core.id.CanonicalServiceId(svc.serviceId)

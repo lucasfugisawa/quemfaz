@@ -55,20 +55,7 @@ class ProfessionalSearchRankingService {
             }
         }
 
-        // 2. Neighborhood Bonus
-        if (query.neighborhoods.isNotEmpty()) {
-            val hasNeighborhoodMatch =
-                profile.neighborhoods.any { profileNeighborhood ->
-                    query.neighborhoods.any { queryNeighborhood ->
-                        profileNeighborhood.equals(queryNeighborhood, ignoreCase = true)
-                    }
-                }
-            if (hasNeighborhoodMatch) {
-                score += NEIGHBORHOOD_BONUS
-            }
-        }
-
-        // 3. Completeness Bonus
+        // 2. Completeness Bonus
         if (profile.completeness == ProfileCompleteness.COMPLETE) {
             score += COMPLETENESS_BONUS
         }

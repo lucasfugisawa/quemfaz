@@ -17,7 +17,6 @@ object SearchQueriesTable : Table("search_queries") {
     val originalQuery = text("original_query")
     val normalizedQuery = text("normalized_query")
     val cityName = varchar("city_name", 255).nullable()
-    val neighborhoodsJson = jsonb<List<String>>("neighborhoods_json", Json)
     val interpretedServiceIdsJson = jsonb<List<String>>("interpreted_service_ids_json", Json)
     val inputMode = varchar("input_mode", 50)
     val createdAt = timestamp("created_at")
@@ -34,7 +33,6 @@ class ExposedSearchQueryRepository : SearchQueryRepository {
                 it[originalQuery] = searchQuery.originalQuery
                 it[normalizedQuery] = searchQuery.normalizedQuery
                 it[cityName] = searchQuery.cityName
-                it[neighborhoodsJson] = searchQuery.neighborhoods
                 it[interpretedServiceIdsJson] = searchQuery.interpretedServiceIds
                 it[inputMode] = searchQuery.inputMode.name
                 it[createdAt] = searchQuery.createdAt

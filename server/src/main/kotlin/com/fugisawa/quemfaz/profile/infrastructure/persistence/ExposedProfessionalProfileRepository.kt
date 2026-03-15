@@ -65,13 +65,6 @@ object ProfessionalProfilesTable : Table("professional_profiles") {
     override val primaryKey = PrimaryKey(id)
 }
 
-object ProfessionalProfileNeighborhoodsTable : Table("professional_profile_neighborhoods") {
-    val professionalProfileId = varchar("professional_profile_id", 128) references ProfessionalProfilesTable.id
-    val neighborhoodName = varchar("neighborhood_name", 255)
-
-    override val primaryKey = PrimaryKey(professionalProfileId, neighborhoodName)
-}
-
 object ProfessionalProfileServicesTable : Table("professional_profile_services") {
     val professionalProfileId = varchar("professional_profile_id", 128) references ProfessionalProfilesTable.id
     val serviceId = varchar("service_id", 128)
@@ -151,14 +144,6 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
                     it[lastActiveAt] = profile.lastActiveAt
                     it[createdAt] = profile.createdAt
                     it[updatedAt] = profile.updatedAt
-                }
-            }
-
-            ProfessionalProfileNeighborhoodsTable.deleteWhere { professionalProfileId eq profile.id.value }
-            profile.neighborhoods.forEach { neighborhood ->
-                ProfessionalProfileNeighborhoodsTable.insert {
-                    it[professionalProfileId] = profile.id.value
-                    it[neighborhoodName] = neighborhood
                 }
             }
 
@@ -276,11 +261,6 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
 
     private fun mapProfile(row: ResultRow): ProfessionalProfile {
         val profileId = row[ProfessionalProfilesTable.id]
-        val neighborhoods =
-            ProfessionalProfileNeighborhoodsTable
-                .selectAll()
-                .where { ProfessionalProfileNeighborhoodsTable.professionalProfileId eq profileId }
-                .map { it[ProfessionalProfileNeighborhoodsTable.neighborhoodName] }
 
         val services =
             ProfessionalProfileServicesTable
@@ -315,7 +295,6 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
             contactPhone = row[ProfessionalProfilesTable.contactPhone],
             whatsappPhone = row[ProfessionalProfilesTable.whatsappPhone],
             cityName = row[ProfessionalProfilesTable.cityName],
-            neighborhoods = neighborhoods,
             services = services,
             portfolioPhotos = portfolioPhotos,
             completeness = row[ProfessionalProfilesTable.completeness],

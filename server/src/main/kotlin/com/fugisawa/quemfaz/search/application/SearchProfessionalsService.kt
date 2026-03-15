@@ -45,7 +45,6 @@ class SearchProfessionalsService(
                 originalQuery = request.query,
                 normalizedQuery = interpreted.normalizedQuery,
                 cityName = city,
-                neighborhoods = interpreted.neighborhoods,
                 interpretedServiceIds = interpreted.serviceIds,
                 inputMode = request.inputMode,
                 createdAt = Instant.now(),
@@ -98,7 +97,7 @@ class SearchProfessionalsService(
             photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
             description = profile.normalizedDescription ?: "",
             cityName = profile.cityName ?: "",
-            neighborhoods = profile.neighborhoods,
+            neighborhoods = emptyList(),
             services =
                 profile.services.map { svc ->
                     val canonical = CanonicalServices.findById(CanonicalServiceId(svc.serviceId))

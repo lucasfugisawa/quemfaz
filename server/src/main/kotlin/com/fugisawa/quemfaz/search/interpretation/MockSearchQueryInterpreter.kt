@@ -10,7 +10,6 @@ class MockSearchQueryInterpreter : SearchQueryInterpreter {
     ): InterpretedSearchQuery {
         val normalized = query.lowercase().trim()
         val serviceIds = mutableSetOf<String>()
-        val detectedNeighborhoods = mutableListOf<String>()
         var detectedCity = cityContext
 
         // Heuristic keyword matching
@@ -18,14 +17,6 @@ class MockSearchQueryInterpreter : SearchQueryInterpreter {
             val keywords = service.baseAliases + service.displayName.lowercase()
             if (keywords.any { normalized.contains(it) }) {
                 serviceIds.add(service.id.value)
-            }
-        }
-
-        // Neighborhood heuristics
-        val neighborhoods = listOf("Centro", "Jardim Bandeirantes", "Vila Nova", "Jardim América")
-        neighborhoods.forEach { n ->
-            if (normalized.contains(n.lowercase())) {
-                detectedNeighborhoods.add(n)
             }
         }
 
@@ -42,7 +33,6 @@ class MockSearchQueryInterpreter : SearchQueryInterpreter {
             normalizedQuery = normalized,
             serviceIds = serviceIds.toList(),
             cityName = detectedCity,
-            neighborhoods = detectedNeighborhoods,
             freeTextAliases = emptyList(), // Not used in Mock for now
         )
     }

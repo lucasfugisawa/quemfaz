@@ -14,7 +14,6 @@ data class ProfessionalProfile(
     val contactPhone: String?,
     val whatsappPhone: String?,
     val cityName: String?,
-    val neighborhoods: List<String>,
     val services: List<ProfessionalProfileService>,
     val portfolioPhotos: List<PortfolioPhoto>,
     val completeness: ProfileCompleteness,

@@ -44,7 +44,6 @@ class LlmSearchQueryInterpreter(
             normalizedQuery = query.lowercase().trim(),
             serviceIds = serviceIds,
             cityName = interpretation.city ?: cityContext,
-            neighborhoods = interpretation.neighborhoods,
             freeTextAliases = if (canonical != null) listOf(canonical.displayName) else emptyList(),
         )
     }
@@ -58,7 +57,6 @@ class LlmSearchQueryInterpreter(
             normalizedQuery = query.lowercase().trim(),
             serviceIds = emptyList(),
             cityName = cityContext,
-            neighborhoods = emptyList(),
             freeTextAliases = emptyList(),
         )
 
