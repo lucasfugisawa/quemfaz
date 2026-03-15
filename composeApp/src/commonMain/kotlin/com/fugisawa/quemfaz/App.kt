@@ -1,5 +1,11 @@
 package com.fugisawa.quemfaz
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -30,6 +36,8 @@ import com.fugisawa.quemfaz.ui.theme.AppTheme
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 
+enum class NavigationDirection { TAB, PUSH, POP }
+
 @Composable
 fun App(baseUrl: String = BASE_URL_DEFAULT) {
     KoinApplication(application = {
@@ -46,14 +54,17 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
 
             var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
             var navigationStack by remember { mutableStateOf(listOf<Screen>(Screen.Home)) }
+            var navigationDirection by remember { mutableStateOf(NavigationDirection.TAB) }
 
             val navigateTo: (Screen) -> Unit = { screen ->
+                navigationDirection = NavigationDirection.PUSH
                 navigationStack = navigationStack + screen
                 currentScreen = screen
             }
 
             val navigateBack: () -> Unit = {
                 if (navigationStack.size > 1) {
+                    navigationDirection = NavigationDirection.POP
                     navigationStack = navigationStack.dropLast(1)
                     currentScreen = navigationStack.last()
                 }
@@ -61,6 +72,7 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
 
             // Tab navigation: resets the stack to just the target screen.
             val navigateToTab: (Screen) -> Unit = { screen ->
+                navigationDirection = NavigationDirection.TAB
                 navigationStack = listOf(screen)
                 currentScreen = screen
             }
@@ -103,7 +115,8 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
                             navigateBack = navigateBack,
                             navigateToTab = navigateToTab,
                             authViewModel = authViewModel,
-                            sessionManager = sessionManager
+                            sessionManager = sessionManager,
+                            navigationDirection = navigationDirection,
                         )
                     }
                 }
@@ -160,7 +173,8 @@ fun MainFlow(
     navigateBack: () -> Unit,
     navigateToTab: (Screen) -> Unit,
     authViewModel: AuthViewModel,
-    sessionManager: SessionManager
+    sessionManager: SessionManager,
+    navigationDirection: NavigationDirection = NavigationDirection.TAB,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val homeViewModel: HomeViewModel = koinInject()
@@ -241,151 +255,164 @@ fun MainFlow(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            when (currentScreen) {
-                is Screen.Home -> {
-                    HomeScreen(
-                        currentUser = currentUser,
-                        currentCity = currentCity,
-                        showEarnMoneyCard = showEarnMoneyCard,
-                        onCityClick = { showCitySheet = true },
-                        onProfileClick = { navigateToTab(Screen.MyProfile) },
-                        onSearch = { query ->
-                            currentQuery = query
-                            homeViewModel.search(query)
-                            navigateTo(Screen.SearchResults)
-                        },
-                        onOfferServices = { navigateTo(Screen.OnboardingStart) }
-                    )
-                }
-                is Screen.CitySelection -> {
-                    CitySelectionScreen(
-                        cities = homeViewModel.supportedCities,
-                        onCitySelected = {
-                            homeViewModel.selectCity(it)
-                            // Always reset to Home after city selection — clears gate stack.
-                            navigateToTab(Screen.Home)
-                        }
-                    )
-                }
-                is Screen.SearchResults -> {
-                    SearchResultsScreen(
-                        query = currentQuery,
-                        uiState = searchUiState,
-                        favoritedProfileIds = favoritedProfileIds,
-                        onFavoriteToggle = { profileId -> homeViewModel.toggleFavoriteFromSearch(profileId) },
-                        onProfileClick = { id ->
-                            currentProfileId = id
-                            navigateTo(Screen.ProfessionalProfile)
-                        },
-                        onNavigateBack = navigateBack,
-                        hasMore = hasMoreResults,
-                        onLoadMore = { homeViewModel.loadMoreResults() },
-                    )
-                }
-                is Screen.ProfessionalProfile -> {
-                    val profileViewModel: ProfileViewModel = koinInject()
-                    val profileUiState by profileViewModel.uiState.collectAsState()
-                    LaunchedEffect(currentProfileId) {
-                        profileViewModel.loadProfile(currentProfileId)
-                        profileViewModel.trackProfileView(currentProfileId)
+            AnimatedContent(
+                targetState = currentScreen,
+                transitionSpec = {
+                    when (navigationDirection) {
+                        NavigationDirection.TAB -> fadeIn() togetherWith fadeOut()
+                        NavigationDirection.PUSH -> slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                        NavigationDirection.POP -> slideInHorizontally { -it } togetherWith slideOutHorizontally { it }
                     }
-                    ProfessionalProfileScreen(
-                        id = currentProfileId,
-                        uiState = profileUiState,
-                        onContactClick = { channel ->
-                            profileViewModel.trackContactClick(currentProfileId, channel)
-                            val profile = (profileUiState as? ProfileUiState.Content)?.profile
-                            when (channel) {
-                                ContactChannelDto.WHATSAPP -> {
-                                    val digits = profile?.whatsAppPhone?.filter { it.isDigit() }
-                                    if (!digits.isNullOrBlank()) openUrl("https://wa.me/$digits")
-                                }
-                                ContactChannelDto.PHONE_CALL -> {
-                                    val phone = profile?.contactPhone?.ifBlank { null }
-                                    if (phone != null) openUrl("tel:$phone")
-                                }
+                },
+                label = "screenTransition",
+                modifier = Modifier.fillMaxSize(),
+            ) { screen ->
+                when (screen) {
+                    is Screen.Home -> {
+                        HomeScreen(
+                            currentUser = currentUser,
+                            currentCity = currentCity,
+                            showEarnMoneyCard = showEarnMoneyCard,
+                            onCityClick = { showCitySheet = true },
+                            onProfileClick = { navigateToTab(Screen.MyProfile) },
+                            onSearch = { query ->
+                                currentQuery = query
+                                homeViewModel.search(query)
+                                navigateTo(Screen.SearchResults)
+                            },
+                            onOfferServices = { navigateTo(Screen.OnboardingStart) }
+                        )
+                    }
+                    is Screen.CitySelection -> {
+                        CitySelectionScreen(
+                            cities = homeViewModel.supportedCities,
+                            onCitySelected = {
+                                homeViewModel.selectCity(it)
+                                // Always reset to Home after city selection — clears gate stack.
+                                navigateToTab(Screen.Home)
                             }
-                        },
-                        onFavoriteToggle = { profileViewModel.toggleFavorite(currentProfileId) },
-                        onReportSubmit = { reason ->
-                            profileViewModel.reportProfile(currentProfileId, reason, null)
-                        },
-                        onNavigateBack = navigateBack
-                    )
-                }
-                is Screen.Favorites -> {
-                    val favoritesViewModel: FavoritesViewModel = koinInject()
-                    val favoritesUiState by favoritesViewModel.uiState.collectAsState()
-                    LaunchedEffect(Unit) {
-                        favoritesViewModel.loadFavorites()
+                        )
                     }
-                    FavoritesScreen(
-                        uiState = favoritesUiState,
-                        onProfileClick = { id ->
-                            currentProfileId = id
-                            navigateTo(Screen.ProfessionalProfile)
-                        },
-                        onRetry = { favoritesViewModel.loadFavorites() },
-                        onFindProfessionals = { navigateToTab(Screen.Home) },
-                    )
-                }
-                is Screen.MyProfile -> {
-                    MyProfileScreen(
-                        currentUser = currentUser,
-                        uiState = authUiState,
-                        hydrationFailed = hydrationFailed,
-                        onSaveName = { firstName, lastName -> authViewModel.submitName(firstName, lastName) },
-                        onSavePhoto = { data, mimeType -> authViewModel.submitPhoto(data, mimeType) },
-                        onNavigateToFavorites = { navigateToTab(Screen.Favorites) },
-                        onChangeCity = { navigateTo(Screen.CitySelection) },
-                        onManageProfessionalProfile = { navigateTo(Screen.EditProfessionalProfile) },
-                        onRetry = { authViewModel.fetchCurrentUser() },
-                        onLogout = { authViewModel.logout() }
-                    )
-                }
-                is Screen.OnboardingStart -> {
-                    val viewModel: OnboardingViewModel = koinInject()
-                    val uiState by viewModel.uiState.collectAsState()
-
-                    val imagePicker = rememberImagePickerLauncher { data, mimeType ->
-                        val draft = (uiState as? OnboardingUiState.PhotoRequired)?.draft ?: return@rememberImagePickerLauncher
-                        viewModel.submitPhoto(data, mimeType, draft)
+                    is Screen.SearchResults -> {
+                        SearchResultsScreen(
+                            query = currentQuery,
+                            uiState = searchUiState,
+                            favoritedProfileIds = favoritedProfileIds,
+                            onFavoriteToggle = { profileId -> homeViewModel.toggleFavoriteFromSearch(profileId) },
+                            onProfileClick = { id ->
+                                currentProfileId = id
+                                navigateTo(Screen.ProfessionalProfile)
+                            },
+                            onNavigateBack = navigateBack,
+                            hasMore = hasMoreResults,
+                            onLoadMore = { homeViewModel.loadMoreResults() },
+                        )
                     }
-
-                    OnboardingScreens(
-                        uiState = uiState,
-                        onCreateDraft = { viewModel.createDraft(it) },
-                        onProceedFromDraft = { draft -> viewModel.proceedFromDraft(draft) },
-                        onPickPhoto = { _ -> imagePicker.launch() },
-                        onSubmitKnownName = { knownName, draft -> viewModel.submitKnownName(knownName, draft) },
-                        onSubmitClarifications = { desc, answers ->
-                            viewModel.submitClarifications(desc, answers)
-                        },
-                        onSkipClarification = { draft -> viewModel.skipClarification(draft) },
-                        onBack = { viewModel.goBack() },
-                        onFinish = { profile ->
-                            currentProfileId = profile.id
-                            navigateTo(Screen.ProfessionalProfile)
+                    is Screen.ProfessionalProfile -> {
+                        val profileViewModel: ProfileViewModel = koinInject()
+                        val profileUiState by profileViewModel.uiState.collectAsState()
+                        LaunchedEffect(currentProfileId) {
+                            profileViewModel.loadProfile(currentProfileId)
+                            profileViewModel.trackProfileView(currentProfileId)
                         }
-                    )
-                }
-                is Screen.EditProfessionalProfile -> {
-                    val viewModel: EditProfessionalProfileViewModel = koinInject()
-                    val uiState by viewModel.uiState.collectAsState()
-                    LaunchedEffect(Unit) {
-                        viewModel.loadProfile()
+                        ProfessionalProfileScreen(
+                            id = currentProfileId,
+                            uiState = profileUiState,
+                            onContactClick = { channel ->
+                                profileViewModel.trackContactClick(currentProfileId, channel)
+                                val profile = (profileUiState as? ProfileUiState.Content)?.profile
+                                when (channel) {
+                                    ContactChannelDto.WHATSAPP -> {
+                                        val digits = profile?.whatsAppPhone?.filter { it.isDigit() }
+                                        if (!digits.isNullOrBlank()) openUrl("https://wa.me/$digits")
+                                    }
+                                    ContactChannelDto.PHONE_CALL -> {
+                                        val phone = profile?.contactPhone?.ifBlank { null }
+                                        if (phone != null) openUrl("tel:$phone")
+                                    }
+                                }
+                            },
+                            onFavoriteToggle = { profileViewModel.toggleFavorite(currentProfileId) },
+                            onReportSubmit = { reason ->
+                                profileViewModel.reportProfile(currentProfileId, reason, null)
+                            },
+                            onNavigateBack = navigateBack
+                        )
                     }
-                    EditProfessionalProfileScreen(
-                        uiState = uiState,
-                        onSave = { desc, city, neighborhoods, contact, whatsapp ->
-                            viewModel.saveProfile(desc, city, neighborhoods, contact, whatsapp)
-                        },
-                        onNavigateBack = navigateBack,
-                        onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }
-                    )
-                }
-                else -> {
-                    Text("Screen $currentScreen not yet fully wired in MVP Shell")
+                    is Screen.Favorites -> {
+                        val favoritesViewModel: FavoritesViewModel = koinInject()
+                        val favoritesUiState by favoritesViewModel.uiState.collectAsState()
+                        LaunchedEffect(Unit) {
+                            favoritesViewModel.loadFavorites()
+                        }
+                        FavoritesScreen(
+                            uiState = favoritesUiState,
+                            onProfileClick = { id ->
+                                currentProfileId = id
+                                navigateTo(Screen.ProfessionalProfile)
+                            },
+                            onRetry = { favoritesViewModel.loadFavorites() },
+                            onFindProfessionals = { navigateToTab(Screen.Home) },
+                        )
+                    }
+                    is Screen.MyProfile -> {
+                        MyProfileScreen(
+                            currentUser = currentUser,
+                            uiState = authUiState,
+                            hydrationFailed = hydrationFailed,
+                            onSaveName = { firstName, lastName -> authViewModel.submitName(firstName, lastName) },
+                            onSavePhoto = { data, mimeType -> authViewModel.submitPhoto(data, mimeType) },
+                            onNavigateToFavorites = { navigateToTab(Screen.Favorites) },
+                            onChangeCity = { navigateTo(Screen.CitySelection) },
+                            onManageProfessionalProfile = { navigateTo(Screen.EditProfessionalProfile) },
+                            onRetry = { authViewModel.fetchCurrentUser() },
+                            onLogout = { authViewModel.logout() }
+                        )
+                    }
+                    is Screen.OnboardingStart -> {
+                        val viewModel: OnboardingViewModel = koinInject()
+                        val uiState by viewModel.uiState.collectAsState()
+
+                        val imagePicker = rememberImagePickerLauncher { data, mimeType ->
+                            val draft = (uiState as? OnboardingUiState.PhotoRequired)?.draft ?: return@rememberImagePickerLauncher
+                            viewModel.submitPhoto(data, mimeType, draft)
+                        }
+
+                        OnboardingScreens(
+                            uiState = uiState,
+                            onCreateDraft = { viewModel.createDraft(it) },
+                            onProceedFromDraft = { draft -> viewModel.proceedFromDraft(draft) },
+                            onPickPhoto = { _ -> imagePicker.launch() },
+                            onSubmitKnownName = { knownName, draft -> viewModel.submitKnownName(knownName, draft) },
+                            onSubmitClarifications = { desc, answers ->
+                                viewModel.submitClarifications(desc, answers)
+                            },
+                            onSkipClarification = { draft -> viewModel.skipClarification(draft) },
+                            onBack = { viewModel.goBack() },
+                            onFinish = { profile ->
+                                currentProfileId = profile.id
+                                navigateTo(Screen.ProfessionalProfile)
+                            }
+                        )
+                    }
+                    is Screen.EditProfessionalProfile -> {
+                        val viewModel: EditProfessionalProfileViewModel = koinInject()
+                        val uiState by viewModel.uiState.collectAsState()
+                        LaunchedEffect(Unit) {
+                            viewModel.loadProfile()
+                        }
+                        EditProfessionalProfileScreen(
+                            uiState = uiState,
+                            onSave = { desc, city, neighborhoods, contact, whatsapp ->
+                                viewModel.saveProfile(desc, city, neighborhoods, contact, whatsapp)
+                            },
+                            onNavigateBack = navigateBack,
+                            onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }
+                        )
+                    }
+                    else -> {
+                        Text("Screen $screen not yet fully wired in MVP Shell")
+                    }
                 }
             }
         }
