@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.drop
+import kotlinx.datetime.Clock
 
 sealed class SearchUiState {
     object Idle : SearchUiState()
@@ -30,6 +32,21 @@ class HomeViewModel(
     private val apiClients: FeatureApiClients,
     private val sessionManager: SessionManager
 ) : ViewModel() {
+
+    private data class CachedSearch(
+        val response: SearchProfessionalsResponse,
+        val accumulatedResults: List<ProfessionalProfileResponse>,
+        val currentPage: Int,
+        val hasMore: Boolean,
+        val timestamp: Long,
+    )
+
+    private val searchCache = mutableMapOf<String, CachedSearch>()
+
+    companion object {
+        private const val CACHE_TTL_MS = 600_000L  // 10 minutes
+        private const val CACHE_MAX_ENTRIES = 5
+    }
 
     private val _searchUiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
     val searchUiState: StateFlow<SearchUiState> = _searchUiState.asStateFlow()
@@ -57,12 +74,41 @@ class HomeViewModel(
 
     val supportedCities = listOf("Batatais", "Franca", "Ribeirão Preto")
 
+    init {
+        viewModelScope.launch {
+            sessionManager.authState.drop(1).collect { state ->
+                if (state == com.fugisawa.quemfaz.session.AuthState.Unauthenticated ||
+                    state == com.fugisawa.quemfaz.session.AuthState.Blocked) {
+                    searchCache.clear()
+                }
+            }
+        }
+    }
+
     fun selectCity(city: String) {
         sessionManager.setCity(city)
     }
 
     fun search(query: String) {
         if (query.isBlank()) return
+
+        // Check cache
+        val cacheKey = "${query.lowercase()}:${currentCity.value?.lowercase()}"
+        val cached = searchCache[cacheKey]
+        val now = Clock.System.now().toEpochMilliseconds()
+        if (cached != null && now - cached.timestamp < CACHE_TTL_MS) {
+            // Restore from cache
+            lastQuery = query
+            currentPage = cached.currentPage
+            isLoadingMore = false
+            _accumulatedResults.value = cached.accumulatedResults
+            _hasMore.value = cached.hasMore
+            _searchUiState.value = SearchUiState.Success(
+                cached.response.copy(results = cached.accumulatedResults)
+            )
+            return
+        }
+
         lastQuery = query
         currentPage = 0
         isLoadingMore = false
@@ -94,10 +140,25 @@ class HomeViewModel(
                 val accumulated = if (page == 0) response.results
                                   else _accumulatedResults.value + response.results
                 _accumulatedResults.value = accumulated
-                _hasMore.value = accumulated.size < response.totalCount
+                val hasMoreValue = accumulated.size < response.totalCount
+                _hasMore.value = hasMoreValue
                 _searchUiState.value = SearchUiState.Success(
                     response.copy(results = accumulated)
                 )
+
+                // Store/update cache
+                val cacheKey = "${lastQuery.lowercase()}:${currentCity.value?.lowercase()}"
+                if (searchCache.size >= CACHE_MAX_ENTRIES && !searchCache.containsKey(cacheKey)) {
+                    searchCache.keys.firstOrNull()?.let { searchCache.remove(it) }
+                }
+                searchCache[cacheKey] = CachedSearch(
+                    response = response,
+                    accumulatedResults = accumulated,
+                    currentPage = currentPage,
+                    hasMore = hasMoreValue,
+                    timestamp = Clock.System.now().toEpochMilliseconds(),
+                )
+
                 // Load favorites to show inline favorite state on search results cards.
                 // Non-critical: failures are silent.
                 try {
@@ -113,6 +174,7 @@ class HomeViewModel(
     }
 
     fun toggleFavoriteFromSearch(profileId: String) {
+        searchCache.clear()
         val current = _favoritedProfileIds.value
         val isCurrentlyFavorited = profileId in current
 
