@@ -1,5 +1,9 @@
 package com.fugisawa.quemfaz.screens
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.ui.components.ShimmerBox
@@ -133,6 +138,19 @@ fun ProfessionalCard(
     isFavorited: Boolean = false,
     onFavoriteToggle: (() -> Unit)? = null
 ) {
+    // Transition must be declared at composable scope — not inside the conditional.
+    // Compose requires state/animation calls to be unconditional (no if/when guards).
+    val favTransition = updateTransition(isFavorited, label = "favoriteTransition")
+    val favScale by favTransition.animateFloat(
+        transitionSpec = {
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium,
+            )
+        },
+        label = "favoriteScale",
+    ) { favorited -> if (favorited) 1.2f else 1f }
+
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
@@ -163,7 +181,8 @@ fun ProfessionalCard(
                             imageVector = if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = if (isFavorited) "Remove from favorites" else "Add to favorites",
                             tint = if (isFavorited) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.onSurfaceVariant
+                                   else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.graphicsLayer { scaleX = favScale; scaleY = favScale },
                         )
                     }
                 }
