@@ -71,6 +71,7 @@ class HomeViewModel(
 
     fun loadMoreResults() {
         if (isLoadingMore) return
+        isLoadingMore = true
         val nextPage = currentPage + 1
         currentPage = nextPage
         executeSearch(page = nextPage)
@@ -79,7 +80,6 @@ class HomeViewModel(
     private fun executeSearch(page: Int) {
         viewModelScope.launch {
             if (page == 0) _searchUiState.value = SearchUiState.Loading
-            else isLoadingMore = true
             try {
                 val response = apiClients.search(
                     SearchProfessionalsRequest(
