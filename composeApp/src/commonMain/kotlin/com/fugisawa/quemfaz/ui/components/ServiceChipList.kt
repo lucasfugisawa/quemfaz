@@ -4,14 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Surface
 import androidx.compose.ui.unit.dp
+import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
 import com.fugisawa.quemfaz.ui.preview.LightDarkPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
@@ -29,7 +31,18 @@ fun ServiceChipList(
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
     ) {
         services.take(maxItems).forEach { service ->
-            SuggestionChip(onClick = {}, label = { Text(service.displayName) })
+            val isPrimary = service.matchLevel == "PRIMARY"
+            SuggestionChip(
+                onClick = {},
+                label = { Text(service.displayName) },
+                colors = if (isPrimary)
+                    SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                else
+                    SuggestionChipDefaults.suggestionChipColors(),
+            )
         }
     }
 }
