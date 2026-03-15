@@ -438,11 +438,17 @@ fun MainFlow(
                     is Screen.EditProfessionalProfile -> {
                         val viewModel: EditProfessionalProfileViewModel = koinInject()
                         val uiState by viewModel.uiState.collectAsState()
+                        val editedServiceIds by viewModel.editedServiceIds.collectAsState()
+                        val editCatalog by viewModel.catalog.collectAsState()
                         LaunchedEffect(Unit) {
                             viewModel.loadProfile()
                         }
                         EditProfessionalProfileScreen(
                             uiState = uiState,
+                            editedServiceIds = editedServiceIds,
+                            catalog = editCatalog,
+                            onAddService = viewModel::addService,
+                            onRemoveService = viewModel::removeService,
                             onSave = { desc, city, contact, whatsapp ->
                                 viewModel.saveProfile(desc, city, contact, whatsapp)
                             },
