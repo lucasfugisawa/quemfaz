@@ -19,6 +19,11 @@ class ProfessionalSearchRankingService {
         const val CITY_MISMATCH_PENALTY = -50
 
         val RECENTLY_ACTIVE_THRESHOLD = 7L // days
+
+        const val CONTACT_CLICK_CAP = 20
+        const val CONTACT_CLICK_POINTS_PER = 2
+        const val VIEW_CAP = 50
+        const val VIEW_POINTS_PER = 0.5
     }
 
     fun rank(
@@ -75,7 +80,13 @@ class ProfessionalSearchRankingService {
             score += RECENTLY_ACTIVE_BONUS
         }
 
-        // 5. City Match
+        // 5. Engagement: Contact Clicks
+        score += (minOf(profile.contactClickCount, CONTACT_CLICK_CAP) * CONTACT_CLICK_POINTS_PER)
+
+        // 6. Engagement: Profile Views
+        score += (minOf(profile.viewCount, VIEW_CAP) * VIEW_POINTS_PER).toInt()
+
+        // 7. City Match
         if (query.cityName != null) {
             if (profile.cityName != null) {
                 if (!profile.cityName.equals(query.cityName, ignoreCase = true)) {
