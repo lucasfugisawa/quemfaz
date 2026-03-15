@@ -92,8 +92,7 @@ class LlmProfessionalInputInterpreterTest {
 
         val response = interpreter.interpret("Faço pintura em Batatais", InputMode.TEXT)
 
-        assertTrue(response.interpretedServices.isEmpty())
-        assertTrue(response.missingFields.contains("services"))
-        assertTrue(response.followUpQuestions.isNotEmpty())
+        assertTrue(response.llmUnavailable)
+        assertTrue(response.followUpQuestions.isEmpty())
     }
 }

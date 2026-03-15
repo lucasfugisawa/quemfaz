@@ -113,18 +113,24 @@ object CanonicalServices {
             var score = 0
 
             // Exact display name match (highest priority)
-            if (service.displayName.lowercase() == lowerQuery) {
+            val lowerDisplayName = service.displayName.lowercase()
+            if (lowerDisplayName == lowerQuery) {
                 score += 100
-            } else if (service.displayName.lowercase().contains(lowerQuery)) {
+            } else if (lowerDisplayName.contains(lowerQuery)) {
                 score += 50
+            } else if (lowerQuery.contains(lowerDisplayName)) {
+                score += 70
             }
 
             // Alias matches
             service.baseAliases.forEach { alias ->
-                if (alias.lowercase() == lowerQuery) {
+                val lowerAlias = alias.lowercase()
+                if (lowerAlias == lowerQuery) {
                     score += 80
-                } else if (alias.lowercase().contains(lowerQuery)) {
+                } else if (lowerAlias.contains(lowerQuery)) {
                     score += 40
+                } else if (lowerQuery.contains(lowerAlias)) {
+                    score += 60
                 }
             }
 

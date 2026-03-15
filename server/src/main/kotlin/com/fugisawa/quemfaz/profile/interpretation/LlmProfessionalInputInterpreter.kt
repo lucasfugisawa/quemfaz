@@ -47,10 +47,20 @@ class LlmProfessionalInputInterpreter(
                     InterpretedServiceDto(canonical.id.value, canonical.displayName, ServiceMatchLevel.PRIMARY.name)
                 }.distinctBy { it.serviceId }
 
+        // Edge case: LLM succeeded but returned empty services without requesting clarification
+        // Try local matching as a second attempt
+        val finalServices = if (interpretedServices.isEmpty() && !interpretation.needsClarification) {
+            CanonicalServices.search(inputText).map { canonical ->
+                InterpretedServiceDto(canonical.id.value, canonical.displayName, ServiceMatchLevel.PRIMARY.name)
+            }
+        } else {
+            interpretedServices
+        }
+
         val missingFields = mutableListOf<String>()
         val followUpQuestions = mutableListOf<String>()
 
-        if (interpretedServices.isEmpty()) {
+        if (finalServices.isEmpty() && !interpretation.needsClarification) {
             missingFields.add("services")
         }
 
@@ -60,23 +70,31 @@ class LlmProfessionalInputInterpreter(
 
         return CreateProfessionalProfileDraftResponse(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
-            interpretedServices = interpretedServices,
+            interpretedServices = finalServices,
             cityName = null,
             missingFields = missingFields,
             followUpQuestions = followUpQuestions,
-            freeTextAliases = interpretedServices.map { it.displayName },
+            freeTextAliases = finalServices.map { it.displayName },
+            llmUnavailable = false,
         )
     }
 
-    private fun fallbackResponse(inputText: String): CreateProfessionalProfileDraftResponse =
-        CreateProfessionalProfileDraftResponse(
+    private fun fallbackResponse(inputText: String): CreateProfessionalProfileDraftResponse {
+        val localMatches = CanonicalServices.search(inputText)
+        val interpretedServices = localMatches.map { canonical ->
+            InterpretedServiceDto(canonical.id.value, canonical.displayName, ServiceMatchLevel.PRIMARY.name)
+        }
+
+        return CreateProfessionalProfileDraftResponse(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
-            interpretedServices = emptyList(),
+            interpretedServices = interpretedServices,
             cityName = null,
-            missingFields = listOf("services"),
-            followUpQuestions = listOf("Pode nos contar um pouco mais sobre os serviços que você oferece?"),
-            freeTextAliases = emptyList(),
+            missingFields = if (interpretedServices.isEmpty()) listOf("services") else emptyList(),
+            followUpQuestions = emptyList(),
+            freeTextAliases = interpretedServices.map { it.displayName },
+            llmUnavailable = true,
         )
+    }
 
     override fun interpretWithClarifications(
         originalDescription: String,
