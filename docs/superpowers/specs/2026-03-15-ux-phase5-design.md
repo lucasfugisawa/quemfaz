@@ -83,10 +83,10 @@ ALTER TABLE professional_profiles
 ### Files
 
 - **Create:** `server/src/main/resources/db/migration/V9__engagement_counters.sql`
-- **Modify:** `server/.../profile/domain/Models.kt` — add `viewCount`, `contactClickCount` fields to `ProfessionalProfile` data class; add `incrementEngagementCounters(id, views, clicks)` and `updateLastActiveAt(id)` to `ProfessionalProfileRepository` interface
-- **Modify:** `server/.../profile/infrastructure/ExposedProfessionalProfileRepository.kt` — implement `incrementEngagementCounters` and `updateLastActiveAt`; add `viewCount`/`contactClickCount` columns to Exposed table and `mapProfile()`
-- **Modify:** `server/.../engagement/application/TrackProfileViewService.kt` — after event insert, call `profileRepository.incrementEngagementCounters()` + `updateLastActiveAt()`
-- **Modify:** `server/.../engagement/application/TrackContactClickService.kt` — after event insert, call `profileRepository.incrementEngagementCounters()` + `updateLastActiveAt()`
+- **Modify:** `server/.../profile/domain/Models.kt` — add `viewCount`, `contactClickCount` fields to `ProfessionalProfile` data class; add `incrementViewCount(id)`, `incrementContactClickCount(id)`, and `updateLastActiveAt(id)` to `ProfessionalProfileRepository` interface
+- **Modify:** `server/.../profile/infrastructure/ExposedProfessionalProfileRepository.kt` — implement `incrementViewCount`, `incrementContactClickCount`, and `updateLastActiveAt`; add `viewCount`/`contactClickCount` columns to Exposed table and `mapProfile()`
+- **Modify:** `server/.../engagement/application/TrackProfileViewService.kt` — after event insert, call `profileRepository.incrementViewCount()` + `updateLastActiveAt()`
+- **Modify:** `server/.../engagement/application/TrackContactClickService.kt` — after event insert, call `profileRepository.incrementContactClickCount()` + `updateLastActiveAt()`
 - **Modify:** `server/.../search/ranking/ProfessionalSearchRankingService.kt` — add 2 new scoring factors
 - **Modify:** `shared/.../contract/profile/ProfileDtos.kt` — add `contactCount: Int` to `ProfessionalProfileResponse`
 - **Modify:** `server/.../profile/application/ProfileServices.kt` — map `contactClickCount` to `contactCount` in response
@@ -107,7 +107,12 @@ ALTER TABLE professional_profiles
 
 **Keep `activeRecently: Boolean`** — no breaking change. The boolean is still useful for chip visibility logic.
 
-**Server mapping:** Each service that builds `ProfessionalProfileResponse` has its own private `mapToResponse()` — there is no shared mapping function. Therefore `daysSinceActive` must be computed independently in `SearchProfessionalsService.mapToResponse()`, `ProfileServices.mapToResponse()`, and `FavoriteServices.mapToResponse()`. With Section 1's fix to `lastActiveAt`, this now reflects real engagement activity.
+**Server mapping:** Three files contain `mapToResponse()` functions that build `ProfessionalProfileResponse`:
+- `ProfileServices.kt` has a single file-level `private fun mapToResponse()` shared by all services in the file — one change covers all four services.
+- `SearchProfessionalsService.kt` has its own private `mapToResponse()`.
+- `FavoriteServices.kt` has its own private `mapToResponse()`.
+
+All three must be updated to compute `daysSinceActive`. With Section 1's fix to `lastActiveAt`, this now reflects real engagement activity.
 
 **UI change in `StatusChipRow`** (used by `ProfessionalCard` and `ProfileHeader`):
 
@@ -163,8 +168,8 @@ private val searchCache = LinkedHashMap<String, CachedSearch>(5, 0.75f, true)
 **`loadMoreResults()` updates the cache entry** — the cached entry is replaced with the new accumulated results and incremented page number.
 
 **Cache invalidation:**
-- Clear entire cache on `toggleFavoriteFromSearch()` (favorited state would be stale in cached results)
-- Clear entire cache on logout: observe `sessionManager.authState` in `HomeViewModel.init {}` and call `searchCache.clear()` when state transitions to `Unauthenticated` or `Blocked`
+- Clear entire cache on `toggleFavoriteFromSearch()` — ensures that returning to search results triggers a fresh server fetch with up-to-date ranking (since the server may factor engagement into ordering)
+- Clear entire cache on logout: in `HomeViewModel.init {}`, launch a coroutine collecting `sessionManager.authState.drop(1)` (skip initial emission to avoid clearing cache on ViewModel creation). When state transitions to `Unauthenticated` or `Blocked`, call `searchCache.clear()`
 
 **No server or shared contract changes.**
 
