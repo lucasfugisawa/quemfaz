@@ -3,7 +3,7 @@ package com.fugisawa.quemfaz.screens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -68,7 +68,7 @@ fun ProfessionalProfileScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(start = Spacing.md, end = Spacing.md, top = Spacing.md, bottom = 88.dp)
+                        .padding(start = Spacing.md, end = Spacing.md, top = Spacing.md, bottom = Spacing.stickyBarBottomPadding)
                 ) {
                     ProfileHeader(profile, uiState.isFavorite, onFavoriteToggle)
                     Spacer(modifier = Modifier.height(Spacing.sm))
@@ -79,12 +79,12 @@ fun ProfessionalProfileScreen(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                             contentPadding = PaddingValues(vertical = Spacing.xs)
                         ) {
-                            items(profile.portfolioPhotoUrls, key = { it }) { url ->
+                            itemsIndexed(profile.portfolioPhotoUrls, key = { _, url -> url }) { index, url ->
                                 AsyncImage(
                                     model = url,
-                                    contentDescription = "Portfolio photo ${profile.portfolioPhotoUrls.indexOf(url) + 1} of ${profile.portfolioPhotoUrls.size}",
+                                    contentDescription = "Portfolio photo ${index + 1} of ${profile.portfolioPhotoUrls.size}",
                                     modifier = Modifier
-                                        .size(96.dp)
+                                        .size(Spacing.portfolioPhotoSize)
                                         .clip(MaterialTheme.shapes.medium),
                                     contentScale = ContentScale.Crop
                                 )

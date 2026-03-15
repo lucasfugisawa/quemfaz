@@ -23,7 +23,6 @@ import com.fugisawa.quemfaz.platform.rememberImagePickerLauncher
 import com.fugisawa.quemfaz.screens.*
 import com.fugisawa.quemfaz.session.AuthState
 import com.fugisawa.quemfaz.session.SessionManager
-import com.fugisawa.quemfaz.ui.components.LocalSnackbarHostState
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
@@ -215,192 +214,190 @@ fun MainFlow(
             currentScreen == Screen.Favorites ||
             currentScreen == Screen.MyProfile
 
-    CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
-        Scaffold(
-            bottomBar = {
-                if (isTopLevelScreen) {
-                    NavigationBar {
-                        NavigationBarItem(
-                            selected = currentScreen == Screen.Home,
-                            onClick = { navigateToTab(Screen.Home) },
-                            icon = {
-                                Icon(
-                                    imageVector = if (currentScreen == Screen.Home) Icons.Filled.Home
-                                                  else Icons.Outlined.Home,
-                                    contentDescription = "Home"
-                                )
-                            },
-                            label = { Text("Home") }
-                        )
-                        NavigationBarItem(
-                            selected = currentScreen == Screen.Favorites,
-                            onClick = { navigateToTab(Screen.Favorites) },
-                            icon = {
-                                Icon(
-                                    imageVector = if (currentScreen == Screen.Favorites) Icons.Filled.Favorite
-                                                  else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = "Favorites"
-                                )
-                            },
-                            label = { Text("Favorites") }
-                        )
-                        NavigationBarItem(
-                            selected = currentScreen == Screen.MyProfile,
-                            onClick = { navigateToTab(Screen.MyProfile) },
-                            icon = {
-                                Icon(
-                                    imageVector = if (currentScreen == Screen.MyProfile) Icons.Filled.Person
-                                                  else Icons.Outlined.Person,
-                                    contentDescription = "Profile"
-                                )
-                            },
-                            label = { Text("Profile") }
-                        )
-                    }
+    Scaffold(
+        bottomBar = {
+            if (isTopLevelScreen) {
+                NavigationBar {
+                    NavigationBarItem(
+                        selected = currentScreen == Screen.Home,
+                        onClick = { navigateToTab(Screen.Home) },
+                        icon = {
+                            Icon(
+                                imageVector = if (currentScreen == Screen.Home) Icons.Filled.Home
+                                              else Icons.Outlined.Home,
+                                contentDescription = "Home"
+                            )
+                        },
+                        label = { Text("Home") }
+                    )
+                    NavigationBarItem(
+                        selected = currentScreen == Screen.Favorites,
+                        onClick = { navigateToTab(Screen.Favorites) },
+                        icon = {
+                            Icon(
+                                imageVector = if (currentScreen == Screen.Favorites) Icons.Filled.Favorite
+                                              else Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Favorites"
+                            )
+                        },
+                        label = { Text("Favorites") }
+                    )
+                    NavigationBarItem(
+                        selected = currentScreen == Screen.MyProfile,
+                        onClick = { navigateToTab(Screen.MyProfile) },
+                        icon = {
+                            Icon(
+                                imageVector = if (currentScreen == Screen.MyProfile) Icons.Filled.Person
+                                              else Icons.Outlined.Person,
+                                contentDescription = "Profile"
+                            )
+                        },
+                        label = { Text("Profile") }
+                    )
                 }
-            },
-            snackbarHost = { SnackbarHost(snackbarHostState) }
-        ) { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-                when (currentScreen) {
-                    is Screen.Home -> {
-                        HomeScreen(
-                            currentUser = currentUser,
-                            currentCity = currentCity,
-                            showEarnMoneyCard = showEarnMoneyCard,
-                            onCityClick = { navigateTo(Screen.CitySelection) },
-                            onProfileClick = { navigateToTab(Screen.MyProfile) },
-                            onSearch = { query ->
-                                currentQuery = query
-                                homeViewModel.search(query)
-                                navigateTo(Screen.SearchResults)
-                            },
-                            onOfferServices = { navigateTo(Screen.OnboardingStart) }
-                        )
-                    }
-                    is Screen.CitySelection -> {
-                        CitySelectionScreen(
-                            cities = homeViewModel.supportedCities,
-                            onCitySelected = {
-                                homeViewModel.selectCity(it)
-                                // Always reset to Home after city selection — clears gate stack.
-                                navigateToTab(Screen.Home)
-                            }
-                        )
-                    }
-                    is Screen.SearchResults -> {
-                        SearchResultsScreen(
-                            query = currentQuery,
-                            uiState = searchUiState,
-                            favoritedProfileIds = favoritedProfileIds,
-                            onFavoriteToggle = { profileId -> homeViewModel.toggleFavoriteFromSearch(profileId) },
-                            onProfileClick = { id ->
-                                currentProfileId = id
-                                navigateTo(Screen.ProfessionalProfile)
-                            },
-                            onNavigateBack = navigateBack
-                        )
-                    }
-                    is Screen.ProfessionalProfile -> {
-                        val profileViewModel: ProfileViewModel = koinInject()
-                        val profileUiState by profileViewModel.uiState.collectAsState()
-                        LaunchedEffect(currentProfileId) {
-                            profileViewModel.loadProfile(currentProfileId)
-                            profileViewModel.trackProfileView(currentProfileId)
+            }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            when (currentScreen) {
+                is Screen.Home -> {
+                    HomeScreen(
+                        currentUser = currentUser,
+                        currentCity = currentCity,
+                        showEarnMoneyCard = showEarnMoneyCard,
+                        onCityClick = { navigateTo(Screen.CitySelection) },
+                        onProfileClick = { navigateToTab(Screen.MyProfile) },
+                        onSearch = { query ->
+                            currentQuery = query
+                            homeViewModel.search(query)
+                            navigateTo(Screen.SearchResults)
+                        },
+                        onOfferServices = { navigateTo(Screen.OnboardingStart) }
+                    )
+                }
+                is Screen.CitySelection -> {
+                    CitySelectionScreen(
+                        cities = homeViewModel.supportedCities,
+                        onCitySelected = {
+                            homeViewModel.selectCity(it)
+                            // Always reset to Home after city selection — clears gate stack.
+                            navigateToTab(Screen.Home)
                         }
-                        ProfessionalProfileScreen(
-                            id = currentProfileId,
-                            uiState = profileUiState,
-                            onContactClick = { channel ->
-                                profileViewModel.trackContactClick(currentProfileId, channel)
-                                val profile = (profileUiState as? ProfileUiState.Content)?.profile
-                                when (channel) {
-                                    ContactChannelDto.WHATSAPP -> {
-                                        val digits = profile?.whatsAppPhone?.filter { it.isDigit() }
-                                        if (!digits.isNullOrBlank()) openUrl("https://wa.me/$digits")
-                                    }
-                                    ContactChannelDto.PHONE_CALL -> {
-                                        val phone = profile?.contactPhone?.ifBlank { null }
-                                        if (phone != null) openUrl("tel:$phone")
-                                    }
+                    )
+                }
+                is Screen.SearchResults -> {
+                    SearchResultsScreen(
+                        query = currentQuery,
+                        uiState = searchUiState,
+                        favoritedProfileIds = favoritedProfileIds,
+                        onFavoriteToggle = { profileId -> homeViewModel.toggleFavoriteFromSearch(profileId) },
+                        onProfileClick = { id ->
+                            currentProfileId = id
+                            navigateTo(Screen.ProfessionalProfile)
+                        },
+                        onNavigateBack = navigateBack
+                    )
+                }
+                is Screen.ProfessionalProfile -> {
+                    val profileViewModel: ProfileViewModel = koinInject()
+                    val profileUiState by profileViewModel.uiState.collectAsState()
+                    LaunchedEffect(currentProfileId) {
+                        profileViewModel.loadProfile(currentProfileId)
+                        profileViewModel.trackProfileView(currentProfileId)
+                    }
+                    ProfessionalProfileScreen(
+                        id = currentProfileId,
+                        uiState = profileUiState,
+                        onContactClick = { channel ->
+                            profileViewModel.trackContactClick(currentProfileId, channel)
+                            val profile = (profileUiState as? ProfileUiState.Content)?.profile
+                            when (channel) {
+                                ContactChannelDto.WHATSAPP -> {
+                                    val digits = profile?.whatsAppPhone?.filter { it.isDigit() }
+                                    if (!digits.isNullOrBlank()) openUrl("https://wa.me/$digits")
                                 }
-                            },
-                            onFavoriteToggle = { profileViewModel.toggleFavorite(currentProfileId) },
-                            onReportSubmit = { reason ->
-                                profileViewModel.reportProfile(currentProfileId, reason, null)
-                            },
-                            onNavigateBack = navigateBack
-                        )
+                                ContactChannelDto.PHONE_CALL -> {
+                                    val phone = profile?.contactPhone?.ifBlank { null }
+                                    if (phone != null) openUrl("tel:$phone")
+                                }
+                            }
+                        },
+                        onFavoriteToggle = { profileViewModel.toggleFavorite(currentProfileId) },
+                        onReportSubmit = { reason ->
+                            profileViewModel.reportProfile(currentProfileId, reason, null)
+                        },
+                        onNavigateBack = navigateBack
+                    )
+                }
+                is Screen.Favorites -> {
+                    val favoritesViewModel: FavoritesViewModel = koinInject()
+                    val favoritesUiState by favoritesViewModel.uiState.collectAsState()
+                    LaunchedEffect(Unit) {
+                        favoritesViewModel.loadFavorites()
                     }
-                    is Screen.Favorites -> {
-                        val favoritesViewModel: FavoritesViewModel = koinInject()
-                        val favoritesUiState by favoritesViewModel.uiState.collectAsState()
-                        LaunchedEffect(Unit) {
-                            favoritesViewModel.loadFavorites()
-                        }
-                        FavoritesScreen(
-                            uiState = favoritesUiState,
-                            onProfileClick = { id ->
-                                currentProfileId = id
-                                navigateTo(Screen.ProfessionalProfile)
-                            },
-                            onRetry = { favoritesViewModel.loadFavorites() }
-                        )
-                    }
-                    is Screen.MyProfile -> {
-                        MyProfileScreen(
-                            currentUser = currentUser,
-                            uiState = authUiState,
-                            hydrationFailed = hydrationFailed,
-                            onSaveName = { firstName, lastName -> authViewModel.submitName(firstName, lastName) },
-                            onSavePhoto = { data, mimeType -> authViewModel.submitPhoto(data, mimeType) },
-                            onNavigateToFavorites = { navigateToTab(Screen.Favorites) },
-                            onChangeCity = { navigateTo(Screen.CitySelection) },
-                            onManageProfessionalProfile = { navigateTo(Screen.EditProfessionalProfile) },
-                            onRetry = { authViewModel.fetchCurrentUser() },
-                            onLogout = { authViewModel.logout() }
-                        )
-                    }
-                    is Screen.OnboardingStart -> {
-                        val viewModel: OnboardingViewModel = koinInject()
-                        val uiState by viewModel.uiState.collectAsState()
+                    FavoritesScreen(
+                        uiState = favoritesUiState,
+                        onProfileClick = { id ->
+                            currentProfileId = id
+                            navigateTo(Screen.ProfessionalProfile)
+                        },
+                        onRetry = { favoritesViewModel.loadFavorites() }
+                    )
+                }
+                is Screen.MyProfile -> {
+                    MyProfileScreen(
+                        currentUser = currentUser,
+                        uiState = authUiState,
+                        hydrationFailed = hydrationFailed,
+                        onSaveName = { firstName, lastName -> authViewModel.submitName(firstName, lastName) },
+                        onSavePhoto = { data, mimeType -> authViewModel.submitPhoto(data, mimeType) },
+                        onNavigateToFavorites = { navigateToTab(Screen.Favorites) },
+                        onChangeCity = { navigateTo(Screen.CitySelection) },
+                        onManageProfessionalProfile = { navigateTo(Screen.EditProfessionalProfile) },
+                        onRetry = { authViewModel.fetchCurrentUser() },
+                        onLogout = { authViewModel.logout() }
+                    )
+                }
+                is Screen.OnboardingStart -> {
+                    val viewModel: OnboardingViewModel = koinInject()
+                    val uiState by viewModel.uiState.collectAsState()
 
-                        val imagePicker = rememberImagePickerLauncher { data, mimeType ->
-                            val draft = (uiState as? OnboardingUiState.PhotoRequired)?.draft ?: return@rememberImagePickerLauncher
-                            viewModel.submitPhoto(data, mimeType, draft)
-                        }
+                    val imagePicker = rememberImagePickerLauncher { data, mimeType ->
+                        val draft = (uiState as? OnboardingUiState.PhotoRequired)?.draft ?: return@rememberImagePickerLauncher
+                        viewModel.submitPhoto(data, mimeType, draft)
+                    }
 
-                        OnboardingScreens(
-                            uiState = uiState,
-                            onCreateDraft = { viewModel.createDraft(it) },
-                            onProceedFromDraft = { draft -> viewModel.proceedFromDraft(draft) },
-                            onPickPhoto = { _ -> imagePicker.launch() },
-                            onSubmitKnownName = { knownName, draft -> viewModel.submitKnownName(knownName, draft) },
-                            onSubmitClarifications = { desc, answers ->
-                                viewModel.submitClarifications(desc, answers)
-                            },
-                            onSkipClarification = { draft -> viewModel.skipClarification(draft) },
-                            onFinish = { navigateToTab(Screen.MyProfile) }
-                        )
+                    OnboardingScreens(
+                        uiState = uiState,
+                        onCreateDraft = { viewModel.createDraft(it) },
+                        onProceedFromDraft = { draft -> viewModel.proceedFromDraft(draft) },
+                        onPickPhoto = { _ -> imagePicker.launch() },
+                        onSubmitKnownName = { knownName, draft -> viewModel.submitKnownName(knownName, draft) },
+                        onSubmitClarifications = { desc, answers ->
+                            viewModel.submitClarifications(desc, answers)
+                        },
+                        onSkipClarification = { draft -> viewModel.skipClarification(draft) },
+                        onFinish = { navigateToTab(Screen.MyProfile) }
+                    )
+                }
+                is Screen.EditProfessionalProfile -> {
+                    val viewModel: EditProfessionalProfileViewModel = koinInject()
+                    val uiState by viewModel.uiState.collectAsState()
+                    LaunchedEffect(Unit) {
+                        viewModel.loadProfile()
                     }
-                    is Screen.EditProfessionalProfile -> {
-                        val viewModel: EditProfessionalProfileViewModel = koinInject()
-                        val uiState by viewModel.uiState.collectAsState()
-                        LaunchedEffect(Unit) {
-                            viewModel.loadProfile()
-                        }
-                        EditProfessionalProfileScreen(
-                            uiState = uiState,
-                            onSave = { desc, city, neighborhoods, contact, whatsapp ->
-                                viewModel.saveProfile(desc, city, neighborhoods, contact, whatsapp)
-                            },
-                            onNavigateBack = navigateBack,
-                            onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }
-                        )
-                    }
-                    else -> {
-                        Text("Screen $currentScreen not yet fully wired in MVP Shell")
-                    }
+                    EditProfessionalProfileScreen(
+                        uiState = uiState,
+                        onSave = { desc, city, neighborhoods, contact, whatsapp ->
+                            viewModel.saveProfile(desc, city, neighborhoods, contact, whatsapp)
+                        },
+                        onNavigateBack = navigateBack,
+                        onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }
+                    )
+                }
+                else -> {
+                    Text("Screen $currentScreen not yet fully wired in MVP Shell")
                 }
             }
         }
