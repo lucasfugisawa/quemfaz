@@ -98,9 +98,6 @@ class OnboardingViewModel(
         viewModelScope.launch {
             _uiState.value = OnboardingUiState.Loading
             try {
-                if (!knownName.isNullOrBlank()) {
-                    apiClients.setKnownName(SetKnownNameRequest(knownName = knownName.trim()))
-                }
                 val response = apiClients.confirmProfile(
                     ConfirmProfessionalProfileRequest(
                         normalizedDescription = draft.normalizedDescription,
@@ -112,6 +109,9 @@ class OnboardingViewModel(
                         portfolioPhotoUrls = emptyList(),
                     )
                 )
+                if (!knownName.isNullOrBlank()) {
+                    apiClients.setKnownName(SetKnownNameRequest(knownName = knownName.trim()))
+                }
                 _uiState.value = OnboardingUiState.Published(response)
             } catch (e: Exception) {
                 _uiState.value = OnboardingUiState.Error(e.message ?: "Failed to publish profile")
