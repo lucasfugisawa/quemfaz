@@ -1,5 +1,6 @@
 package com.fugisawa.quemfaz
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -9,9 +10,11 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
+import com.fugisawa.quemfaz.ui.theme.Spacing
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
 import com.fugisawa.quemfaz.di.appModule
 import com.fugisawa.quemfaz.domain.moderation.ReportReason
@@ -93,17 +96,6 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
                             authViewModel.fetchCurrentUser()
                         }
 
-                        // City gate: if city is not set, force CitySelection and prevent bypass.
-                        // Keyed on both currentCity AND currentScreen so re-checking on every
-                        // screen change catches back-navigation attempts to bypass the gate.
-                        LaunchedEffect(currentCity, currentScreen) {
-                            if (currentCity == null && currentScreen != Screen.CitySelection) {
-                                // Replace the entire stack so there is nothing to go back to.
-                                navigationStack = listOf(Screen.CitySelection)
-                                currentScreen = Screen.CitySelection
-                            }
-                        }
-
                         MainFlow(
                             currentScreen = currentScreen,
                             currentCity = currentCity,
@@ -159,6 +151,7 @@ fun AuthFlow(navigateTo: (Screen) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainFlow(
     currentScreen: Screen,
@@ -189,6 +182,13 @@ fun MainFlow(
 
     var currentQuery by remember { mutableStateOf("") }
     var currentProfileId by remember { mutableStateOf("") }
+
+    var showCitySheet by remember { mutableStateOf(false) }
+    val citySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    LaunchedEffect(currentCity) {
+        if (currentCity == null) showCitySheet = true
+    }
 
     val isTopLevelScreen = currentScreen == Screen.Home ||
             currentScreen == Screen.Favorites ||
@@ -246,7 +246,7 @@ fun MainFlow(
                         currentUser = currentUser,
                         currentCity = currentCity,
                         showEarnMoneyCard = showEarnMoneyCard,
-                        onCityClick = { navigateTo(Screen.CitySelection) },
+                        onCityClick = { showCitySheet = true },
                         onProfileClick = { navigateToTab(Screen.MyProfile) },
                         onSearch = { query ->
                             currentQuery = query
@@ -378,6 +378,40 @@ fun MainFlow(
                 }
                 else -> {
                     Text("Screen $currentScreen not yet fully wired in MVP Shell")
+                }
+            }
+        }
+    }
+
+    if (showCitySheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showCitySheet = false },
+            sheetState = citySheetState,
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = Spacing.screenEdge)
+                    .padding(bottom = Spacing.xl)
+            ) {
+                Text("Select your city", style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.height(Spacing.md))
+                homeViewModel.supportedCities.forEach { city ->
+                    ListItem(
+                        headlineContent = {
+                            Text(city, style = MaterialTheme.typography.bodyLarge)
+                        },
+                        trailingContent = {
+                            Text("›", style = MaterialTheme.typography.headlineSmall)
+                        },
+                        modifier = Modifier.clickable {
+                            homeViewModel.selectCity(city)
+                            showCitySheet = false
+                        }
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = Spacing.md),
+                        thickness = 0.5.dp,
+                    )
                 }
             }
         }
