@@ -124,15 +124,9 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
 fun AuthFlow(navigateTo: (Screen) -> Unit) {
     val viewModel: AuthViewModel = koinInject()
     val uiState by viewModel.uiState.collectAsState()
-    val sessionManager: SessionManager = koinInject()
-    val currentUser by sessionManager.currentUser.collectAsState()
 
     var currentAuthStep by remember { mutableStateOf("phone") }
     var phoneForOtp by remember { mutableStateOf("") }
-
-    val imagePicker = rememberImagePickerLauncher { data, mimeType ->
-        viewModel.submitPhoto(data, mimeType)
-    }
 
     when (currentAuthStep) {
         "phone" -> {
@@ -155,25 +149,11 @@ fun AuthFlow(navigateTo: (Screen) -> Unit) {
                 onSubmitName = { firstName, lastName -> viewModel.submitName(firstName, lastName) },
                 uiState = uiState,
             )
-            if (uiState is AuthUiState.PhotoUploadRequired) currentAuthStep = "photo"
-        }
-        "photo" -> {
-            val displayName = currentUser?.let { "${it.firstName} ${it.lastName}" } ?: ""
-            ProfilePhotoScreen(
-                currentPhotoUrl = currentUser?.photoUrl,
-                displayName = displayName,
-                headline = "Add a profile photo",
-                showSkip = true,
-                isLoading = uiState is AuthUiState.Loading,
-                error = (uiState as? AuthUiState.Error)?.message,
-                onPickImage = { imagePicker.launch() },
-                onSkip = { viewModel.skipPhoto() },
-            )
         }
     }
 
     if (uiState is AuthUiState.Success) {
-        LaunchedEffect(Unit) {
+        LaunchedEffect(uiState) {
             navigateTo(Screen.Home)
         }
     }

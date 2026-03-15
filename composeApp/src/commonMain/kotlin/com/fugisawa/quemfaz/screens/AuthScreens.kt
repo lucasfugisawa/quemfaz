@@ -120,8 +120,7 @@ fun NameInputScreen(
     onSubmitName: (firstName: String, lastName: String) -> Unit,
     uiState: AuthUiState,
 ) {
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
+    var displayName by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -132,31 +131,39 @@ fun NameInputScreen(
         Text("What's your name?", style = MaterialTheme.typography.headlineMedium)
 
         OutlinedTextField(
-            value = firstName,
-            onValueChange = { firstName = it },
-            label = { Text("First name") },
+            value = displayName,
+            onValueChange = { displayName = it },
+            label = { Text("Full name") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-        )
-        OutlinedTextField(
-            value = lastName,
-            onValueChange = { lastName = it },
-            label = { Text("Last name") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
+            shape = MaterialTheme.shapes.medium,
         )
 
         if (uiState is AuthUiState.Error) {
-            Text(uiState.message, color = MaterialTheme.colorScheme.error)
+            Text(
+                uiState.message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
 
         Button(
-            onClick = { onSubmitName(firstName, lastName) },
-            enabled = firstName.isNotBlank() && lastName.isNotBlank() && uiState !is AuthUiState.Loading,
-            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                val parts = displayName.trim().split(" ", limit = 2)
+                onSubmitName(parts[0], if (parts.size > 1) parts[1] else "")
+            },
+            enabled = displayName.isNotBlank() && uiState !is AuthUiState.Loading,
+            modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
+            shape = MaterialTheme.shapes.medium,
         ) {
-            if (uiState is AuthUiState.Loading) CircularProgressIndicator(Modifier.size(20.dp))
-            else Text("Continue")
+            if (uiState is AuthUiState.Loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            } else {
+                Text("Continue")
+            }
         }
     }
 }

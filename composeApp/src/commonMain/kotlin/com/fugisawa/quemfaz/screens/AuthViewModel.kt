@@ -85,8 +85,8 @@ class AuthViewModel(
     }
 
     fun submitName(firstName: String, lastName: String) {
-        if (firstName.isBlank() || lastName.isBlank()) {
-            _uiState.value = AuthUiState.Error("First name and last name are required")
+        if (firstName.isBlank()) {
+            _uiState.value = AuthUiState.Error("Name is required")
             return
         }
         viewModelScope.launch {
@@ -96,7 +96,7 @@ class AuthViewModel(
                     CompleteUserProfileRequest(firstName.trim(), lastName.trim())
                 )
                 sessionManager.setCurrentUser(response)
-                _uiState.value = AuthUiState.PhotoUploadRequired
+                _uiState.value = AuthUiState.Success
             } catch (e: Exception) {
                 _uiState.value = AuthUiState.Error(e.message ?: "Failed to save name")
             }

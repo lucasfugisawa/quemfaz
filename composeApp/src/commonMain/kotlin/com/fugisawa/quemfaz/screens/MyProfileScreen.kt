@@ -13,6 +13,7 @@ import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
+import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @Composable
 fun MyProfileScreen(
@@ -65,6 +66,32 @@ fun MyProfileScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+
+        if (currentUser.photoUrl == null) {
+            Spacer(modifier = Modifier.height(Spacing.md))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(modifier = Modifier.padding(Spacing.md)) {
+                    Text(
+                        "Add a profile photo",
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.xs))
+                    Text(
+                        "Clients are more likely to contact professionals with a photo.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    TextButton(onClick = { imagePicker.launch() }) {
+                        Text("Add photo")
+                    }
+                }
             }
         }
 
