@@ -1,0 +1,239 @@
+# UX Phase 5 — Marketplace Signals & Performance Design
+
+**Date:** 2026-03-15
+**Status:** Approved
+**Reference:** `quemfaz-ux-ui-audit.md` (Phases 14–16), `2026-03-14-ux-redesign-implementation-design.md`
+
+---
+
+## Context
+
+Phases 1–4 addressed usability, flow simplification, visual consistency, and interaction polish. Phase 5 shifts to marketplace quality and performance: making ranking smarter by feeding engagement data back into search scoring, improving perceived speed with caching and timeouts, and surfacing more useful recency information to users.
+
+The engagement tracking infrastructure (profile views, contact clicks) was built in earlier phases and stores events in dedicated tables. However, these signals are never aggregated or used in ranking. `lastActiveAt` on professional profiles is frozen at creation time, making the "Active recently" chip misleading. There is no client-side caching and no HTTP timeout configuration.
+
+---
+
+## Scope
+
+### In Scope
+
+| # | Item | Priority | Modules |
+|---|------|----------|---------|
+| 1 | Feed engagement signals into ranking score | P1 | server, shared |
+| 2 | Specific recency display ("Active X days ago") | P2 | server, shared, composeApp |
+| 3 | Client-side search result caching (10-min TTL) | P1 | composeApp |
+| 4 | Explicit Ktor client timeouts | P2 | composeApp |
+| 5 | HTTP Cache-Control headers on profile endpoints | P2 | server |
+
+### Out of Scope (Deferred)
+
+- **Prefetch profile detail on scroll** (P3) — requires scroll-position-aware lifecycle; deferred
+- **Haptic feedback** — requires `expect/actual` KMP platform code; deferred
+- **Server-side Redis caching** — not needed at v1 scale
+- **Pagination activation** — already functional end-to-end (server paginates with `page`/`pageSize`, client accumulates via `loadMoreResults()`, "Load more" button exists in UI)
+
+---
+
+## 1. Engagement Signals in Ranking
+
+### Problem
+
+`ProfessionalSearchRankingService` scores professionals on 5 static factors (service match, neighborhood, completeness, recency, city). Engagement events (profile views, contact clicks) are tracked and stored in `profile_view_events` and `contact_click_events` tables but never read back. A new professional with zero engagement ranks identically to an established one with dozens of contact clicks.
+
+### Design
+
+**Database migration (V8):** Add denormalized counters to `professional_profiles`:
+
+```sql
+ALTER TABLE professional_profiles
+    ADD COLUMN view_count INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN contact_click_count INTEGER NOT NULL DEFAULT 0;
+```
+
+**Increment on write:**
+
+- `TrackProfileViewService.execute()`: after inserting the event, increment `view_count` on the profile row and update `last_active_at = NOW()`.
+- `TrackContactClickService.execute()`: after inserting the event, increment `contact_click_count` on the profile row and update `last_active_at = NOW()`.
+- Both updates happen in the same transaction as the event insert.
+- Updating `last_active_at` on engagement events fixes the stale-recency bug where the field was frozen at profile creation time.
+
+**New ranking factors in `ProfessionalSearchRankingService.calculateScore()`:**
+
+- Contact clicks: `min(contactClickCount, 20) * 2` → up to **40 points** (strongest engagement signal — represents real user intent)
+- Profile views: `min(viewCount, 50) * 0.5` → up to **25 points** (weaker signal — passive browsing)
+- Both are capped to prevent runaway dominance by a single popular professional.
+
+**Updated scoring summary:**
+
+| Factor | Points | Source |
+|--------|--------|--------|
+| PRIMARY service match | 100 | existing |
+| SECONDARY service match | 50 | existing |
+| RELATED service match | 20 | existing |
+| Neighborhood match | 30 | existing |
+| Contact clicks (capped at 20) | up to 40 | **new** |
+| Profile views (capped at 50) | up to 25 | **new** |
+| Profile completeness | 15 | existing |
+| Recently active (≤7 days) | 10 | existing |
+| City mismatch penalty | -50 | existing |
+
+**DTO change:** Add `contactCount: Int` to `ProfessionalProfileResponse` in `shared/contract/`. Populated server-side from `contact_click_count`. No UI display in this phase — the field is available for future "X people contacted this professional" display.
+
+### Files
+
+- **Create:** `server/src/main/resources/db/migration/V8__engagement_counters.sql`
+- **Modify:** `server/.../engagement/application/TrackProfileViewService.kt` — increment counter + update `lastActiveAt`
+- **Modify:** `server/.../engagement/application/TrackContactClickService.kt` — increment counter + update `lastActiveAt`
+- **Modify:** `server/.../engagement/infrastructure/ExposedProfileViewEventRepository.kt` or profile repository — add increment method
+- **Modify:** `server/.../engagement/infrastructure/ExposedContactClickEventRepository.kt` or profile repository — add increment method
+- **Modify:** `server/.../search/ranking/ProfessionalSearchRankingService.kt` — add 2 new scoring factors
+- **Modify:** `server/.../profile/domain/ProfessionalProfile.kt` — add `viewCount`, `contactClickCount` fields
+- **Modify:** `shared/.../contract/profile/ProfileDtos.kt` — add `contactCount: Int` to `ProfessionalProfileResponse`
+- **Modify:** `server/.../profile/application/ProfileServices.kt` — map `contactClickCount` to `contactCount` in response
+
+---
+
+## 2. Recency Specificity
+
+### Problem
+
+`ProfessionalProfileResponse.activeRecently` is a boolean — true if `lastActiveAt` is within 7 days. The UI shows a generic "Active recently" chip with no granularity. Users can't distinguish between a professional who was active today vs. 6 days ago.
+
+### Design
+
+**DTO change:** Add `daysSinceActive: Int?` to `ProfessionalProfileResponse` in `shared/contract/`. Null if `lastActiveAt` is null. Computed server-side as `ChronoUnit.DAYS.between(lastActiveAt, now)`.
+
+**Keep `activeRecently: Boolean`** — no breaking change. The boolean is still useful for chip visibility logic.
+
+**Server mapping:** `SearchProfessionalsService` and `ProfileServices` compute `daysSinceActive` when mapping to the response DTO. With Section 1's fix to `lastActiveAt`, this now reflects real engagement activity.
+
+**UI change in `StatusChipRow`** (used by `ProfessionalCard` and `ProfileHeader`):
+
+| `daysSinceActive` | Display text |
+|----|---|
+| 0 | "Active today" |
+| 1 | "Active yesterday" |
+| 2–7 | "Active X days ago" |
+| 8–30 | "Active this month" |
+| 31+ or null | chip hidden |
+
+### Files
+
+- **Modify:** `shared/.../contract/profile/ProfileDtos.kt` — add `daysSinceActive: Int?`
+- **Modify:** `server/.../search/application/SearchProfessionalsService.kt` — compute `daysSinceActive`
+- **Modify:** `server/.../profile/application/ProfileServices.kt` — compute `daysSinceActive`
+- **Modify:** `composeApp/.../ui/components/StatusChipRow.kt` — accept `daysSinceActive`, display granular text
+
+---
+
+## 3. Client-side Search Result Caching
+
+### Problem
+
+Every search hits the server. Navigating back from a profile to search results re-fetches the entire result set. This adds latency and wastes bandwidth.
+
+### Design
+
+**In-memory cache in `HomeViewModel`:**
+
+```kotlin
+private data class CachedSearch(
+    val response: SearchProfessionalsResponse,
+    val accumulatedResults: List<ProfessionalProfileResponse>,
+    val currentPage: Int,
+    val hasMore: Boolean,
+    val timestamp: Long,  // System.currentTimeMillis()
+)
+
+private val searchCache = LinkedHashMap<String, CachedSearch>(5, 0.75f, true)
+```
+
+**Cache key:** `"$query:$cityName"` (normalized lowercase).
+
+**TTL:** 10 minutes. On `search(query)`:
+1. Compute cache key.
+2. If entry exists and `System.currentTimeMillis() - entry.timestamp < 600_000`: restore UI state from cache (set Success, restore accumulated results, page number, hasMore). Return without server call.
+3. Otherwise: fetch from server, store result in cache. Evict oldest entry if cache exceeds 5 entries.
+
+**`loadMoreResults()` updates the cache entry** — the cached entry is replaced with the new accumulated results and incremented page number.
+
+**Cache invalidation:**
+- Clear entire cache on `toggleFavoriteFromSearch()` (favorited state would be stale in cached results)
+- Clear entire cache on logout (via SessionManager observation or explicit call)
+
+**No server or shared contract changes.**
+
+### Files
+
+- **Modify:** `composeApp/.../screens/HomeViewModel.kt` — add `CachedSearch` class, `searchCache` map, cache-check logic in `search()`, cache-update in `executeSearch()` and `loadMoreResults()`, invalidation in `toggleFavoriteFromSearch()`
+
+---
+
+## 4. Ktor Client Timeouts
+
+### Problem
+
+`ApiClient`'s `HttpClient` has no explicit timeout configuration. A slow or unresponsive server hangs the UI indefinitely with no user feedback and no automatic recovery.
+
+### Design
+
+**Install `HttpTimeout` plugin** in `ApiClient.kt`'s `HttpClient` block:
+
+```kotlin
+install(HttpTimeout) {
+    connectTimeoutMillis = 5_000    // 5s — fail fast if server unreachable
+    socketTimeoutMillis = 30_000    // 30s — generous for AI endpoints
+    requestTimeoutMillis = 60_000   // 60s — overall ceiling for slow AI round-trips
+}
+```
+
+**Dependency:** `HttpTimeout` is in `io.ktor:ktor-client-core` which is already on the classpath.
+
+**No retry logic.** Timeout exceptions are caught by existing `catch` blocks in ViewModels, which display the Error UI state. This is sufficient for v1.
+
+### Files
+
+- **Modify:** `composeApp/.../network/ApiClient.kt` — add `HttpTimeout` plugin installation
+
+---
+
+## 5. HTTP Cache-Control Headers
+
+### Problem
+
+No server responses include `Cache-Control` headers. All responses are treated as uncacheable by intermediaries and clients.
+
+### Design
+
+**Add `Cache-Control` headers to profile GET endpoints:**
+
+| Endpoint | Header | Rationale |
+|----------|--------|-----------|
+| `GET /profile/{id}` | `Cache-Control: public, max-age=120` | Profile detail changes infrequently; 2-min cache reduces round-trips on back-navigation |
+| `GET /profile/me` | `Cache-Control: private, no-cache` | Own profile must always reflect latest edits |
+
+**No caching on POST endpoints** — search, engagement tracking, auth, favorites are all POST. HTTP semantics already prevent caching.
+
+**Implementation:** Add `call.response.header("Cache-Control", "...")` before `call.respond()` in the relevant route handlers. No middleware or plugin needed.
+
+### Files
+
+- **Modify:** `server/.../profile/routing/ProfileRoutes.kt` — add Cache-Control header to `GET /profile/{id}` and `GET /profile/me`
+
+---
+
+## Cross-Cutting Concerns
+
+### Shared Contract Change
+
+Items 1 and 2 both modify `ProfessionalProfileResponse` in `shared/contract/profile/ProfileDtos.kt`. Both new fields have defaults (`contactCount: Int = 0`, `daysSinceActive: Int? = null`) ensuring backward compatibility with existing serialized responses.
+
+### Testing
+
+- **Server:** Integration tests for ranking with engagement scores, counter increment on event tracking, recency computation, Cache-Control headers
+- **Client:** No automated UI tests (consistent with existing test coverage)
+
+### Migration Safety
+
+V8 migration adds two `INTEGER DEFAULT 0` columns — non-destructive, no data loss, no table lock on small tables.
