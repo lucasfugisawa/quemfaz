@@ -12,7 +12,8 @@ enum class InputMode {
 data class InterpretedServiceDto(
     val serviceId: String,
     val displayName: String,
-    val matchLevel: String
+    val matchLevel: String,
+    val status: String = "active",
 )
 
 @Serializable
@@ -30,6 +31,7 @@ data class CreateProfessionalProfileDraftResponse(
     val followUpQuestions: List<String>,
     val freeTextAliases: List<String>,
     val llmUnavailable: Boolean = false,
+    val blockedDescriptions: List<String> = emptyList(),
 )
 
 @Serializable

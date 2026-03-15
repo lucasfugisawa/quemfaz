@@ -23,4 +23,5 @@ data class SearchProfessionalsResponse(
     val pageSize: Int,
     val totalCount: Int,
     val llmUnavailable: Boolean = false,
+    val blockedDescriptions: List<String> = emptyList(),
 )
