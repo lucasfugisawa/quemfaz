@@ -22,4 +22,5 @@ data class SearchProfessionalsResponse(
     val page: Int,
     val pageSize: Int,
     val totalCount: Int,
+    val llmUnavailable: Boolean = false,
 )

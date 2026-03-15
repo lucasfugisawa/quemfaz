@@ -28,7 +28,8 @@ data class CreateProfessionalProfileDraftResponse(
     val cityName: String?,
     val missingFields: List<String>,
     val followUpQuestions: List<String>,
-    val freeTextAliases: List<String>
+    val freeTextAliases: List<String>,
+    val llmUnavailable: Boolean = false,
 )
 
 @Serializable
