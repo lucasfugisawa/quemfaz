@@ -1,13 +1,15 @@
 package com.fugisawa.quemfaz.profile.interpretation
 
+import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
-import com.fugisawa.quemfaz.domain.service.CanonicalServices
 import com.fugisawa.quemfaz.domain.service.ServiceMatchLevel
 
-class MockProfessionalInputInterpreter : ProfessionalInputInterpreter {
+class MockProfessionalInputInterpreter(
+    private val catalogService: CatalogService,
+) : ProfessionalInputInterpreter {
     override fun interpret(
         inputText: String,
         inputMode: InputMode,
@@ -15,15 +17,15 @@ class MockProfessionalInputInterpreter : ProfessionalInputInterpreter {
         val normalizedText = inputText.lowercase()
 
         val interpretedServices =
-            CanonicalServices.all
+            catalogService.getActiveServices()
                 .flatMap { service ->
                     val matches = mutableListOf<InterpretedServiceDto>()
                     if (normalizedText.contains(service.displayName.lowercase())) {
-                        matches.add(InterpretedServiceDto(service.id.value, service.displayName, ServiceMatchLevel.PRIMARY.name))
+                        matches.add(InterpretedServiceDto(service.id, service.displayName, ServiceMatchLevel.PRIMARY.name))
                     } else {
-                        val matchingAlias = service.baseAliases.find { normalizedText.contains(it.lowercase()) }
+                        val matchingAlias = service.aliases.find { normalizedText.contains(it.lowercase()) }
                         if (matchingAlias != null) {
-                            matches.add(InterpretedServiceDto(service.id.value, service.displayName, ServiceMatchLevel.PRIMARY.name))
+                            matches.add(InterpretedServiceDto(service.id, service.displayName, ServiceMatchLevel.PRIMARY.name))
                         }
                     }
                     matches

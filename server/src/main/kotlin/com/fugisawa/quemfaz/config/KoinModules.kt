@@ -154,34 +154,34 @@ val infrastructureModule =
         single { CatalogService(get(), get()) }
 
         // Professional Profile Interpretation
-        single<ProfessionalInputInterpreter> { LlmProfessionalInputInterpreter(get()) }
+        single<ProfessionalInputInterpreter> { LlmProfessionalInputInterpreter(get(), get(), get()) }
 
         // Professional Profile Services
         single { CreateProfessionalProfileDraftService(get()) }
         single { ClarifyProfessionalProfileDraftService(get()) }
-        single { ConfirmProfessionalProfileService(get(), get()) }
-        single { GetMyProfessionalProfileService(get(), get()) }
-        single { GetPublicProfessionalProfileService(get(), get()) }
-        single { UpdateProfessionalProfileService(get(), get()) }
+        single { ConfirmProfessionalProfileService(get(), get(), get()) }
+        single { GetMyProfessionalProfileService(get(), get(), get()) }
+        single { GetPublicProfessionalProfileService(get(), get(), get()) }
+        single { UpdateProfessionalProfileService(get(), get(), get()) }
         single { SetKnownNameService(get()) }
 
         // Search Repositories
         single<SearchQueryRepository> { ExposedSearchQueryRepository() }
 
         // Search Interpretation
-        single<SearchQueryInterpreter> { LlmSearchQueryInterpreter(get()) }
+        single<SearchQueryInterpreter> { LlmSearchQueryInterpreter(get(), get(), get()) }
 
         // Search Ranking
         single { ProfessionalSearchRankingService() }
 
         // Search Services
-        single { SearchProfessionalsService(get(), get(), get(), get(), get()) }
+        single { SearchProfessionalsService(get(), get(), get(), get(), get(), get()) }
 
         // Favorites
         single<FavoriteRepository> { ExposedFavoriteRepository() }
         single { AddFavoriteService(get(), get()) }
         single { RemoveFavoriteService(get()) }
-        single { ListFavoritesService(get(), get(), get()) }
+        single { ListFavoritesService(get(), get(), get(), get()) }
 
         // Engagement
         single<ContactClickEventRepository> { ExposedContactClickEventRepository() }

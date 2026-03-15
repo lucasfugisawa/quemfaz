@@ -1,6 +1,7 @@
 package com.fugisawa.quemfaz.profile.application
 
 import com.fugisawa.quemfaz.auth.domain.UserRepository
+import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.contract.profile.ClarifyDraftRequest
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftRequest
@@ -9,7 +10,6 @@ import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
 import com.fugisawa.quemfaz.core.id.UserId
-import com.fugisawa.quemfaz.domain.service.CanonicalServices
 import com.fugisawa.quemfaz.domain.service.ServiceMatchLevel
 import com.fugisawa.quemfaz.profile.domain.PortfolioPhoto
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfile
@@ -49,6 +49,7 @@ class ClarifyProfessionalProfileDraftService(
 class ConfirmProfessionalProfileService(
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
+    private val catalogService: CatalogService,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -106,31 +107,33 @@ class ConfirmProfessionalProfileService(
 
         val savedProfile = profileRepository.save(profile)
 
-        return mapToResponse(savedProfile, user.firstName, user.lastName, user.photoUrl)
+        return mapToResponse(savedProfile, user.firstName, user.lastName, user.photoUrl, catalogService)
     }
 }
 
 class GetMyProfessionalProfileService(
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
+    private val catalogService: CatalogService,
 ) {
     fun execute(userId: UserId): ProfessionalProfileResponse? {
         val profile = profileRepository.findByUserId(userId) ?: return null
         val user = userRepository.findById(userId)
-        return mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl)
+        return mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl, catalogService)
     }
 }
 
 class GetPublicProfessionalProfileService(
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
+    private val catalogService: CatalogService,
 ) {
     fun execute(profileId: ProfessionalProfileId): ProfessionalProfileResponse? {
         val profile = profileRepository.findById(profileId) ?: return null
         if (profile.status != ProfessionalProfileStatus.PUBLISHED) return null
 
         val user = userRepository.findById(profile.userId)
-        return mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl)
+        return mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl, catalogService)
     }
 }
 
@@ -147,6 +150,7 @@ sealed class UpdateProfileResult {
 class UpdateProfessionalProfileService(
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
+    private val catalogService: CatalogService,
 ) {
     fun execute(
         userId: UserId,
@@ -195,7 +199,7 @@ class UpdateProfessionalProfileService(
 
         val saved = profileRepository.save(updated)
 
-        return UpdateProfileResult.Success(mapToResponse(saved, user.firstName, user.lastName, user.photoUrl))
+        return UpdateProfileResult.Success(mapToResponse(saved, user.firstName, user.lastName, user.photoUrl, catalogService))
     }
 }
 
@@ -204,6 +208,7 @@ private fun mapToResponse(
     firstName: String,
     lastName: String,
     userPhotoUrl: String?,
+    catalogService: CatalogService,
 ): ProfessionalProfileResponse =
     ProfessionalProfileResponse(
         id = profile.id.value,
@@ -214,9 +219,7 @@ private fun mapToResponse(
         description = profile.normalizedDescription ?: "",
         cityName = profile.cityName ?: "",
         services = profile.services.map { svc ->
-            val canonical = CanonicalServices.findById(
-                com.fugisawa.quemfaz.core.id.CanonicalServiceId(svc.serviceId)
-            )
+            val canonical = catalogService.findById(svc.serviceId)
             InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
         },
         profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,

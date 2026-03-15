@@ -1,13 +1,13 @@
 package com.fugisawa.quemfaz.favorites.application
 
 import com.fugisawa.quemfaz.auth.domain.UserRepository
+import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.contract.favorites.FavoritesListResponse
 import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.core.id.FavoriteId
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
 import com.fugisawa.quemfaz.core.id.UserId
-import com.fugisawa.quemfaz.domain.service.CanonicalServices
 import com.fugisawa.quemfaz.favorites.domain.Favorite
 import com.fugisawa.quemfaz.favorites.domain.FavoriteRepository
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfile
@@ -73,6 +73,7 @@ class ListFavoritesService(
     private val favoriteRepository: FavoriteRepository,
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
+    private val catalogService: CatalogService,
 ) {
     fun execute(userId: UserId): FavoritesListResponse {
         val favorites = favoriteRepository.listByUserId(userId)
@@ -105,11 +106,7 @@ class ListFavoritesService(
             cityName = profile.cityName ?: "",
             services =
                 profile.services.map { svc ->
-                    val canonical =
-                        CanonicalServices.findById(
-                            com.fugisawa.quemfaz.core.id
-                                .CanonicalServiceId(svc.serviceId),
-                        )
+                    val canonical = catalogService.findById(svc.serviceId)
                     InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
                 },
             profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
