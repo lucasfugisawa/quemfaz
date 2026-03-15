@@ -73,6 +73,20 @@ class OnboardingViewModel(
         _uiState.value = OnboardingUiState.DraftReady(draft)
     }
 
+    fun goBack() {
+        _uiState.value = when (val current = _uiState.value) {
+            is OnboardingUiState.NeedsClarification -> OnboardingUiState.Idle
+            is OnboardingUiState.DraftReady -> OnboardingUiState.Idle
+            is OnboardingUiState.PhotoRequired -> OnboardingUiState.DraftReady(current.draft)
+            is OnboardingUiState.KnownName -> {
+                val hasPhoto = sessionManager.currentUser.value?.photoUrl != null
+                if (hasPhoto) OnboardingUiState.DraftReady(current.draft)
+                else OnboardingUiState.PhotoRequired(current.draft)
+            }
+            else -> current
+        }
+    }
+
     fun proceedFromDraft(draft: CreateProfessionalProfileDraftResponse) {
         val hasPhoto = sessionManager.currentUser.value?.photoUrl != null
         _uiState.value = if (hasPhoto) OnboardingUiState.KnownName(draft) else OnboardingUiState.PhotoRequired(draft)

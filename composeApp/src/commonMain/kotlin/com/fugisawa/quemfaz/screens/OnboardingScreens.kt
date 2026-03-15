@@ -1,6 +1,8 @@
 package com.fugisawa.quemfaz.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -8,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
+import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.session.SessionManager
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
@@ -24,7 +27,8 @@ fun OnboardingScreens(
     onSubmitKnownName: (knownName: String?, draft: CreateProfessionalProfileDraftResponse) -> Unit,
     onSubmitClarifications: (String, List<ClarificationAnswer>) -> Unit,
     onSkipClarification: (CreateProfessionalProfileDraftResponse) -> Unit,
-    onFinish: () -> Unit,
+    onBack: () -> Unit,
+    onFinish: (ProfessionalProfileResponse) -> Unit,
 ) {
     var inputText by remember { mutableStateOf("") }
     var currentStep by remember { mutableStateOf(1) }
@@ -56,6 +60,23 @@ fun OnboardingScreens(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.TopCenter)
                 )
+            }
+
+            val showBack = uiState is OnboardingUiState.NeedsClarification ||
+                           uiState is OnboardingUiState.DraftReady ||
+                           uiState is OnboardingUiState.PhotoRequired ||
+                           uiState is OnboardingUiState.KnownName
+
+            if (showBack) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.align(Alignment.TopStart),
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                    )
+                }
             }
 
             // Offset content below the step indicator to avoid overlap
@@ -264,7 +285,7 @@ fun OnboardingScreens(
                         Spacer(modifier = Modifier.height(32.dp))
 
                         Button(
-                            onClick = onFinish,
+                            onClick = { onFinish(uiState.profile) },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = MaterialTheme.shapes.medium
                         ) {
@@ -300,13 +321,13 @@ fun OnboardingScreens(
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
@@ -315,7 +336,7 @@ private fun OnboardingDraftReadyPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.DraftReady(PreviewSamples.sampleDraftResponse),
-            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
+            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -326,7 +347,7 @@ private fun OnboardingPublishedPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
-            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
+            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -337,7 +358,7 @@ private fun OnboardingErrorPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
-            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onFinish = {}
+            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }

@@ -361,7 +361,11 @@ fun MainFlow(
                             viewModel.submitClarifications(desc, answers)
                         },
                         onSkipClarification = { draft -> viewModel.skipClarification(draft) },
-                        onFinish = { navigateToTab(Screen.MyProfile) }
+                        onBack = { viewModel.goBack() },
+                        onFinish = { profile ->
+                            currentProfileId = profile.id
+                            navigateTo(Screen.ProfessionalProfile)
+                        }
                     )
                 }
                 is Screen.EditProfessionalProfile -> {

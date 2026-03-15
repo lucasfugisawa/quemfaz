@@ -113,8 +113,12 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Earn money", style = MaterialTheme.typography.titleMedium)
-                            Text("Offer your services here", style = MaterialTheme.typography.bodySmall)
+                            Text("Offer your services", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Describe what you do — AI builds your profile.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
                         }
                         Text("🚀", style = MaterialTheme.typography.headlineLarge)
                     }
