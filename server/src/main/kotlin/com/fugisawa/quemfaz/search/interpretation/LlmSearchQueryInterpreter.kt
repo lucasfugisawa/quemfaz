@@ -1,6 +1,7 @@
 package com.fugisawa.quemfaz.search.interpretation
 
 import com.fugisawa.quemfaz.catalog.application.CatalogService
+import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
 import com.fugisawa.quemfaz.catalog.domain.SignalRepository
 import com.fugisawa.quemfaz.catalog.domain.UnmatchedServiceSignal
 import com.fugisawa.quemfaz.llm.LlmAgentService
@@ -15,6 +16,7 @@ class LlmSearchQueryInterpreter(
     private val llmAgentService: LlmAgentService,
     private val catalogService: CatalogService,
     private val signalRepository: SignalRepository,
+    private val provisionalServiceCreator: ProvisionalServiceCreator,
 ) : SearchQueryInterpreter {
     private val logger = LoggerFactory.getLogger(LlmSearchQueryInterpreter::class.java)
 
@@ -112,6 +114,9 @@ class LlmSearchQueryInterpreter(
         safetyReason: String?,
     ) {
         try {
+            val provisionalId = provisionalServiceCreator.tryProvision(
+                rawDescription, source, userId, cityName, safetyClassification, safetyReason
+            )
             val bestMatch = catalogService.search(rawDescription).firstOrNull()
             signalRepository.create(
                 UnmatchedServiceSignal(
@@ -121,7 +126,7 @@ class LlmSearchQueryInterpreter(
                     userId = userId,
                     bestMatchServiceId = bestMatch?.id,
                     bestMatchConfidence = if (bestMatch != null) "low" else "none",
-                    provisionalServiceId = null,
+                    provisionalServiceId = provisionalId,
                     cityName = cityName,
                     safetyClassification = safetyClassification,
                     safetyReason = safetyReason,

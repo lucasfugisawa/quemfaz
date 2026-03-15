@@ -1,6 +1,7 @@
 package com.fugisawa.quemfaz.profile.interpretation
 
 import com.fugisawa.quemfaz.catalog.application.CatalogService
+import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
 import com.fugisawa.quemfaz.catalog.domain.SignalRepository
 import com.fugisawa.quemfaz.catalog.domain.UnmatchedServiceSignal
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
@@ -19,6 +20,7 @@ class LlmProfessionalInputInterpreter(
     private val llmAgentService: LlmAgentService,
     private val catalogService: CatalogService,
     private val signalRepository: SignalRepository,
+    private val provisionalServiceCreator: ProvisionalServiceCreator,
 ) : ProfessionalInputInterpreter {
     private val logger = LoggerFactory.getLogger(LlmProfessionalInputInterpreter::class.java)
 
@@ -155,6 +157,9 @@ class LlmProfessionalInputInterpreter(
         safetyReason: String?,
     ) {
         try {
+            val provisionalId = provisionalServiceCreator.tryProvision(
+                rawDescription, source, userId, cityName, safetyClassification, safetyReason
+            )
             val bestMatch = catalogService.search(rawDescription).firstOrNull()
             signalRepository.create(
                 UnmatchedServiceSignal(
@@ -164,7 +169,7 @@ class LlmProfessionalInputInterpreter(
                     userId = userId,
                     bestMatchServiceId = bestMatch?.id,
                     bestMatchConfidence = if (bestMatch != null) "low" else "none",
-                    provisionalServiceId = null,
+                    provisionalServiceId = provisionalId,
                     cityName = cityName,
                     safetyClassification = safetyClassification,
                     safetyReason = safetyReason,
