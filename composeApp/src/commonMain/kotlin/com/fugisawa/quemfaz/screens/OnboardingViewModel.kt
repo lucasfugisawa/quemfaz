@@ -35,6 +35,19 @@ class OnboardingViewModel(
     private val _uiState = MutableStateFlow<OnboardingUiState>(OnboardingUiState.Idle)
     val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
 
+    private val _selectedCity = MutableStateFlow<String?>(null)
+    val selectedCity: StateFlow<String?> = _selectedCity.asStateFlow()
+
+    fun initializeCity(mainScreenCity: String?) {
+        if (_selectedCity.value == null) {
+            _selectedCity.value = mainScreenCity
+        }
+    }
+
+    fun selectCity(city: String) {
+        _selectedCity.value = city
+    }
+
     fun createDraft(inputText: String) {
         viewModelScope.launch {
             _uiState.value = OnboardingUiState.Loading
@@ -136,7 +149,7 @@ class OnboardingViewModel(
                     ConfirmProfessionalProfileRequest(
                         normalizedDescription = draft.normalizedDescription,
                         selectedServiceIds = draft.interpretedServices.map { it.serviceId },
-                        cityName = draft.cityName,
+                        cityName = _selectedCity.value,
                         contactPhone = "",
                         whatsAppPhone = null,
                         portfolioPhotoUrls = emptyList(),

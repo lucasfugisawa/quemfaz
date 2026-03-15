@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.domain.city.SupportedCities
 import com.fugisawa.quemfaz.session.SessionManager
 import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
@@ -41,7 +42,9 @@ private fun OnboardingUiState.stepIndex() = when (this) {
 @Composable
 fun OnboardingScreens(
     uiState: OnboardingUiState,
+    selectedCity: String?,
     onCreateDraft: (String) -> Unit,
+    onSelectCity: (String) -> Unit,
     onProceedFromDraft: (CreateProfessionalProfileDraftResponse) -> Unit,
     onProceedWithManualServices: (CreateProfessionalProfileDraftResponse, Set<String>) -> Unit,
     onPickPhoto: (draft: CreateProfessionalProfileDraftResponse) -> Unit,
@@ -262,6 +265,8 @@ fun OnboardingScreens(
                             }
                         }
                     } else {
+                        var cityDropdownExpanded by remember { mutableStateOf(false) }
+
                         Column(modifier = Modifier.fillMaxSize()) {
                             Text("Review your profile", style = MaterialTheme.typography.headlineLarge)
                             Text("This is how customers will see your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -290,6 +295,42 @@ fun OnboardingScreens(
                                                 label = { Text(service.displayName) }
                                             )
                                         }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Text("Your city:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            @OptIn(ExperimentalMaterial3Api::class)
+                            ExposedDropdownMenuBox(
+                                expanded = cityDropdownExpanded,
+                                onExpandedChange = { cityDropdownExpanded = it },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedCity ?: "",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("City") },
+                                    placeholder = { Text("Select a city") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityDropdownExpanded) },
+                                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.medium,
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = cityDropdownExpanded,
+                                    onDismissRequest = { cityDropdownExpanded = false },
+                                ) {
+                                    SupportedCities.all.forEach { city ->
+                                        DropdownMenuItem(
+                                            text = { Text(city) },
+                                            onClick = {
+                                                onSelectCity(city)
+                                                cityDropdownExpanded = false
+                                            },
+                                        )
                                     }
                                 }
                             }
@@ -409,13 +450,13 @@ fun OnboardingScreens(
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, selectedCity = null, onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
@@ -424,7 +465,8 @@ private fun OnboardingDraftReadyPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.DraftReady(PreviewSamples.sampleDraftResponse),
-            onCreateDraft = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            selectedCity = "Franca",
+            onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -435,7 +477,8 @@ private fun OnboardingPublishedPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
-            onCreateDraft = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            selectedCity = null,
+            onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -446,7 +489,8 @@ private fun OnboardingErrorPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
-            onCreateDraft = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            selectedCity = null,
+            onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }

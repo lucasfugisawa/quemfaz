@@ -373,6 +373,11 @@ fun MainFlow(
                     is Screen.OnboardingStart -> {
                         val viewModel: OnboardingViewModel = koinInject()
                         val uiState by viewModel.uiState.collectAsState()
+                        val selectedCity by viewModel.selectedCity.collectAsState()
+
+                        LaunchedEffect(currentCity) {
+                            viewModel.initializeCity(currentCity)
+                        }
 
                         val imagePicker = rememberImagePickerLauncher { data, mimeType ->
                             val draft = (uiState as? OnboardingUiState.PhotoRequired)?.draft ?: return@rememberImagePickerLauncher
@@ -381,7 +386,9 @@ fun MainFlow(
 
                         OnboardingScreens(
                             uiState = uiState,
+                            selectedCity = selectedCity,
                             onCreateDraft = { viewModel.createDraft(it) },
+                            onSelectCity = { viewModel.selectCity(it) },
                             onProceedFromDraft = { draft -> viewModel.proceedFromDraft(draft) },
                             onProceedWithManualServices = { draft, serviceIds -> viewModel.proceedWithManualServices(draft, serviceIds) },
                             onPickPhoto = { _ -> imagePicker.launch() },
