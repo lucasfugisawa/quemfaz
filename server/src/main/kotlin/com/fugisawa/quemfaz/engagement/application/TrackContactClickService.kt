@@ -9,6 +9,7 @@ import com.fugisawa.quemfaz.engagement.domain.ContactClickEvent
 import com.fugisawa.quemfaz.engagement.domain.ContactClickEventRepository
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.UUID
@@ -47,7 +48,11 @@ class TrackContactClickService(
                 createdAt = Instant.now(),
             )
 
-        contactClickEventRepository.save(event)
+        transaction {
+            contactClickEventRepository.save(event)
+            profileRepository.incrementContactClickCount(profileId)
+            profileRepository.updateLastActiveAt(profileId)
+        }
         logger.info("Contact click tracked for profile ${profileId.value} via ${event.channel}")
     }
 }

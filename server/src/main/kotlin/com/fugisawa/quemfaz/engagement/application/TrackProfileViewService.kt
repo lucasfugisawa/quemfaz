@@ -7,6 +7,7 @@ import com.fugisawa.quemfaz.engagement.domain.ProfileViewEvent
 import com.fugisawa.quemfaz.engagement.domain.ProfileViewEventRepository
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.UUID
@@ -40,7 +41,11 @@ class TrackProfileViewService(
                 createdAt = Instant.now(),
             )
 
-        profileViewEventRepository.save(event)
+        transaction {
+            profileViewEventRepository.save(event)
+            profileRepository.incrementViewCount(profileId)
+            profileRepository.updateLastActiveAt(profileId)
+        }
         logger.info("Profile view tracked for profile ${profileId.value}")
     }
 }
