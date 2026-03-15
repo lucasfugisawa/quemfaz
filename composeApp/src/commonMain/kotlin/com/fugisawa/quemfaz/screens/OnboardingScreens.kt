@@ -34,9 +34,10 @@ import org.koin.compose.koinInject
 private fun OnboardingUiState.stepIndex() = when (this) {
     is OnboardingUiState.Idle -> 1
     is OnboardingUiState.NeedsClarification -> 1
-    is OnboardingUiState.DraftReady -> 2
-    is OnboardingUiState.PhotoRequired -> 3
-    is OnboardingUiState.KnownName -> 4
+    is OnboardingUiState.ReviewServices -> 2
+    is OnboardingUiState.ReviewDescription -> 3
+    is OnboardingUiState.PhotoRequired -> 4
+    is OnboardingUiState.KnownName -> 5
     else -> -1
 }
 
@@ -47,10 +48,11 @@ fun OnboardingScreens(
     catalog: CatalogResponse?,
     onCreateDraft: (String) -> Unit,
     onSelectCity: (String) -> Unit,
-    onProceedFromDraft: (CreateProfessionalProfileDraftResponse) -> Unit,
+    onProceedFromServices: (CreateProfessionalProfileDraftResponse, List<String>) -> Unit,
     onProceedWithManualServices: (CreateProfessionalProfileDraftResponse, Set<String>) -> Unit,
-    onPickPhoto: (draft: CreateProfessionalProfileDraftResponse) -> Unit,
-    onSubmitKnownName: (knownName: String?, draft: CreateProfessionalProfileDraftResponse) -> Unit,
+    onProceedFromDescription: (CreateProfessionalProfileDraftResponse, List<String>, String) -> Unit,
+    onPickPhoto: () -> Unit,
+    onSubmitKnownName: (knownName: String?, confirmedServiceIds: List<String>, confirmedDescription: String) -> Unit,
     onSubmitClarifications: (String, List<ClarificationAnswer>) -> Unit,
     onSkipClarification: (CreateProfessionalProfileDraftResponse) -> Unit,
     onBack: () -> Unit,
@@ -65,12 +67,13 @@ fun OnboardingScreens(
         currentStep = when (uiState) {
             is OnboardingUiState.Idle -> 1
             is OnboardingUiState.NeedsClarification -> 1
-            is OnboardingUiState.DraftReady -> 2
-            is OnboardingUiState.PhotoRequired -> 3
-            is OnboardingUiState.KnownName -> 4
+            is OnboardingUiState.ReviewServices -> 2
+            is OnboardingUiState.ReviewDescription -> 3
+            is OnboardingUiState.PhotoRequired -> 4
+            is OnboardingUiState.KnownName -> 5
             is OnboardingUiState.Loading,
             is OnboardingUiState.Published,
-            is OnboardingUiState.Error -> currentStep  // no change
+            is OnboardingUiState.Error -> currentStep
         }
     }
 
@@ -81,7 +84,7 @@ fun OnboardingScreens(
                                     uiState !is OnboardingUiState.Error
             if (showStepIndicator) {
                 Text(
-                    text = "Step $currentStep of 4",
+                    text = "Step $currentStep of 5",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.TopCenter)
@@ -89,7 +92,8 @@ fun OnboardingScreens(
             }
 
             val showBack = uiState is OnboardingUiState.NeedsClarification ||
-                           uiState is OnboardingUiState.DraftReady ||
+                           uiState is OnboardingUiState.ReviewServices ||
+                           uiState is OnboardingUiState.ReviewDescription ||
                            uiState is OnboardingUiState.PhotoRequired ||
                            uiState is OnboardingUiState.KnownName
 
@@ -239,7 +243,7 @@ fun OnboardingScreens(
                         }
                     }
                 }
-                is OnboardingUiState.DraftReady -> {
+                is OnboardingUiState.ReviewServices -> {
                     val draft = state.draft
                     if (draft.interpretedServices.isEmpty()) {
                         var manualSelectedServices by remember { mutableStateOf(emptySet<String>()) }
@@ -258,10 +262,7 @@ fun OnboardingScreens(
                                     modifier = Modifier.weight(1f),
                                 )
                             } else {
-                                Box(
-                                    modifier = Modifier.weight(1f),
-                                    contentAlignment = Alignment.Center,
-                                ) {
+                                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator()
                                 }
                             }
@@ -281,8 +282,8 @@ fun OnboardingScreens(
                         var cityDropdownExpanded by remember { mutableStateOf(false) }
 
                         Column(modifier = Modifier.fillMaxSize()) {
-                            Text("Review your profile", style = MaterialTheme.typography.headlineLarge)
-                            Text("This is how customers will see your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Review your services", style = MaterialTheme.typography.headlineLarge)
+                            Text("These are the services we identified.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                             Spacer(modifier = Modifier.height(32.dp))
 
@@ -291,11 +292,6 @@ fun OnboardingScreens(
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
-                                    Text("Description:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                                    Text(draft.normalizedDescription, style = MaterialTheme.typography.bodyLarge)
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
                                     Text("Interpreted services:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                                     @OptIn(ExperimentalLayoutApi::class)
                                     FlowRow(
@@ -314,6 +310,7 @@ fun OnboardingScreens(
 
                             Spacer(modifier = Modifier.height(24.dp))
 
+                            // City selector
                             Text("Your city:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.height(8.dp))
                             @OptIn(ExperimentalMaterial3Api::class)
@@ -351,12 +348,48 @@ fun OnboardingScreens(
                             Spacer(modifier = Modifier.weight(1f))
 
                             Button(
-                                onClick = { onProceedFromDraft(draft) },
+                                onClick = {
+                                    onProceedFromServices(draft, draft.interpretedServices.map { it.serviceId })
+                                },
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = MaterialTheme.shapes.medium
                             ) {
                                 Text("Looks good, continue", style = MaterialTheme.typography.titleMedium)
                             }
+                        }
+                    }
+                }
+                is OnboardingUiState.ReviewDescription -> {
+                    var descriptionText by remember {
+                        mutableStateOf(state.draft.editedDescription.ifBlank { state.draft.normalizedDescription })
+                    }
+
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Text("Descrição do perfil", style = MaterialTheme.typography.headlineLarge)
+                        Text(
+                            "Esta é a descrição que os clientes verão no seu perfil. Você pode editá-la se quiser.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        OutlinedTextField(
+                            value = descriptionText,
+                            onValueChange = { descriptionText = it },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+                            label = { Text("Descrição") },
+                            maxLines = 8,
+                            shape = MaterialTheme.shapes.medium,
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Button(
+                            onClick = { onProceedFromDescription(state.draft, state.confirmedServiceIds, descriptionText) },
+                            enabled = descriptionText.isNotBlank(),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = MaterialTheme.shapes.medium,
+                        ) {
+                            Text("Continuar", style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 }
@@ -372,7 +405,7 @@ fun OnboardingScreens(
                         showSkip = false,
                         isLoading = false,
                         error = null,
-                        onPickImage = { onPickPhoto(state.draft) },
+                        onPickImage = { onPickPhoto() },
                         onSkip = null,
                     )
                 }
@@ -399,14 +432,14 @@ fun OnboardingScreens(
                         )
 
                         Button(
-                            onClick = { onSubmitKnownName(knownNameInput.trim().ifBlank { null }, state.draft) },
+                            onClick = { onSubmitKnownName(knownNameInput.trim().ifBlank { null }, state.confirmedServiceIds, state.confirmedDescription) },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text("Continue")
                         }
 
                         TextButton(
-                            onClick = { onSubmitKnownName(null, state.draft) },
+                            onClick = { onSubmitKnownName(null, state.confirmedServiceIds, state.confirmedDescription) },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text("Skip")
@@ -463,24 +496,40 @@ fun OnboardingScreens(
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, selectedCity = null, catalog = null, onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, selectedCity = null, catalog = null, onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, catalog = null, onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, catalog = null, onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
-private fun OnboardingDraftReadyPreview() {
+private fun OnboardingReviewServicesPreview() {
     AppTheme {
         OnboardingScreens(
-            uiState = OnboardingUiState.DraftReady(PreviewSamples.sampleDraftResponse),
+            uiState = OnboardingUiState.ReviewServices(PreviewSamples.sampleDraftResponse),
             selectedCity = "Franca",
             catalog = null,
-            onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun OnboardingReviewDescriptionPreview() {
+    AppTheme {
+        OnboardingScreens(
+            uiState = OnboardingUiState.ReviewDescription(
+                PreviewSamples.sampleDraftResponse,
+                listOf("paint-residential"),
+            ),
+            selectedCity = "Franca",
+            catalog = null,
+            onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -493,7 +542,7 @@ private fun OnboardingPublishedPreview() {
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
             selectedCity = null,
             catalog = null,
-            onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -506,7 +555,7 @@ private fun OnboardingErrorPreview() {
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
             selectedCity = null,
             catalog = null,
-            onCreateDraft = {}, onSelectCity = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }

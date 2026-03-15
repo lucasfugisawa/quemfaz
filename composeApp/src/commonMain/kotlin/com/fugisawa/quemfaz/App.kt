@@ -396,10 +396,11 @@ fun MainFlow(
 
                         // Onboarding-specific back: navigate within steps for non-Idle,
                         // pop back to previous screen for Idle/Loading.
-                        val isOnboardingInProgress = uiState is OnboardingUiState.NeedsClarification ||
-                                uiState is OnboardingUiState.DraftReady ||
-                                uiState is OnboardingUiState.PhotoRequired ||
-                                uiState is OnboardingUiState.KnownName
+                        val isOnboardingInProgress =
+                            uiState is OnboardingUiState.ReviewServices ||
+                            uiState is OnboardingUiState.ReviewDescription ||
+                            uiState is OnboardingUiState.PhotoRequired ||
+                            uiState is OnboardingUiState.KnownName
                         PlatformBackHandler(enabled = isOnboardingInProgress) {
                             viewModel.goBack()
                         }
@@ -409,8 +410,8 @@ fun MainFlow(
                         }
 
                         val imagePicker = rememberImagePickerLauncher { data, mimeType ->
-                            val draft = (uiState as? OnboardingUiState.PhotoRequired)?.draft ?: return@rememberImagePickerLauncher
-                            viewModel.submitPhoto(data, mimeType, draft)
+                            val photoState = (uiState as? OnboardingUiState.PhotoRequired) ?: return@rememberImagePickerLauncher
+                            viewModel.submitPhoto(data, mimeType, photoState.draft, photoState.confirmedServiceIds, photoState.confirmedDescription)
                         }
 
                         OnboardingScreens(
@@ -419,17 +420,17 @@ fun MainFlow(
                             catalog = onboardingCatalog,
                             onCreateDraft = { viewModel.createDraft(it) },
                             onSelectCity = { viewModel.selectCity(it) },
-                            onProceedFromDraft = { draft -> viewModel.proceedFromDraft(draft) },
+                            onProceedFromServices = { draft, serviceIds -> viewModel.proceedFromServices(draft, serviceIds) },
                             onProceedWithManualServices = { draft, serviceIds -> viewModel.proceedWithManualServices(draft, serviceIds) },
-                            onPickPhoto = { _ -> imagePicker.launch() },
-                            onSubmitKnownName = { knownName, draft -> viewModel.submitKnownName(knownName, draft) },
-                            onSubmitClarifications = { desc, answers ->
-                                viewModel.submitClarifications(desc, answers)
-                            },
+                            onProceedFromDescription = { draft, serviceIds, description -> viewModel.proceedFromDescription(draft, serviceIds, description) },
+                            onPickPhoto = { imagePicker.launch() },
+                            onSubmitKnownName = { knownName, serviceIds, description -> viewModel.submitKnownName(knownName, serviceIds, description) },
+                            onSubmitClarifications = { desc, answers -> viewModel.submitClarifications(desc, answers) },
                             onSkipClarification = { draft -> viewModel.skipClarification(draft) },
                             onBack = { viewModel.goBack() },
                             onFinish = { profile ->
                                 currentProfileId = profile.id
+                                navigateToTab(Screen.Home)
                                 navigateTo(Screen.ProfessionalProfile)
                             }
                         )
