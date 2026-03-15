@@ -1,11 +1,15 @@
 package com.fugisawa.quemfaz.screens
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
@@ -13,6 +17,7 @@ import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
+import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,10 +95,23 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            val isSearchEnabled = query.isNotBlank() && currentCity != null
+            val searchButtonScale by animateFloatAsState(
+                targetValue = if (isSearchEnabled) 1f else 0.96f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium,
+                ),
+                label = "searchButtonScale",
+            )
+
             Button(
                 onClick = { onSearch(query) },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                enabled = query.isNotBlank() && currentCity != null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(Spacing.ctaButtonHeight)
+                    .graphicsLayer { scaleX = searchButtonScale; scaleY = searchButtonScale },
+                enabled = isSearchEnabled,
                 shape = MaterialTheme.shapes.medium
             ) {
                 Text("Search", style = MaterialTheme.typography.titleMedium)
