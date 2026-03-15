@@ -191,7 +191,6 @@ abstract class BaseIntegrationTest {
                 normalizedDescription = draft.normalizedDescription,
                 selectedServiceIds = draft.interpretedServices.map { it.serviceId },
                 cityName = "São Paulo",
-                neighborhoods = emptyList(),
                 contactPhone = "+5511999999999",
                 whatsAppPhone = "+5511999999999",
                 portfolioPhotoUrls = emptyList(),

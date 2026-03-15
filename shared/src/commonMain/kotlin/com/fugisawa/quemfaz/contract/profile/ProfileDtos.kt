@@ -26,7 +26,6 @@ data class CreateProfessionalProfileDraftResponse(
     val normalizedDescription: String,
     val interpretedServices: List<InterpretedServiceDto>,
     val cityName: String?,
-    val neighborhoods: List<String>,
     val missingFields: List<String>,
     val followUpQuestions: List<String>,
     val freeTextAliases: List<String>
@@ -50,7 +49,6 @@ data class ConfirmProfessionalProfileRequest(
     val normalizedDescription: String,
     val selectedServiceIds: List<String>,
     val cityName: String?,
-    val neighborhoods: List<String>,
     val contactPhone: String,
     val whatsAppPhone: String?,
     val portfolioPhotoUrls: List<String>
@@ -65,7 +63,6 @@ data class ProfessionalProfileResponse(
     val photoUrl: String?,
     val description: String,
     val cityName: String,
-    val neighborhoods: List<String>,
     val services: List<InterpretedServiceDto>,
     val profileComplete: Boolean,
     val activeRecently: Boolean,

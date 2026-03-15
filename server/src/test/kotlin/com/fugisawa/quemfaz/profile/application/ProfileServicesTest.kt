@@ -50,6 +50,21 @@ class ProfileServicesTest {
             profiles[id.value] = p.copy(knownName = knownName)
             return true
         }
+
+        override fun incrementViewCount(id: ProfessionalProfileId) {
+            val p = profiles[id.value] ?: return
+            profiles[id.value] = p.copy(viewCount = p.viewCount + 1)
+        }
+
+        override fun incrementContactClickCount(id: ProfessionalProfileId) {
+            val p = profiles[id.value] ?: return
+            profiles[id.value] = p.copy(contactClickCount = p.contactClickCount + 1)
+        }
+
+        override fun updateLastActiveAt(id: ProfessionalProfileId) {
+            val p = profiles[id.value] ?: return
+            profiles[id.value] = p.copy(lastActiveAt = Instant.now())
+        }
     }
 
     private class FakeUserRepository : UserRepository {
@@ -96,7 +111,6 @@ class ProfileServicesTest {
                 normalizedDescription = "Pintor experiente",
                 selectedServiceIds = listOf("paint-residential"),
                 cityName = "Batatais",
-                neighborhoods = listOf("Centro"),
                 contactPhone = "16999999999",
                 whatsAppPhone = "16999999999",
                 portfolioPhotoUrls = emptyList(),
@@ -128,7 +142,6 @@ class ProfileServicesTest {
                 normalizedDescription = "Pintor experiente",
                 selectedServiceIds = listOf("paint-residential"),
                 cityName = "Batatais",
-                neighborhoods = listOf("Centro"),
                 contactPhone = "16999999999",
                 whatsAppPhone = null,
                 portfolioPhotoUrls = emptyList(),
@@ -143,7 +156,6 @@ class ProfileServicesTest {
                     normalizedDescription = "Pintor e eletricista",
                     selectedServiceIds = listOf("paint-residential", "electrical-residential"),
                     cityName = "Batatais",
-                    neighborhoods = listOf("Centro", "Vila Nova"),
                     contactPhone = "16988888888",
                     whatsAppPhone = "16988888888",
                     portfolioPhotoUrls = emptyList(),
@@ -154,7 +166,6 @@ class ProfileServicesTest {
         val response = (result as UpdateProfileResult.Success).response
         assertEquals("Pintor e eletricista", response.description)
         assertEquals(2, response.services.size)
-        assertEquals(listOf("Centro", "Vila Nova"), response.neighborhoods)
         assertEquals("16988888888", response.contactPhone)
         assertEquals("16988888888", response.whatsAppPhone)
         assertEquals(true, response.profileComplete)
@@ -178,7 +189,6 @@ class ProfileServicesTest {
                     normalizedDescription = "Desc",
                     selectedServiceIds = listOf("paint-residential"),
                     cityName = "Batatais",
-                    neighborhoods = emptyList(),
                     contactPhone = "16999999999",
                     whatsAppPhone = null,
                     portfolioPhotoUrls = emptyList(),
@@ -209,7 +219,6 @@ class ProfileServicesTest {
                 "City",
                 emptyList(),
                 emptyList(),
-                emptyList(),
                 ProfileCompleteness.INCOMPLETE,
                 ProfessionalProfileStatus.BLOCKED,
                 Instant.now(),
@@ -226,7 +235,6 @@ class ProfileServicesTest {
                     normalizedDescription = "New desc",
                     selectedServiceIds = listOf("paint-residential"),
                     cityName = "Batatais",
-                    neighborhoods = emptyList(),
                     contactPhone = "16999999999",
                     whatsAppPhone = null,
                     portfolioPhotoUrls = emptyList(),
@@ -261,7 +269,6 @@ class ProfileServicesTest {
                 "123",
                 "123",
                 "City",
-                emptyList(),
                 emptyList(),
                 emptyList(),
                 ProfileCompleteness.INCOMPLETE,

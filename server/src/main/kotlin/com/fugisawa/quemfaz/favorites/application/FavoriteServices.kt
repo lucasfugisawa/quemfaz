@@ -103,7 +103,6 @@ class ListFavoritesService(
             photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
             description = profile.normalizedDescription ?: "",
             cityName = profile.cityName ?: "",
-            neighborhoods = emptyList(),
             services =
                 profile.services.map { svc ->
                     val canonical =

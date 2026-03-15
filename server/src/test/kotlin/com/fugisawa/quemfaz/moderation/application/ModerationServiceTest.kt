@@ -59,6 +59,21 @@ class ModerationServiceTest {
         }
 
         override fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean = false
+
+        override fun incrementViewCount(id: ProfessionalProfileId) {
+            val p = profiles[id.value] ?: return
+            profiles[id.value] = p.copy(viewCount = p.viewCount + 1)
+        }
+
+        override fun incrementContactClickCount(id: ProfessionalProfileId) {
+            val p = profiles[id.value] ?: return
+            profiles[id.value] = p.copy(contactClickCount = p.contactClickCount + 1)
+        }
+
+        override fun updateLastActiveAt(id: ProfessionalProfileId) {
+            val p = profiles[id.value] ?: return
+            profiles[id.value] = p.copy(lastActiveAt = Instant.now())
+        }
     }
 
     private class FakeUserRepository : UserRepository {
@@ -147,7 +162,6 @@ class ModerationServiceTest {
         "123",
         "123",
         "City",
-        emptyList(),
         emptyList(),
         emptyList(),
         ProfileCompleteness.COMPLETE,

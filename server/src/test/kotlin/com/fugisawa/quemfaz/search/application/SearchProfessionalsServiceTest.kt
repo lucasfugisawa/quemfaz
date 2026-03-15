@@ -63,6 +63,12 @@ class SearchProfessionalsServiceTest {
         ): Boolean = false
 
         override fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean = false
+
+        override fun incrementViewCount(id: ProfessionalProfileId) {}
+
+        override fun incrementContactClickCount(id: ProfessionalProfileId) {}
+
+        override fun updateLastActiveAt(id: ProfessionalProfileId) {}
     }
 
     private class FakeUserRepository : UserRepository {
@@ -85,7 +91,7 @@ class SearchProfessionalsServiceTest {
             query: String,
             cityContext: String?,
         ): InterpretedSearchQuery =
-            InterpretedSearchQuery(query, query.lowercase(), listOf("clean-house"), cityContext ?: "Batatais", emptyList(), emptyList())
+            InterpretedSearchQuery(query, query.lowercase(), listOf("clean-house"), cityContext ?: "Batatais", emptyList())
     }
 
     @Test
@@ -100,7 +106,6 @@ class SearchProfessionalsServiceTest {
                 contactPhone = "123",
                 whatsappPhone = "123",
                 cityName = "Batatais",
-                neighborhoods = emptyList(),
                 services = listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
                 portfolioPhotos = emptyList(),
                 completeness = ProfileCompleteness.COMPLETE,

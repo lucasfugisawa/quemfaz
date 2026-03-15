@@ -97,7 +97,6 @@ class SearchProfessionalsService(
             photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
             description = profile.normalizedDescription ?: "",
             cityName = profile.cityName ?: "",
-            neighborhoods = emptyList(),
             services =
                 profile.services.map { svc ->
                     val canonical = CanonicalServices.findById(CanonicalServiceId(svc.serviceId))

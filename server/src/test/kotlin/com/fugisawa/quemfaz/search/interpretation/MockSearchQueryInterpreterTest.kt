@@ -25,11 +25,10 @@ class MockSearchQueryInterpreterTest {
     }
 
     @Test
-    fun `should interpret land cleaning and neighborhood`() {
+    fun `should interpret land cleaning service`() {
         val result = interpreter.interpret("Limpar lote no Jardim Bandeirantes", "Batatais")
 
         assertTrue(result.serviceIds.contains("clean-land"))
-        assertTrue(result.neighborhoods.contains("Jardim Bandeirantes"))
     }
 
     @Test

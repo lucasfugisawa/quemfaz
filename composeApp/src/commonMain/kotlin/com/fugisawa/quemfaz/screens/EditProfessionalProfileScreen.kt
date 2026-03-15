@@ -1,33 +1,24 @@
 package com.fugisawa.quemfaz.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
-import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfessionalProfileScreen(
     uiState: EditProfileUiState,
-    onSave: (description: String, city: String, neighborhoods: List<String>, contactPhone: String, whatsAppPhone: String) -> Unit,
+    onSave: (description: String, city: String, contactPhone: String, whatsAppPhone: String) -> Unit,
     onNavigateBack: () -> Unit,
     onGoToOnboarding: () -> Unit
 ) {
@@ -103,18 +94,15 @@ fun EditProfessionalProfileScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun EditProfileForm(
     profile: ProfessionalProfileResponse,
     isSaving: Boolean,
     isSaved: Boolean,
-    onSave: (description: String, city: String, neighborhoods: List<String>, contactPhone: String, whatsAppPhone: String) -> Unit
+    onSave: (description: String, city: String, contactPhone: String, whatsAppPhone: String) -> Unit
 ) {
     var description by remember(profile.id) { mutableStateOf(profile.description) }
     var city by remember(profile.id) { mutableStateOf(profile.cityName) }
-    var neighborhoodChips by remember(profile.id) { mutableStateOf(profile.neighborhoods) }
-    var neighborhoodInput by remember(profile.id) { mutableStateOf("") }
     var contactPhone by remember(profile.id) { mutableStateOf(profile.contactPhone) }
     var whatsAppPhone by remember(profile.id) { mutableStateOf(profile.whatsAppPhone ?: "") }
 
@@ -164,58 +152,6 @@ private fun EditProfileForm(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (neighborhoodChips.isNotEmpty()) {
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-            ) {
-                neighborhoodChips.forEach { chip ->
-                    InputChip(
-                        selected = false,
-                        onClick = {},
-                        label = { Text(chip) },
-                        trailingIcon = {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Remove $chip",
-                                modifier = Modifier
-                                    .size(InputChipDefaults.IconSize)
-                                    .clickable { neighborhoodChips = neighborhoodChips - chip },
-                            )
-                        }
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(Spacing.xs))
-        }
-
-        OutlinedTextField(
-            value = neighborhoodInput,
-            onValueChange = { input ->
-                if (input.endsWith(",")) {
-                    val chip = input.dropLast(1).trim()
-                    if (chip.isNotBlank()) neighborhoodChips = neighborhoodChips + chip
-                    neighborhoodInput = ""
-                } else {
-                    neighborhoodInput = input
-                }
-            },
-            label = { Text("Add neighborhood") },
-            placeholder = { Text("Type and press comma to add") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = {
-                val chip = neighborhoodInput.trim()
-                if (chip.isNotBlank()) neighborhoodChips = neighborhoodChips + chip
-                neighborhoodInput = ""
-            }),
-            shape = MaterialTheme.shapes.medium,
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
         OutlinedTextField(
             value = contactPhone,
             onValueChange = { contactPhone = it },
@@ -249,7 +185,7 @@ private fun EditProfileForm(
 
         Button(
             onClick = {
-                onSave(description, city, neighborhoodChips, contactPhone, whatsAppPhone)
+                onSave(description, city, contactPhone, whatsAppPhone)
             },
             enabled = !isSaving,
             modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -269,13 +205,13 @@ private fun EditProfileForm(
 @LightDarkScreenPreview
 @Composable
 private fun EditProfileLoadingPreview() {
-    AppTheme { EditProfessionalProfileScreen(uiState = EditProfileUiState.Loading, onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}) }
+    AppTheme { EditProfessionalProfileScreen(uiState = EditProfileUiState.Loading, onSave = { _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun EditProfileNoProfilePreview() {
-    AppTheme { EditProfessionalProfileScreen(uiState = EditProfileUiState.NoProfile, onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}) }
+    AppTheme { EditProfessionalProfileScreen(uiState = EditProfileUiState.NoProfile, onSave = { _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}) }
 }
 
 @LightDarkScreenPreview
@@ -284,7 +220,7 @@ private fun EditProfileReadyPreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile),
-            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -295,7 +231,7 @@ private fun EditProfileSavingPreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Saving(PreviewSamples.sampleProfile),
-            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -306,7 +242,7 @@ private fun EditProfileSavedPreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Saved(PreviewSamples.sampleProfile),
-            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -317,7 +253,7 @@ private fun EditProfileErrorPreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Error("Failed to load profile. Please try again later."),
-            onSave = { _, _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }

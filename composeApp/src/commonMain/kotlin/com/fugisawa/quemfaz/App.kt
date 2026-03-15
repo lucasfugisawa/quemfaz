@@ -403,8 +403,8 @@ fun MainFlow(
                         }
                         EditProfessionalProfileScreen(
                             uiState = uiState,
-                            onSave = { desc, city, neighborhoods, contact, whatsapp ->
-                                viewModel.saveProfile(desc, city, neighborhoods, contact, whatsapp)
+                            onSave = { desc, city, contact, whatsapp ->
+                                viewModel.saveProfile(desc, city, contact, whatsapp)
                             },
                             onNavigateBack = navigateBack,
                             onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }

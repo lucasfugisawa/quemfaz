@@ -41,7 +41,6 @@ class EditProfessionalProfileViewModel(
     fun saveProfile(
         description: String,
         cityName: String,
-        neighborhoods: List<String>,
         contactPhone: String,
         whatsAppPhone: String,
     ) {
@@ -58,7 +57,6 @@ class EditProfessionalProfileViewModel(
                         normalizedDescription = description,
                         selectedServiceIds = current.services.map { it.serviceId },
                         cityName = cityName.ifBlank { null },
-                        neighborhoods = neighborhoods,
                         contactPhone = contactPhone,
                         whatsAppPhone = whatsAppPhone.ifBlank { null },
                         portfolioPhotoUrls = current.portfolioPhotoUrls

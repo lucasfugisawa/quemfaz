@@ -23,7 +23,6 @@ sealed interface InterpretedInput {
     val normalizedText: String
     val canonicalServices: List<InterpretedCanonicalService>
     val cityName: String?
-    val neighborhoods: List<String>
     val freeTextAliases: List<String>
 }
 
@@ -40,7 +39,6 @@ data class InterpretedSearchQuery(
     val normalizedQuery: String,
     override val canonicalServices: List<InterpretedCanonicalService>,
     override val cityName: String?,
-    override val neighborhoods: List<String>,
     override val freeTextAliases: List<String>
 ) : InterpretedInput {
     override val originalInput: String get() = originalQuery
@@ -62,7 +60,6 @@ data class InterpretedProfessionalInput(
     val normalizedDescription: String,
     override val canonicalServices: List<InterpretedCanonicalService>,
     override val cityName: String?,
-    override val neighborhoods: List<String>,
     override val freeTextAliases: List<String>,
     val missingFields: List<String>,
     val followUpQuestions: List<String>
@@ -83,11 +80,6 @@ fun InterpretedInput.hasServices(): Boolean = canonicalServices.isNotEmpty()
  * Returns true if a city was identified.
  */
 fun InterpretedInput.hasCity(): Boolean = cityName != null
-
-/**
- * Returns true if any neighborhoods were identified.
- */
-fun InterpretedInput.hasNeighborhoods(): Boolean = neighborhoods.isNotEmpty()
 
 /**
  * Returns services filtered by match level.

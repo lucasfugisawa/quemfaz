@@ -213,7 +213,6 @@ private fun mapToResponse(
         photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
         description = profile.normalizedDescription ?: "",
         cityName = profile.cityName ?: "",
-        neighborhoods = emptyList(),
         services = profile.services.map { svc ->
             val canonical = CanonicalServices.findById(
                 com.fugisawa.quemfaz.core.id.CanonicalServiceId(svc.serviceId)

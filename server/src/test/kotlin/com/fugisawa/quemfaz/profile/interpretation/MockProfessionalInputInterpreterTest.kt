@@ -15,19 +15,16 @@ class MockProfessionalInputInterpreterTest {
 
         assertTrue(response.interpretedServices.any { it.serviceId == "paint-residential" })
         assertEquals("Batatais", response.cityName)
-        assertTrue(response.missingFields.contains("neighborhoods"))
-        assertTrue(response.followUpQuestions.any { it.contains("bairros") })
+        assertTrue(response.missingFields.isEmpty())
     }
 
     @Test
-    fun `should interpret land cleaning and multiple neighborhoods`() {
+    fun `should interpret land cleaning service`() {
         val input = "Limpeza de terreno no Centro e Jardim Bandeirantes de Batatais"
         val response = interpreter.interpret(input, InputMode.TEXT)
 
         assertTrue(response.interpretedServices.any { it.serviceId == "clean-land" })
         assertEquals("Batatais", response.cityName)
-        assertTrue(response.neighborhoods.contains("Centro"))
-        assertTrue(response.neighborhoods.contains("Jardim Bandeirantes"))
         assertTrue(response.missingFields.isEmpty())
     }
 

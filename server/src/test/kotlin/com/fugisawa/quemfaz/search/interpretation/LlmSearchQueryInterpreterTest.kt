@@ -33,7 +33,6 @@ class LlmSearchQueryInterpreterTest {
                 SearchInterpretation(
                     serviceId = "paint-residential",
                     city = "Batatais",
-                    neighborhoods = listOf("Centro"),
                 ),
             )
         val interpreter = LlmSearchQueryInterpreter(service)
@@ -42,7 +41,6 @@ class LlmSearchQueryInterpreterTest {
 
         assertTrue(result.serviceIds.contains("paint-residential"))
         assertEquals("Batatais", result.cityName)
-        assertEquals(listOf("Centro"), result.neighborhoods)
     }
 
     @Test
@@ -52,7 +50,6 @@ class LlmSearchQueryInterpreterTest {
                 SearchInterpretation(
                     serviceId = "paint-residential",
                     city = null,
-                    neighborhoods = emptyList(),
                 ),
             )
         val interpreter = LlmSearchQueryInterpreter(service)
@@ -71,6 +68,5 @@ class LlmSearchQueryInterpreterTest {
 
         assertTrue(result.serviceIds.isEmpty())
         assertEquals("Batatais", result.cityName)
-        assertTrue(result.neighborhoods.isEmpty())
     }
 }

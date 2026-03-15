@@ -176,13 +176,6 @@ fun ProfessionalCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(profile.knownName ?: "${profile.firstName} ${profile.lastName}", style = MaterialTheme.typography.titleMedium)
                     Text(profile.cityName, style = MaterialTheme.typography.bodySmall)
-                    if (profile.neighborhoods.isNotEmpty()) {
-                        Text(
-                            profile.neighborhoods.take(2).joinToString(" · "),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
                 // Inline favorite button — only shown when a toggle callback is provided
                 if (onFavoriteToggle != null) {

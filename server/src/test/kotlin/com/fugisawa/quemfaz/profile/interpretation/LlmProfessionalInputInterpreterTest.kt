@@ -35,7 +35,6 @@ class LlmProfessionalInputInterpreterTest {
                 OnboardingInterpretation(
                     serviceIds = listOf("paint-residential"),
                     city = "Batatais",
-                    neighborhoods = listOf("Centro"),
                     needsClarification = false,
                 ),
             )
@@ -45,7 +44,6 @@ class LlmProfessionalInputInterpreterTest {
 
         assertTrue(response.interpretedServices.any { it.serviceId == "paint-residential" })
         assertEquals("Batatais", response.cityName)
-        assertEquals(listOf("Centro"), response.neighborhoods)
         assertTrue(response.followUpQuestions.isEmpty())
         assertTrue(response.missingFields.isEmpty())
     }
@@ -57,7 +55,6 @@ class LlmProfessionalInputInterpreterTest {
                 OnboardingInterpretation(
                     serviceIds = listOf("paint-residential"),
                     city = null,
-                    neighborhoods = emptyList(),
                     needsClarification = true,
                     clarificationQuestions = listOf("Em qual cidade você atende?", "Quais bairros?"),
                 ),
@@ -78,7 +75,6 @@ class LlmProfessionalInputInterpreterTest {
                 OnboardingInterpretation(
                     serviceIds = listOf("paint-residential"),
                     city = "Batatais",
-                    neighborhoods = listOf("Centro"),
                     needsClarification = false,
                 ),
             )

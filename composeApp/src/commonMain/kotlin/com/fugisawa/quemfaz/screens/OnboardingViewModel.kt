@@ -117,7 +117,6 @@ class OnboardingViewModel(
                         normalizedDescription = draft.normalizedDescription,
                         selectedServiceIds = draft.interpretedServices.map { it.serviceId },
                         cityName = draft.cityName,
-                        neighborhoods = draft.neighborhoods,
                         contactPhone = "",
                         whatsAppPhone = null,
                         portfolioPhotoUrls = emptyList(),

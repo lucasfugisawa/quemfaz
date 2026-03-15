@@ -98,15 +98,6 @@ fun ProfessionalProfileScreen(
                         Spacer(modifier = Modifier.height(Spacing.sm))
                     }
 
-                    if (profile.neighborhoods.isNotEmpty()) {
-                        Text(
-                            profile.neighborhoods.joinToString(" · "),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(Spacing.sm))
-                    }
-
                     StatusChipRow(
                         activeRecently = profile.activeRecently,
                         profileComplete = profile.profileComplete,
