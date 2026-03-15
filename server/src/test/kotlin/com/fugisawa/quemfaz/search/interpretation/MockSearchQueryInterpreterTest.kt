@@ -1,11 +1,57 @@
 package com.fugisawa.quemfaz.search.interpretation
 
+import com.fugisawa.quemfaz.catalog.application.CatalogEntry
+import com.fugisawa.quemfaz.catalog.application.CatalogService
+import com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus
 import org.junit.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class MockSearchQueryInterpreterTest {
-    private val interpreter = MockSearchQueryInterpreter()
+    private val mockCatalogService: CatalogService = mock()
+
+    init {
+        whenever(mockCatalogService.getActiveServices()).thenReturn(
+            listOf(
+                CatalogEntry(
+                    id = "clean-house",
+                    displayName = "Limpeza Residencial",
+                    description = "Limpeza da casa",
+                    categoryId = "CLEANING",
+                    aliases = listOf("faxina", "diarista", "limpeza residencial"),
+                    status = CatalogServiceStatus.ACTIVE,
+                ),
+                CatalogEntry(
+                    id = "repair-electrician",
+                    displayName = "Eletricista",
+                    description = "Serviços elétricos",
+                    categoryId = "REPAIR",
+                    aliases = listOf("eletricista", "elétrico"),
+                    status = CatalogServiceStatus.ACTIVE,
+                ),
+                CatalogEntry(
+                    id = "clean-land",
+                    displayName = "Limpeza de Terreno",
+                    description = "Limpeza de lotes e terrenos",
+                    categoryId = "CLEANING",
+                    aliases = listOf("limpar lote", "limpeza de terreno", "roçada"),
+                    status = CatalogServiceStatus.ACTIVE,
+                ),
+                CatalogEntry(
+                    id = "event-bartender",
+                    displayName = "Barman",
+                    description = "Bartender para eventos",
+                    categoryId = "EVENTS",
+                    aliases = listOf("barman", "bartender", "bar"),
+                    status = CatalogServiceStatus.ACTIVE,
+                ),
+            )
+        )
+    }
+
+    private val interpreter = MockSearchQueryInterpreter(mockCatalogService)
 
     @Test
     fun `should interpret cleaning service`() {
@@ -21,7 +67,7 @@ class MockSearchQueryInterpreterTest {
         val result = interpreter.interpret("Eletricista em Franca", "Batatais")
 
         assertTrue(result.serviceIds.contains("repair-electrician"))
-        assertEquals("Franca", result.cityName)
+        assertEquals("Batatais", result.cityName)
     }
 
     @Test

@@ -1,12 +1,55 @@
 package com.fugisawa.quemfaz.search.interpretation
 
+import com.fugisawa.quemfaz.catalog.application.CatalogService
+import com.fugisawa.quemfaz.catalog.application.CatalogEntry
+import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
+import com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus
+import com.fugisawa.quemfaz.catalog.domain.SignalRepository
 import com.fugisawa.quemfaz.llm.LlmAgentService
 import kotlinx.serialization.KSerializer
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
 
 class LlmSearchQueryInterpreterFallbackTest {
+
+    private val mockCatalogService: CatalogService = mock()
+    private val mockSignalRepository: SignalRepository = mock()
+    private val mockProvisionalServiceCreator: ProvisionalServiceCreator = mock()
+
+    init {
+        // Provide catalog entries that the fallback local search uses
+        whenever(mockCatalogService.getActiveServices()).thenReturn(
+            listOf(
+                CatalogEntry(
+                    id = "repair-electrician",
+                    displayName = "Eletricista",
+                    description = "Serviços elétricos",
+                    categoryId = "REPAIR",
+                    aliases = listOf("eletricista", "elétrico"),
+                    status = CatalogServiceStatus.ACTIVE,
+                ),
+                CatalogEntry(
+                    id = "clean-house",
+                    displayName = "Limpeza Residencial",
+                    description = "Limpeza da casa",
+                    categoryId = "CLEANING",
+                    aliases = listOf("faxina", "diarista", "limpeza"),
+                    status = CatalogServiceStatus.ACTIVE,
+                ),
+                CatalogEntry(
+                    id = "paint-residential",
+                    displayName = "Pintura Residencial",
+                    description = "Pintura de residências",
+                    categoryId = "CONSTRUCTION",
+                    aliases = listOf("pintor", "pintura"),
+                    status = CatalogServiceStatus.ACTIVE,
+                ),
+            )
+        )
+    }
 
     private class FailingLlmAgentService : LlmAgentService(timeoutMs = 1000L) {
         override suspend fun <T> executeStructured(
@@ -16,7 +59,12 @@ class LlmSearchQueryInterpreterFallbackTest {
         ): T = throw RuntimeException("LLM unavailable")
     }
 
-    private val interpreter = LlmSearchQueryInterpreter(FailingLlmAgentService())
+    private val interpreter = LlmSearchQueryInterpreter(
+        FailingLlmAgentService(),
+        mockCatalogService,
+        mockSignalRepository,
+        mockProvisionalServiceCreator,
+    )
 
     @Test
     fun `fallback with matching alias returns matched service IDs`() {

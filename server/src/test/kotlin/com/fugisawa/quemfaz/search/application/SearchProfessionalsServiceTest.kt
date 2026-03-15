@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.search.application
 import com.fugisawa.quemfaz.auth.domain.User
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.auth.domain.UserStatus
+import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
@@ -19,6 +20,7 @@ import com.fugisawa.quemfaz.search.domain.SearchQueryRepository
 import com.fugisawa.quemfaz.search.interpretation.SearchQueryInterpreter
 import com.fugisawa.quemfaz.search.ranking.ProfessionalSearchRankingService
 import org.junit.Test
+import org.mockito.kotlin.mock
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -123,6 +125,7 @@ class SearchProfessionalsServiceTest {
                 searchQueryRepository = searchQueryRepo,
                 profileRepository = FakeProfileRepository(listOf(profile)),
                 userRepository = FakeUserRepository(),
+                catalogService = mock(),
             )
 
         val request = SearchProfessionalsRequest("faxina", "Batatais", InputMode.TEXT)

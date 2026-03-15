@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.profile.application
 import com.fugisawa.quemfaz.auth.domain.User
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.auth.domain.UserStatus
+import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
 import com.fugisawa.quemfaz.core.id.UserId
@@ -11,6 +12,7 @@ import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus
 import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
 import org.junit.Test
+import org.mockito.kotlin.mock
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -105,7 +107,7 @@ class ProfileServicesTest {
         val userId = UserId("user-123")
         userRepo.create(User(userId, "John", "Doe", "https://example.com/photo.jpg", UserStatus.ACTIVE, Instant.now(), Instant.now()))
 
-        val service = ConfirmProfessionalProfileService(profileRepo, userRepo)
+        val service = ConfirmProfessionalProfileService(profileRepo, userRepo, mock())
         val request =
             ConfirmProfessionalProfileRequest(
                 normalizedDescription = "Pintor experiente",
@@ -135,7 +137,7 @@ class ProfileServicesTest {
         userRepo.create(User(userId, "John", "Doe", "https://example.com/photo.jpg", UserStatus.ACTIVE, Instant.now(), Instant.now()))
 
         // Create initial profile via confirm service
-        val confirmService = ConfirmProfessionalProfileService(profileRepo, userRepo)
+        val confirmService = ConfirmProfessionalProfileService(profileRepo, userRepo, mock())
         confirmService.execute(
             userId,
             ConfirmProfessionalProfileRequest(
@@ -148,7 +150,7 @@ class ProfileServicesTest {
             ),
         )
 
-        val updateService = UpdateProfessionalProfileService(profileRepo, userRepo)
+        val updateService = UpdateProfessionalProfileService(profileRepo, userRepo, mock())
         val result =
             updateService.execute(
                 userId,
@@ -181,7 +183,7 @@ class ProfileServicesTest {
         val userId = UserId("user-no-profile")
         userRepo.create(User(userId, "Jane", "", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
 
-        val service = UpdateProfessionalProfileService(profileRepo, userRepo)
+        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock())
         val result =
             service.execute(
                 userId,
@@ -227,7 +229,7 @@ class ProfileServicesTest {
             ),
         )
 
-        val service = UpdateProfessionalProfileService(profileRepo, userRepo)
+        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock())
         val result =
             service.execute(
                 userId,
@@ -253,7 +255,7 @@ class ProfileServicesTest {
 
         userRepo.create(User(userId, "John", "Doe", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
 
-        val service = GetPublicProfessionalProfileService(profileRepo, userRepo)
+        val service = GetPublicProfessionalProfileService(profileRepo, userRepo, mock())
 
         // No profile yet
         assertEquals(null, service.execute(profileId))

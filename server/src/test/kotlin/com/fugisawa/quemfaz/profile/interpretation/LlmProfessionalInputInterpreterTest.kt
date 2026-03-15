@@ -1,5 +1,8 @@
 package com.fugisawa.quemfaz.profile.interpretation
 
+import com.fugisawa.quemfaz.catalog.application.CatalogService
+import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
+import com.fugisawa.quemfaz.catalog.domain.SignalRepository
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.llm.LlmAgentService
@@ -7,10 +10,19 @@ import com.fugisawa.quemfaz.llm.OnboardingInterpretation
 import kotlinx.serialization.KSerializer
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class LlmProfessionalInputInterpreterTest {
+    private val mockCatalogService: CatalogService = mock()
+    private val mockSignalRepository: SignalRepository = mock()
+    private val mockProvisionalServiceCreator: ProvisionalServiceCreator = mock()
+
+    init {
+        whenever(mockCatalogService.getActiveServices()).thenReturn(emptyList())
+    }
+
     private fun createFakeService(
         response: Any? = null,
         exception: Exception? = null,
@@ -37,7 +49,7 @@ class LlmProfessionalInputInterpreterTest {
                     needsClarification = false,
                 ),
             )
-        val interpreter = LlmProfessionalInputInterpreter(service)
+        val interpreter = LlmProfessionalInputInterpreter(service, mockCatalogService, mockSignalRepository, mockProvisionalServiceCreator)
 
         val response = interpreter.interpret("Faço pintura residencial em Batatais no Centro", InputMode.TEXT)
 
@@ -56,7 +68,7 @@ class LlmProfessionalInputInterpreterTest {
                     clarificationQuestions = listOf("Que tipo de pintura você faz?", "Trabalha com texturas?"),
                 ),
             )
-        val interpreter = LlmProfessionalInputInterpreter(service)
+        val interpreter = LlmProfessionalInputInterpreter(service, mockCatalogService, mockSignalRepository, mockProvisionalServiceCreator)
 
         val response = interpreter.interpret("Faço pintura", InputMode.TEXT)
 
@@ -73,7 +85,7 @@ class LlmProfessionalInputInterpreterTest {
                     needsClarification = false,
                 ),
             )
-        val interpreter = LlmProfessionalInputInterpreter(service)
+        val interpreter = LlmProfessionalInputInterpreter(service, mockCatalogService, mockSignalRepository, mockProvisionalServiceCreator)
 
         val answers =
             listOf(
@@ -88,7 +100,7 @@ class LlmProfessionalInputInterpreterTest {
     @Test
     fun `should fallback gracefully on LLM failure`() {
         val service = createFakeService(exception = RuntimeException("API key missing"))
-        val interpreter = LlmProfessionalInputInterpreter(service)
+        val interpreter = LlmProfessionalInputInterpreter(service, mockCatalogService, mockSignalRepository, mockProvisionalServiceCreator)
 
         val response = interpreter.interpret("Faço pintura em Batatais", InputMode.TEXT)
 
