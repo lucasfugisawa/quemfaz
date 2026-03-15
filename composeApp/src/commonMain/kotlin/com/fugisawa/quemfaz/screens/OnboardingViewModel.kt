@@ -20,9 +20,21 @@ sealed class OnboardingUiState {
         val originalDescription: String,
         val draft: CreateProfessionalProfileDraftResponse,
     ) : OnboardingUiState()
-    data class DraftReady(val draft: CreateProfessionalProfileDraftResponse) : OnboardingUiState()
-    data class PhotoRequired(val draft: CreateProfessionalProfileDraftResponse) : OnboardingUiState()
-    data class KnownName(val draft: CreateProfessionalProfileDraftResponse) : OnboardingUiState()
+    data class ReviewServices(val draft: CreateProfessionalProfileDraftResponse) : OnboardingUiState()
+    data class ReviewDescription(
+        val draft: CreateProfessionalProfileDraftResponse,
+        val confirmedServiceIds: List<String>,
+    ) : OnboardingUiState()
+    data class PhotoRequired(
+        val draft: CreateProfessionalProfileDraftResponse,
+        val confirmedServiceIds: List<String>,
+        val confirmedDescription: String,
+    ) : OnboardingUiState()
+    data class KnownName(
+        val draft: CreateProfessionalProfileDraftResponse,
+        val confirmedServiceIds: List<String>,
+        val confirmedDescription: String,
+    ) : OnboardingUiState()
     data class Published(val profile: ProfessionalProfileResponse) : OnboardingUiState()
     data class Error(val message: String) : OnboardingUiState()
 }
@@ -70,7 +82,7 @@ class OnboardingViewModel(
                 if (response.llmUnavailable || response.followUpQuestions.isEmpty()) {
                     // LLM was unavailable OR no clarification needed — go straight to draft review.
                     // If services are empty, the UI will show manual selection.
-                    _uiState.value = OnboardingUiState.DraftReady(response)
+                    _uiState.value = OnboardingUiState.ReviewServices(response)
                 } else {
                     _uiState.value = OnboardingUiState.NeedsClarification(inputText, response)
                 }
@@ -88,7 +100,7 @@ class OnboardingViewModel(
                     ClarifyDraftRequest(originalDescription, answers)
                 )
                 if (response.llmUnavailable || response.followUpQuestions.isEmpty()) {
-                    _uiState.value = OnboardingUiState.DraftReady(response)
+                    _uiState.value = OnboardingUiState.ReviewServices(response)
                 } else {
                     _uiState.value = OnboardingUiState.NeedsClarification(originalDescription, response)
                 }
@@ -99,29 +111,50 @@ class OnboardingViewModel(
     }
 
     fun skipClarification(draft: CreateProfessionalProfileDraftResponse) {
-        _uiState.value = OnboardingUiState.DraftReady(draft)
+        _uiState.value = OnboardingUiState.ReviewServices(draft)
     }
 
     fun goBack() {
         _uiState.value = when (val current = _uiState.value) {
             is OnboardingUiState.NeedsClarification -> OnboardingUiState.Idle
-            is OnboardingUiState.DraftReady -> OnboardingUiState.Idle
-            is OnboardingUiState.PhotoRequired -> OnboardingUiState.DraftReady(current.draft)
+            is OnboardingUiState.ReviewServices -> OnboardingUiState.Idle
+            is OnboardingUiState.ReviewDescription -> OnboardingUiState.ReviewServices(current.draft)
+            is OnboardingUiState.PhotoRequired -> OnboardingUiState.ReviewDescription(
+                current.draft, current.confirmedServiceIds
+            )
             is OnboardingUiState.KnownName -> {
                 val hasPhoto = sessionManager.currentUser.value?.photoUrl != null
-                if (hasPhoto) OnboardingUiState.DraftReady(current.draft)
-                else OnboardingUiState.PhotoRequired(current.draft)
+                if (hasPhoto) OnboardingUiState.ReviewDescription(current.draft, current.confirmedServiceIds)
+                else OnboardingUiState.PhotoRequired(current.draft, current.confirmedServiceIds, current.confirmedDescription)
             }
             else -> current
         }
     }
 
-    fun proceedFromDraft(draft: CreateProfessionalProfileDraftResponse) {
-        val hasPhoto = sessionManager.currentUser.value?.photoUrl != null
-        _uiState.value = if (hasPhoto) OnboardingUiState.KnownName(draft) else OnboardingUiState.PhotoRequired(draft)
+    fun proceedFromServices(draft: CreateProfessionalProfileDraftResponse, confirmedServiceIds: List<String>) {
+        _uiState.value = OnboardingUiState.ReviewDescription(draft, confirmedServiceIds)
     }
 
-    fun submitPhoto(data: ByteArray, mimeType: String, draft: CreateProfessionalProfileDraftResponse) {
+    fun proceedFromDescription(
+        draft: CreateProfessionalProfileDraftResponse,
+        confirmedServiceIds: List<String>,
+        confirmedDescription: String,
+    ) {
+        val hasPhoto = sessionManager.currentUser.value?.photoUrl != null
+        _uiState.value = if (hasPhoto) {
+            OnboardingUiState.KnownName(draft, confirmedServiceIds, confirmedDescription)
+        } else {
+            OnboardingUiState.PhotoRequired(draft, confirmedServiceIds, confirmedDescription)
+        }
+    }
+
+    fun submitPhoto(
+        data: ByteArray,
+        mimeType: String,
+        draft: CreateProfessionalProfileDraftResponse,
+        confirmedServiceIds: List<String>,
+        confirmedDescription: String,
+    ) {
         viewModelScope.launch {
             _uiState.value = OnboardingUiState.Loading
             try {
@@ -130,7 +163,7 @@ class OnboardingViewModel(
                     SetProfilePhotoRequest(photoUrl = uploadResponse.url)
                 )
                 sessionManager.setCurrentUser(userResponse)
-                _uiState.value = OnboardingUiState.KnownName(draft)
+                _uiState.value = OnboardingUiState.KnownName(draft, confirmedServiceIds, confirmedDescription)
             } catch (e: Exception) {
                 _uiState.value = OnboardingUiState.Error(e.message ?: "Failed to upload photo")
             }
@@ -150,17 +183,24 @@ class OnboardingViewModel(
             )
         }
         val updatedDraft = draft.copy(interpretedServices = manualServices)
-        proceedFromDraft(updatedDraft)
+        _uiState.value = OnboardingUiState.ReviewDescription(
+            updatedDraft,
+            selectedServiceIds.toList(),
+        )
     }
 
-    fun submitKnownName(knownName: String?, draft: CreateProfessionalProfileDraftResponse) {
+    fun submitKnownName(
+        knownName: String?,
+        confirmedServiceIds: List<String>,
+        confirmedDescription: String,
+    ) {
         viewModelScope.launch {
             _uiState.value = OnboardingUiState.Loading
             try {
                 val response = apiClients.confirmProfile(
                     ConfirmProfessionalProfileRequest(
-                        description = draft.normalizedDescription,
-                        selectedServiceIds = draft.interpretedServices.map { it.serviceId },
+                        description = confirmedDescription,
+                        selectedServiceIds = confirmedServiceIds,
                         cityName = _selectedCity.value,
                         contactPhone = "",
                         whatsAppPhone = null,
