@@ -27,7 +27,13 @@ class LlmSearchQueryInterpreter(
                 }
             mapToResult(query, cityContext, interpretation)
         } catch (e: Exception) {
-            logger.error("LLM search interpretation failed, falling back to basic response", e)
+            logger.error(
+                "LLM interpretation failed [flow=search, query={}, cityContext={}, errorType={}, message={}]. Engaging local matching fallback.",
+                query,
+                cityContext,
+                e::class.simpleName,
+                e.message,
+            )
             fallbackResult(query, cityContext)
         }
 

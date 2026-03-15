@@ -31,7 +31,12 @@ class LlmProfessionalInputInterpreter(
                 }
             mapToResponse(inputText, interpretation)
         } catch (e: Exception) {
-            logger.error("LLM interpretation failed, falling back to basic response", e)
+            logger.error(
+                "LLM interpretation failed [flow=onboarding, inputLength={}, errorType={}, message={}]. Engaging local matching fallback.",
+                inputText.length,
+                e::class.simpleName,
+                e.message,
+            )
             fallbackResponse(inputText)
         }
 
@@ -113,7 +118,12 @@ class LlmProfessionalInputInterpreter(
                 }
             mapToResponse(originalDescription, interpretation)
         } catch (e: Exception) {
-            logger.error("LLM clarification interpretation failed, falling back to basic response", e)
+            logger.error(
+                "LLM interpretation failed [flow=onboarding, inputLength={}, errorType={}, message={}]. Engaging local matching fallback.",
+                originalDescription.length,
+                e::class.simpleName,
+                e.message,
+            )
             fallbackResponse(originalDescription)
         }
 
