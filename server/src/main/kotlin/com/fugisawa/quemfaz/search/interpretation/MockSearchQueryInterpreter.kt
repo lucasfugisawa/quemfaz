@@ -1,9 +1,11 @@
 package com.fugisawa.quemfaz.search.interpretation
 
-import com.fugisawa.quemfaz.domain.service.CanonicalServices
+import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.search.domain.InterpretedSearchQuery
 
-class MockSearchQueryInterpreter : SearchQueryInterpreter {
+class MockSearchQueryInterpreter(
+    private val catalogService: CatalogService,
+) : SearchQueryInterpreter {
     override fun interpret(
         query: String,
         cityContext: String?,
@@ -11,11 +13,10 @@ class MockSearchQueryInterpreter : SearchQueryInterpreter {
         val normalized = query.lowercase().trim()
         val serviceIds = mutableSetOf<String>()
 
-        // Heuristic keyword matching
-        CanonicalServices.all.forEach { service ->
-            val keywords = service.baseAliases + service.displayName.lowercase()
+        catalogService.getActiveServices().forEach { service ->
+            val keywords = service.aliases + service.displayName.lowercase()
             if (keywords.any { normalized.contains(it) }) {
-                serviceIds.add(service.id.value)
+                serviceIds.add(service.id)
             }
         }
 

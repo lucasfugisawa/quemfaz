@@ -1,13 +1,12 @@
 package com.fugisawa.quemfaz.search.application
 
 import com.fugisawa.quemfaz.auth.domain.UserRepository
+import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsResponse
-import com.fugisawa.quemfaz.core.id.CanonicalServiceId
 import com.fugisawa.quemfaz.core.id.UserId
-import com.fugisawa.quemfaz.domain.service.CanonicalServices
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfile
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
@@ -26,6 +25,7 @@ class SearchProfessionalsService(
     private val searchQueryRepository: SearchQueryRepository,
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
+    private val catalogService: CatalogService,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -69,7 +69,7 @@ class SearchProfessionalsService(
             normalizedQuery = interpreted.normalizedQuery,
             interpretedServices =
                 interpreted.serviceIds.map { serviceId ->
-                    val canonical = CanonicalServices.findById(CanonicalServiceId(serviceId))
+                    val canonical = catalogService.findById(serviceId)
                     InterpretedServiceDto(serviceId, canonical?.displayName ?: serviceId, "PRIMARY")
                 },
             results =
@@ -81,6 +81,7 @@ class SearchProfessionalsService(
             pageSize = pageSize,
             totalCount = totalCount,
             llmUnavailable = interpreted.llmUnavailable,
+            blockedDescriptions = interpreted.blockedDescriptions,
         )
     }
 
@@ -100,7 +101,7 @@ class SearchProfessionalsService(
             cityName = profile.cityName ?: "",
             services =
                 profile.services.map { svc ->
-                    val canonical = CanonicalServices.findById(CanonicalServiceId(svc.serviceId))
+                    val canonical = catalogService.findById(svc.serviceId)
                     InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
                 },
             profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
