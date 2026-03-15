@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -73,9 +74,16 @@ class HomeViewModel(
 
     val currentCity = sessionManager.currentCity
 
-    val showEarnMoneyCard = sessionManager.currentUser
-        .map { it?.hasProfessionalProfile != true }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val showEarnMoneyCard = combine(
+        sessionManager.currentUser,
+        sessionManager.offerServicesCardDismissed,
+    ) { user, dismissed ->
+        user?.hasProfessionalProfile != true && !dismissed
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun dismissOfferServicesCard() {
+        sessionManager.dismissOfferServicesCard()
+    }
 
     val supportedCities = listOf("Batatais", "Franca", "Ribeirão Preto")
 

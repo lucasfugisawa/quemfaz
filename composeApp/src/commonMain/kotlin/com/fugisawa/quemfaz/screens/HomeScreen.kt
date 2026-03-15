@@ -11,6 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.unit.sp
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
@@ -28,7 +30,8 @@ fun HomeScreen(
     onCityClick: () -> Unit,
     onProfileClick: () -> Unit,
     onSearch: (String) -> Unit,
-    onOfferServices: () -> Unit
+    onOfferServices: () -> Unit,
+    onDismissOfferServices: () -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
 
@@ -120,25 +123,40 @@ fun HomeScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             if (showEarnMoneyCard) {
-                Card(
+                Box(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                    onClick = onOfferServices
                 ) {
-                    Row(
-                        modifier = Modifier.padding(24.dp).fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                        onClick = onOfferServices
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Offer your services", style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                "Describe what you do — AI builds your profile.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            )
+                        Row(
+                            modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 24.dp, end = 48.dp).fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Offer your services", style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    "Describe what you do — AI builds your profile.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                )
+                            }
+                            Text("🚀", style = MaterialTheme.typography.headlineLarge)
                         }
-                        Text("🚀", style = MaterialTheme.typography.headlineLarge)
+                    }
+                    IconButton(
+                        onClick = onDismissOfferServices,
+                        modifier = Modifier.align(Alignment.TopEnd).size(36.dp),
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Dismiss",
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
                     }
                 }
             } else {
@@ -161,7 +179,8 @@ private fun HomeScreenWithCityPreview() {
             onCityClick = {},
             onProfileClick = {},
             onSearch = {},
-            onOfferServices = {}
+            onOfferServices = {},
+            onDismissOfferServices = {}
         )
     }
 }
@@ -177,7 +196,8 @@ private fun HomeScreenNoCityPreview() {
             onCityClick = {},
             onProfileClick = {},
             onSearch = {},
-            onOfferServices = {}
+            onOfferServices = {},
+            onDismissOfferServices = {}
         )
     }
 }
@@ -193,7 +213,8 @@ private fun HomeScreenProfessionalPreview() {
             onCityClick = {},
             onProfileClick = {},
             onSearch = {},
-            onOfferServices = {}
+            onOfferServices = {},
+            onDismissOfferServices = {}
         )
     }
 }

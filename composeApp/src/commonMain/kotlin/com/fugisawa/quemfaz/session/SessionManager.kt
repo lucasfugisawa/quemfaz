@@ -33,6 +33,9 @@ class SessionManager(
     private val _currentCity = MutableStateFlow<String?>(settings.getStringOrNull("current_city"))
     val currentCity: StateFlow<String?> = _currentCity.asStateFlow()
 
+    private val _offerServicesCardDismissed = MutableStateFlow(settings.getBoolean("offer_services_dismissed", false))
+    val offerServicesCardDismissed: StateFlow<Boolean> = _offerServicesCardDismissed.asStateFlow()
+
     init {
         val token = sessionStorage.getToken()
         if (token != null) {
@@ -82,5 +85,10 @@ class SessionManager(
     fun setCity(cityName: String) {
         settings["current_city"] = cityName
         _currentCity.value = cityName
+    }
+
+    fun dismissOfferServicesCard() {
+        settings["offer_services_dismissed"] = true
+        _offerServicesCardDismissed.value = true
     }
 }

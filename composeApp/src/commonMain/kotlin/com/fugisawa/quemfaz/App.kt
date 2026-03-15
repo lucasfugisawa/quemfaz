@@ -297,7 +297,8 @@ fun MainFlow(
                                 homeViewModel.search(query)
                                 navigateTo(Screen.SearchResults)
                             },
-                            onOfferServices = { navigateTo(Screen.OnboardingStart) }
+                            onOfferServices = { navigateTo(Screen.OnboardingStart) },
+                            onDismissOfferServices = { homeViewModel.dismissOfferServicesCard() }
                         )
                     }
                     is Screen.CitySelection -> {
