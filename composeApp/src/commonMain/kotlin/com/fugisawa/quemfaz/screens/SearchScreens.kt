@@ -110,7 +110,7 @@ fun ProfessionalCard(
                 ProfileAvatar(
                     name = profile.knownName ?: "${profile.firstName} ${profile.lastName}",
                     photoUrl = profile.photoUrl,
-                    size = 56.dp
+                    size = 72.dp
                 )
                 Spacer(modifier = Modifier.width(Spacing.sm + Spacing.xs))
                 Column(modifier = Modifier.weight(1f)) {
