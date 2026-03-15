@@ -120,6 +120,10 @@ class FeatureApiClients(private val apiClient: ApiClient) {
             setBody(request)
         }.body()
 
+    suspend fun disableMyProfessionalProfile() {
+        apiClient.client.delete("/professional-profile/me")
+    }
+
     suspend fun confirmProfile(request: ConfirmProfessionalProfileRequest): ProfessionalProfileResponse =
         apiClient.client.post("/professional-profile/confirm") {
             contentType(ContentType.Application.Json)

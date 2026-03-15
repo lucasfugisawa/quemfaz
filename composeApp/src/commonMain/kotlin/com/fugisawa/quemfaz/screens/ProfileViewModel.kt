@@ -17,7 +17,11 @@ import kotlinx.coroutines.launch
 
 sealed class ProfileUiState {
     object Loading : ProfileUiState()
-    data class Content(val profile: ProfessionalProfileResponse, val isFavorite: Boolean = false) : ProfileUiState()
+    data class Content(
+        val profile: ProfessionalProfileResponse,
+        val isFavorite: Boolean = false,
+        val isOwnProfile: Boolean = false,
+    ) : ProfileUiState()
     data class Error(val message: String) : ProfileUiState()
 }
 
@@ -39,7 +43,13 @@ class ProfileViewModel(
                 } catch (_: Exception) {
                     false
                 }
-                _uiState.value = ProfileUiState.Content(profile, isFavorite = isFavorite)
+                val isOwn = try {
+                    val myProfile = apiClients.getMyProfessionalProfile()
+                    myProfile.id == id
+                } catch (_: Exception) {
+                    false
+                }
+                _uiState.value = ProfileUiState.Content(profile, isFavorite = isFavorite, isOwnProfile = isOwn)
             } catch (e: Exception) {
                 _uiState.value = ProfileUiState.Error(e.message ?: "Failed to load profile")
             }
@@ -79,6 +89,20 @@ class ProfileViewModel(
                 apiClients.trackContactClick(TrackContactClickRequest(profileId, channel))
             } catch (e: Exception) {
                 // Silent fail for tracking
+            }
+        }
+    }
+
+    private val _profileDisabled = MutableStateFlow(false)
+    val profileDisabled: StateFlow<Boolean> = _profileDisabled.asStateFlow()
+
+    fun disableProfile() {
+        viewModelScope.launch {
+            try {
+                apiClients.disableMyProfessionalProfile()
+                _profileDisabled.value = true
+            } catch (_: Exception) {
+                // Error handled silently for now
             }
         }
     }

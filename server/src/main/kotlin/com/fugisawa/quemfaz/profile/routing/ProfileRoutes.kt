@@ -9,6 +9,8 @@ import com.fugisawa.quemfaz.core.id.UserId
 import com.fugisawa.quemfaz.profile.application.ClarifyProfessionalProfileDraftService
 import com.fugisawa.quemfaz.profile.application.ConfirmProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.CreateProfessionalProfileDraftService
+import com.fugisawa.quemfaz.profile.application.DisableProfessionalProfileService
+import com.fugisawa.quemfaz.profile.application.DisableProfileResult
 import com.fugisawa.quemfaz.profile.application.GetMyProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.GetPublicProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.SetKnownNameResult
@@ -25,6 +27,7 @@ import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
@@ -38,6 +41,7 @@ fun Route.profileRoutes() {
     val getPublicProfileService by inject<GetPublicProfessionalProfileService>()
     val updateProfileService by inject<UpdateProfessionalProfileService>()
     val setKnownNameService by inject<SetKnownNameService>()
+    val disableProfileService by inject<DisableProfessionalProfileService>()
 
     route("/professional-profile") {
         // Public route
@@ -131,6 +135,22 @@ fun Route.profileRoutes() {
                             mapOf("message" to "Profile is blocked and cannot be updated"),
                         )
                     }
+                }
+            }
+
+            delete("/me") {
+                val principal = call.principal<JWTPrincipal>()
+                val userId =
+                    principal?.payload?.getClaim("userId")?.asString()
+                        ?: return@delete call.respond(HttpStatusCode.Unauthorized)
+
+                when (disableProfileService.execute(UserId(userId))) {
+                    is DisableProfileResult.Success -> call.respond(HttpStatusCode.NoContent)
+                    is DisableProfileResult.NotFound -> call.respond(
+                        HttpStatusCode.NotFound,
+                        mapOf("message" to "Professional profile not found"),
+                    )
+                    is DisableProfileResult.AlreadyInactive -> call.respond(HttpStatusCode.NoContent)
                 }
             }
 

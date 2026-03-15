@@ -41,11 +41,15 @@ fun ProfessionalProfileScreen(
     onContactClick: (ContactChannelDto) -> Unit,
     onFavoriteToggle: () -> Unit,
     onReportSubmit: (ReportReason) -> Unit,
+    onEditProfile: () -> Unit = {},
+    onDisableProfile: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     var showReportDialog by remember { mutableStateOf(false) }
+    var showDisableDialog by remember { mutableStateOf(false) }
 
     val title = (uiState as? ProfileUiState.Content)?.profile?.let { it.knownName ?: "${it.firstName} ${it.lastName}" } ?: "Professional"
+    val isOwnProfile = (uiState as? ProfileUiState.Content)?.isOwnProfile == true
 
     if (showReportDialog) {
         ReportDialog(
@@ -53,6 +57,30 @@ fun ProfessionalProfileScreen(
             onSubmit = { reason ->
                 onReportSubmit(reason)
                 showReportDialog = false
+            }
+        )
+    }
+
+    if (showDisableDialog) {
+        AlertDialog(
+            onDismissRequest = { showDisableDialog = false },
+            title = { Text("Disable Professional Profile") },
+            text = {
+                Text("Your professional profile will be deactivated and hidden from search results. Your account will remain intact. You can re-enable it anytime by adding services again.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDisableDialog = false
+                        onDisableProfile()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Disable")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDisableDialog = false }) { Text("Cancel") }
             }
         )
     }
@@ -75,7 +103,12 @@ fun ProfessionalProfileScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(start = Spacing.md, end = Spacing.md, top = Spacing.md, bottom = Spacing.stickyBarBottomPadding)
                 ) {
-                    ProfileHeader(profile, uiState.isFavorite, onFavoriteToggle)
+                    ProfileHeader(
+                        profile = profile,
+                        isFavorite = uiState.isFavorite,
+                        onFavoriteToggle = onFavoriteToggle,
+                        showFavorite = !isOwnProfile,
+                    )
                     Spacer(modifier = Modifier.height(Spacing.sm))
 
                     // Portfolio photos strip — only shown when photos are available
@@ -119,15 +152,24 @@ fun ProfessionalProfileScreen(
                         Spacer(modifier = Modifier.height(Spacing.lg))
                     }
 
-                    TextButton(
-                        onClick = { showReportDialog = true },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) {
-                        Text("Report Profile", color = MaterialTheme.colorScheme.error)
+                    if (isOwnProfile) {
+                        TextButton(
+                            onClick = { showDisableDialog = true },
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Text("Disable Professional Profile", color = MaterialTheme.colorScheme.error)
+                        }
+                    } else {
+                        TextButton(
+                            onClick = { showReportDialog = true },
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Text("Report Profile", color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
 
-                // Sticky contact bar — pinned to the bottom of the AppScreen Box (BoxScope.align)
+                // Sticky bottom bar
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -135,23 +177,34 @@ fun ProfessionalProfileScreen(
                     shadowElevation = 8.dp,
                     tonalElevation = 2.dp
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                    ) {
+                    if (isOwnProfile) {
                         Button(
-                            onClick = { onContactClick(ContactChannelDto.WHATSAPP) },
-                            modifier = Modifier.weight(1f)
+                            onClick = onEditProfile,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                         ) {
-                            Text("WhatsApp")
+                            Text("Edit Profile")
                         }
-                        Button(
-                            onClick = { onContactClick(ContactChannelDto.PHONE_CALL) },
-                            modifier = Modifier.weight(1f)
+                    } else {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
-                            Text("Call")
+                            Button(
+                                onClick = { onContactClick(ContactChannelDto.WHATSAPP) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("WhatsApp")
+                            }
+                            Button(
+                                onClick = { onContactClick(ContactChannelDto.PHONE_CALL) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Call")
+                            }
                         }
                     }
                 }
@@ -164,7 +217,8 @@ fun ProfessionalProfileScreen(
 fun ProfileHeader(
     profile: ProfessionalProfileResponse,
     isFavorite: Boolean,
-    onFavoriteToggle: () -> Unit
+    onFavoriteToggle: () -> Unit,
+    showFavorite: Boolean = true,
 ) {
     val favTransition = updateTransition(isFavorite, label = "favoriteTransition")
     val favScale by favTransition.animateFloat(
@@ -189,9 +243,11 @@ fun ProfileHeader(
             Text(profile.knownName ?: "${profile.firstName} ${profile.lastName}", style = MaterialTheme.typography.headlineSmall)
             Text(profile.cityName, style = MaterialTheme.typography.bodyMedium)
         }
-        IconButton(onClick = onFavoriteToggle) {
-            Box(modifier = Modifier.graphicsLayer { scaleX = favScale; scaleY = favScale }) {
-                Text(if (isFavorite) "❤️" else "🤍")
+        if (showFavorite) {
+            IconButton(onClick = onFavoriteToggle) {
+                Box(modifier = Modifier.graphicsLayer { scaleX = favScale; scaleY = favScale }) {
+                    Text(if (isFavorite) "❤️" else "🤍")
+                }
             }
         }
     }
@@ -283,6 +339,18 @@ private fun ProfileContentFavoritedPreview() {
             id = "prof-1",
             uiState = ProfileUiState.Content(PreviewSamples.sampleProfile, isFavorite = true),
             onContactClick = {}, onFavoriteToggle = {}, onReportSubmit = {}, onNavigateBack = {}
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun ProfileContentOwnProfilePreview() {
+    AppTheme {
+        ProfessionalProfileScreen(
+            id = "prof-own",
+            uiState = ProfileUiState.Content(PreviewSamples.sampleProfile, isFavorite = false, isOwnProfile = true),
+            onContactClick = {}, onFavoriteToggle = {}, onReportSubmit = {}, onEditProfile = {}, onDisableProfile = {}, onNavigateBack = {}
         )
     }
 }

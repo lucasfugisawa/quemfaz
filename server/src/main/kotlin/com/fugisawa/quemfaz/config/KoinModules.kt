@@ -60,6 +60,7 @@ import com.fugisawa.quemfaz.profile.application.CreateProfessionalProfileDraftSe
 import com.fugisawa.quemfaz.profile.application.GetMyProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.GetPublicProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.SetKnownNameService
+import com.fugisawa.quemfaz.profile.application.DisableProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.UpdateProfessionalProfileService
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.infrastructure.persistence.ExposedProfessionalProfileRepository
@@ -169,6 +170,7 @@ val infrastructureModule =
         single { GetMyProfessionalProfileService(get(), get(), get()) }
         single { GetPublicProfessionalProfileService(get(), get(), get()) }
         single { UpdateProfessionalProfileService(get(), get(), get()) }
+        single { DisableProfessionalProfileService(get()) }
         single { SetKnownNameService(get()) }
 
         // Search Repositories

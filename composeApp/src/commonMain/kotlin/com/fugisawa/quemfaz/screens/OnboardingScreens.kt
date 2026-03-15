@@ -7,12 +7,15 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
@@ -78,18 +81,10 @@ fun OnboardingScreens(
     }
 
     Scaffold { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(24.dp)) {
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = Spacing.screenEdge)) {
             // Step indicator — visible for all active steps, hidden for terminal states
             val showStepIndicator = uiState !is OnboardingUiState.Published &&
                                     uiState !is OnboardingUiState.Error
-            if (showStepIndicator) {
-                Text(
-                    text = "Step $currentStep of 5",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.align(Alignment.TopCenter)
-                )
-            }
 
             val showBack = uiState is OnboardingUiState.NeedsClarification ||
                            uiState is OnboardingUiState.ReviewServices ||
@@ -97,24 +92,33 @@ fun OnboardingScreens(
                            uiState is OnboardingUiState.PhotoRequired ||
                            uiState is OnboardingUiState.KnownName
 
-            if (showBack) {
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier.align(Alignment.TopStart),
+            // Header row with properly aligned back button and step indicator
+            if (showStepIndicator || showBack) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                    )
+                    if (showBack) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.width(Spacing.smallButtonHeight))
+                    }
+                    if (showStepIndicator) {
+                        Text(
+                            text = "Step $currentStep of 5",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    Spacer(modifier = Modifier.width(Spacing.smallButtonHeight))
                 }
             }
-
-            // Offset content below the step indicator to avoid overlap
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = if (showStepIndicator) Spacing.lg else Spacing.none)
-            ) {
             AnimatedContent(
                 targetState = uiState,
                 transitionSpec = {
@@ -138,29 +142,34 @@ fun OnboardingScreens(
                 when (state) {
                 is OnboardingUiState.Idle -> {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        Text("Become a professional", style = MaterialTheme.typography.headlineLarge)
-                        Text("Describe your services in your own words. We'll help you organize them.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column(
+                            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
+                        ) {
+                            Text("Become a professional", style = MaterialTheme.typography.headlineLarge)
+                            Text("Describe your services in your own words. We'll help you organize them.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                            Spacer(modifier = Modifier.height(Spacing.sectionGap))
 
-                        OutlinedTextField(
-                            value = inputText,
-                            onValueChange = { inputText = it },
-                            modifier = Modifier.fillMaxWidth().height(200.dp),
-                            placeholder = { Text("e.g. I am a residential painter with 10 years of experience. I work in Batatais and Ribeirão Preto. I also do small wall repairs.") },
-                            shape = MaterialTheme.shapes.medium
-                        )
+                            OutlinedTextField(
+                                value = inputText,
+                                onValueChange = { inputText = it },
+                                modifier = Modifier.fillMaxWidth().height(200.dp),
+                                placeholder = { Text("e.g. I am a residential painter with 10 years of experience. I work in Batatais and Ribeirão Preto. I also do small wall repairs.") },
+                                shape = MaterialTheme.shapes.medium
+                            )
+                        }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(Spacing.md))
 
                         Button(
                             onClick = { onCreateDraft(inputText) },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                             enabled = inputText.isNotBlank(),
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Text("Analyze my services", style = MaterialTheme.typography.titleMedium)
                         }
+                        Spacer(modifier = Modifier.height(Spacing.md))
                     }
                 }
                 is OnboardingUiState.Loading -> {
@@ -198,26 +207,30 @@ fun OnboardingScreens(
                     val answers = remember { mutableStateListOf(*Array(questions.size) { "" }) }
 
                     Column(modifier = Modifier.fillMaxSize()) {
-                        Text("We need a bit more info", style = MaterialTheme.typography.headlineLarge)
-                        Text("Please answer the questions below so we can better understand your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column(
+                            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
+                        ) {
+                            Text("We need a bit more info", style = MaterialTheme.typography.headlineLarge)
+                            Text("Please answer the questions below so we can better understand your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(Spacing.lg))
 
-                        questions.forEachIndexed { index, question ->
-                            Text(question, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            OutlinedTextField(
-                                value = answers[index],
-                                onValueChange = { answers[index] = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Your answer") },
-                                singleLine = true,
-                                shape = MaterialTheme.shapes.medium
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            questions.forEachIndexed { index, question ->
+                                Text(question, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+                                OutlinedTextField(
+                                    value = answers[index],
+                                    onValueChange = { answers[index] = it },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = { Text("Your answer") },
+                                    singleLine = true,
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                                Spacer(modifier = Modifier.height(Spacing.md))
+                            }
                         }
 
-                        Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.height(Spacing.sm))
 
                         Button(
                             onClick = {
@@ -227,13 +240,13 @@ fun OnboardingScreens(
                                 onSubmitClarifications(state.originalDescription, clarificationAnswers)
                             },
                             enabled = answers.any { it.isNotBlank() },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Text("Submit answers", style = MaterialTheme.typography.titleMedium)
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Spacing.sm))
 
                         TextButton(
                             onClick = { onSkipClarification(state.draft) },
@@ -241,6 +254,7 @@ fun OnboardingScreens(
                         ) {
                             Text("Skip and continue")
                         }
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                     }
                 }
                 is OnboardingUiState.ReviewServices -> {
@@ -282,80 +296,85 @@ fun OnboardingScreens(
                         var cityDropdownExpanded by remember { mutableStateOf(false) }
 
                         Column(modifier = Modifier.fillMaxSize()) {
-                            Text("Review your services", style = MaterialTheme.typography.headlineLarge)
-                            Text("These are the services we identified.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-
-                            Spacer(modifier = Modifier.height(32.dp))
-
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            Column(
+                                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
                             ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Text("Interpreted services:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                                    @OptIn(ExperimentalLayoutApi::class)
-                                    FlowRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                Text("Review your services", style = MaterialTheme.typography.headlineLarge)
+                                Text("These are the services we identified.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                                Spacer(modifier = Modifier.height(Spacing.sectionGap))
+
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                ) {
+                                    Column(modifier = Modifier.padding(Spacing.md)) {
+                                        Text("Interpreted services:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                        @OptIn(ExperimentalLayoutApi::class)
+                                        FlowRow(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                                        ) {
+                                            draft.interpretedServices.forEach { service ->
+                                                SuggestionChip(
+                                                    onClick = {},
+                                                    label = { Text(service.displayName) }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(Spacing.lg))
+
+                                // City selector
+                                Text("Your city:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+                                @OptIn(ExperimentalMaterial3Api::class)
+                                ExposedDropdownMenuBox(
+                                    expanded = cityDropdownExpanded,
+                                    onExpandedChange = { cityDropdownExpanded = it },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    OutlinedTextField(
+                                        value = selectedCity ?: "",
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        label = { Text("City") },
+                                        placeholder = { Text("Select a city") },
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityDropdownExpanded) },
+                                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                                        shape = MaterialTheme.shapes.medium,
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = cityDropdownExpanded,
+                                        onDismissRequest = { cityDropdownExpanded = false },
                                     ) {
-                                        draft.interpretedServices.forEach { service ->
-                                            SuggestionChip(
-                                                onClick = {},
-                                                label = { Text(service.displayName) }
+                                        SupportedCities.all.forEach { city ->
+                                            DropdownMenuItem(
+                                                text = { Text(city) },
+                                                onClick = {
+                                                    onSelectCity(city)
+                                                    cityDropdownExpanded = false
+                                                },
                                             )
                                         }
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(24.dp))
-
-                            // City selector
-                            Text("Your city:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            @OptIn(ExperimentalMaterial3Api::class)
-                            ExposedDropdownMenuBox(
-                                expanded = cityDropdownExpanded,
-                                onExpandedChange = { cityDropdownExpanded = it },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                OutlinedTextField(
-                                    value = selectedCity ?: "",
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    label = { Text("City") },
-                                    placeholder = { Text("Select a city") },
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityDropdownExpanded) },
-                                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                                    shape = MaterialTheme.shapes.medium,
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = cityDropdownExpanded,
-                                    onDismissRequest = { cityDropdownExpanded = false },
-                                ) {
-                                    SupportedCities.all.forEach { city ->
-                                        DropdownMenuItem(
-                                            text = { Text(city) },
-                                            onClick = {
-                                                onSelectCity(city)
-                                                cityDropdownExpanded = false
-                                            },
-                                        )
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.weight(1f))
+                            Spacer(modifier = Modifier.height(Spacing.md))
 
                             Button(
                                 onClick = {
                                     onProceedFromServices(draft, draft.interpretedServices.map { it.serviceId })
                                 },
-                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                                 shape = MaterialTheme.shapes.medium
                             ) {
                                 Text("Looks good, continue", style = MaterialTheme.typography.titleMedium)
                             }
+                            Spacer(modifier = Modifier.height(Spacing.md))
                         }
                     }
                 }
@@ -364,33 +383,36 @@ fun OnboardingScreens(
                         mutableStateOf(state.draft.editedDescription.ifBlank { state.draft.normalizedDescription })
                     }
 
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        Text("Descrição do perfil", style = MaterialTheme.typography.headlineLarge)
-                        Text(
-                            "Esta é a descrição que os clientes verão no seu perfil. Você pode editá-la se quiser.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        OutlinedTextField(
-                            value = descriptionText,
-                            onValueChange = { descriptionText = it },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
-                            label = { Text("Descrição") },
-                            maxLines = 8,
-                            shape = MaterialTheme.shapes.medium,
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Column(
+                            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+                        ) {
+                            Text("Descrição do perfil", style = MaterialTheme.typography.headlineLarge)
+                            Text(
+                                "Esta é a descrição que os clientes verão no seu perfil. Você pode editá-la se quiser.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            OutlinedTextField(
+                                value = descriptionText,
+                                onValueChange = { descriptionText = it },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+                                label = { Text("Descrição") },
+                                maxLines = 8,
+                                shape = MaterialTheme.shapes.medium,
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.md))
                         Button(
                             onClick = { onProceedFromDescription(state.draft, state.confirmedServiceIds, descriptionText) },
                             enabled = descriptionText.isNotBlank(),
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                             shape = MaterialTheme.shapes.medium,
                         ) {
                             Text("Continuar", style = MaterialTheme.typography.titleMedium)
                         }
+                        Spacer(modifier = Modifier.height(Spacing.md))
                     }
                 }
                 is OnboardingUiState.PhotoRequired -> {
@@ -487,8 +509,7 @@ fun OnboardingScreens(
             }
             }
         }               // end Column
-    }                   // end Box
-}                       // end Scaffold
+    }                   // end Scaffold
 }
 
 // ── Previews ──

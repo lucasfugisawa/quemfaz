@@ -137,6 +137,24 @@ class GetPublicProfessionalProfileService(
     }
 }
 
+sealed class DisableProfileResult {
+    object Success : DisableProfileResult()
+    object NotFound : DisableProfileResult()
+    object AlreadyInactive : DisableProfileResult()
+}
+
+class DisableProfessionalProfileService(
+    private val profileRepository: ProfessionalProfileRepository,
+) {
+    fun execute(userId: UserId): DisableProfileResult {
+        val existing = profileRepository.findByUserId(userId) ?: return DisableProfileResult.NotFound
+        if (existing.status == ProfessionalProfileStatus.INACTIVE) return DisableProfileResult.AlreadyInactive
+
+        profileRepository.updateStatus(existing.id, ProfessionalProfileStatus.INACTIVE)
+        return DisableProfileResult.Success
+    }
+}
+
 sealed class UpdateProfileResult {
     data class Success(
         val response: ProfessionalProfileResponse,
@@ -183,6 +201,13 @@ class UpdateProfessionalProfileService(
                 ProfileCompleteness.INCOMPLETE
             }
 
+        // Auto-disable when all services are removed; auto-reactivate when services are added back.
+        val newStatus = when {
+            services.isEmpty() -> ProfessionalProfileStatus.INACTIVE
+            existing.status == ProfessionalProfileStatus.INACTIVE && services.isNotEmpty() -> ProfessionalProfileStatus.PUBLISHED
+            else -> existing.status
+        }
+
         val updated =
             existing.copy(
                 description = request.description,
@@ -193,6 +218,7 @@ class UpdateProfessionalProfileService(
                 services = services,
                 portfolioPhotos = portfolioPhotos,
                 completeness = completeness,
+                status = newStatus,
                 lastActiveAt = Instant.now(),
                 updatedAt = Instant.now(),
             )

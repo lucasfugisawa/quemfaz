@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,13 +36,19 @@ fun ProfileAvatar(
         color = MaterialTheme.colorScheme.primaryContainer
     ) {
         Box(contentAlignment = Alignment.Center) {
-            if (photoUrl != null) {
-                AsyncImage(
-                    model = photoUrl,
-                    contentDescription = name,
-                    modifier = Modifier.fillMaxSize().clip(MaterialTheme.shapes.medium),
-                    contentScale = ContentScale.Crop
-                )
+            if (!photoUrl.isNullOrBlank()) {
+                var imageLoadFailed by remember(photoUrl) { mutableStateOf(false) }
+                if (!imageLoadFailed) {
+                    AsyncImage(
+                        model = photoUrl,
+                        contentDescription = name,
+                        modifier = Modifier.fillMaxSize().clip(MaterialTheme.shapes.medium),
+                        contentScale = ContentScale.Crop,
+                        onError = { imageLoadFailed = true }
+                    )
+                } else {
+                    Text(name?.take(1)?.uppercase() ?: "?", style = textStyle)
+                }
             } else {
                 Text(name?.take(1)?.uppercase() ?: "?", style = textStyle)
             }

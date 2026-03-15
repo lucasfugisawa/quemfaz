@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -18,6 +19,7 @@ import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
+import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +39,7 @@ fun EditProfessionalProfileScreen(
                 title = { Text("Professional Profile") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("←", style = MaterialTheme.typography.titleLarge)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -52,7 +54,7 @@ fun EditProfessionalProfileScreen(
                 }
                 is EditProfileUiState.NoProfile -> {
                     Box(
-                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        modifier = Modifier.fillMaxSize().padding(Spacing.screenEdge),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -60,22 +62,22 @@ fun EditProfessionalProfileScreen(
                                 "You don't have a professional profile yet.",
                                 style = MaterialTheme.typography.bodyLarge
                             )
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(Spacing.lg))
                             Button(
                                 onClick = onGoToOnboarding,
-                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
                                 shape = MaterialTheme.shapes.medium
                             ) {
                                 Text("Set up professional profile")
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(Spacing.sm))
                             TextButton(onClick = onNavigateBack) { Text("Go Back") }
                         }
                     }
                 }
                 is EditProfileUiState.Error -> {
                     Box(
-                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        modifier = Modifier.fillMaxSize().padding(Spacing.screenEdge),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -84,7 +86,7 @@ fun EditProfessionalProfileScreen(
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodyMedium
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(Spacing.md))
                             Button(onClick = onNavigateBack) { Text("Go Back") }
                         }
                     }
@@ -124,7 +126,7 @@ private fun EditProfileForm(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(Spacing.md)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             ProfileAvatar(
@@ -132,18 +134,18 @@ private fun EditProfileForm(
                 photoUrl = profile.photoUrl,
                 size = 64.dp
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Spacing.md))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.md))
 
         // Services section
         Text("Serviços", style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
 
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             editedServiceIds.forEach { serviceId ->
                 val displayName = catalog?.services?.find { it.id == serviceId }?.displayName ?: serviceId
@@ -158,7 +160,21 @@ private fun EditProfileForm(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        if (editedServiceIds.isEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+            ) {
+                Text(
+                    "You removed all services. Your professional profile will be disabled. You can re-enable it anytime by adding services again.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(Spacing.md),
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.sm))
 
         // Add service button + dialog
         var showServicePicker by remember { mutableStateOf(false) }
@@ -198,7 +214,7 @@ private fun EditProfileForm(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.md))
 
         OutlinedTextField(
             value = description,
@@ -208,7 +224,7 @@ private fun EditProfileForm(
             shape = MaterialTheme.shapes.medium
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
 
         OutlinedTextField(
             value = city,
@@ -219,7 +235,7 @@ private fun EditProfileForm(
             shape = MaterialTheme.shapes.medium
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
 
         OutlinedTextField(
             value = contactPhone,
@@ -230,7 +246,7 @@ private fun EditProfileForm(
             shape = MaterialTheme.shapes.medium
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
 
         OutlinedTextField(
             value = whatsAppPhone,
@@ -241,7 +257,7 @@ private fun EditProfileForm(
             shape = MaterialTheme.shapes.medium
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(Spacing.lg))
 
         if (isSaved) {
             Text(
@@ -249,7 +265,7 @@ private fun EditProfileForm(
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodySmall
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
         }
 
         Button(
@@ -257,7 +273,7 @@ private fun EditProfileForm(
                 onSave(description, city, contactPhone, whatsAppPhone)
             },
             enabled = !isSaving,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
             shape = MaterialTheme.shapes.medium
         ) {
             if (isSaving) {
