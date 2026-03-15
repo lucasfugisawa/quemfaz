@@ -46,6 +46,7 @@ fun FavoritesScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                        modifier = Modifier.padding(horizontal = Spacing.lg),
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.FavoriteBorder,
@@ -60,7 +61,6 @@ fun FavoritesScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         if (onFindProfessionals != null) {
-                            Spacer(modifier = Modifier.height(Spacing.xs))
                             Button(onClick = onFindProfessionals) {
                                 Text("Find professionals")
                             }
