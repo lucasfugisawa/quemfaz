@@ -10,8 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.ui.components.ShimmerBox
 import com.fugisawa.quemfaz.ui.components.AppScreen
 import com.fugisawa.quemfaz.ui.components.ErrorMessage
 import com.fugisawa.quemfaz.ui.components.FullScreenLoading
@@ -37,7 +42,14 @@ fun SearchResultsScreen(
 ) {
     AppScreen(title = "Results for \"$query\"", onNavigateBack = onNavigateBack) {
         when (uiState) {
-            is SearchUiState.Loading -> FullScreenLoading()
+            is SearchUiState.Loading -> {
+                LazyColumn(contentPadding = PaddingValues(Spacing.md)) {
+                    items(3) {
+                        ProfessionalCardSkeleton()
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                    }
+                }
+            }
             is SearchUiState.Error -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     ErrorMessage(uiState.message)
@@ -146,6 +158,38 @@ fun ProfessionalCard(
                     activeRecently = profile.activeRecently,
                     profileComplete = profile.profileComplete
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun ProfessionalCardSkeleton() {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(Spacing.md)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ShimmerBox(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                )
+                Spacer(modifier = Modifier.width(Spacing.sm + Spacing.xs))
+                Column(modifier = Modifier.weight(1f)) {
+                    ShimmerBox(modifier = Modifier.fillMaxWidth(0.55f).height(16.dp))
+                    Spacer(modifier = Modifier.height(Spacing.xs))
+                    ShimmerBox(modifier = Modifier.fillMaxWidth(0.35f).height(12.dp))
+                }
+            }
+            Spacer(modifier = Modifier.height(Spacing.sm))
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                repeat(3) {
+                    ShimmerBox(
+                        modifier = Modifier
+                            .width(60.dp)
+                            .height(28.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                    )
+                }
             }
         }
     }
