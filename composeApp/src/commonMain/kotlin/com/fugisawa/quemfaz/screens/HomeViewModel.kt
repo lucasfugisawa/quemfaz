@@ -47,6 +47,7 @@ class HomeViewModel(
     private var lastQuery: String = ""
     private var currentPage: Int = 0
     private val _accumulatedResults = MutableStateFlow<List<ProfessionalProfileResponse>>(emptyList())
+    private var isLoadingMore = false
 
     val currentCity = sessionManager.currentCity
 
@@ -69,6 +70,7 @@ class HomeViewModel(
     }
 
     fun loadMoreResults() {
+        if (isLoadingMore) return
         val nextPage = currentPage + 1
         currentPage = nextPage
         executeSearch(page = nextPage)
@@ -77,6 +79,7 @@ class HomeViewModel(
     private fun executeSearch(page: Int) {
         viewModelScope.launch {
             if (page == 0) _searchUiState.value = SearchUiState.Loading
+            else isLoadingMore = true
             try {
                 val response = apiClients.search(
                     SearchProfessionalsRequest(
@@ -102,6 +105,8 @@ class HomeViewModel(
                 } catch (_: Exception) { }
             } catch (e: Exception) {
                 _searchUiState.value = SearchUiState.Error(e.message ?: "Search failed")
+            } finally {
+                if (page > 0) isLoadingMore = false
             }
         }
     }
