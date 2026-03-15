@@ -7,8 +7,6 @@ import kotlinx.serialization.Serializable
 @SerialName("OnboardingInterpretation")
 data class OnboardingInterpretation(
     val serviceIds: List<String>,
-    val city: String? = null,
-    val neighborhoods: List<String> = emptyList(),
     val needsClarification: Boolean,
     val clarificationQuestions: List<String> = emptyList(),
 )
@@ -17,6 +15,4 @@ data class OnboardingInterpretation(
 @SerialName("SearchInterpretation")
 data class SearchInterpretation(
     val serviceId: String,
-    val city: String? = null,
-    val neighborhoods: List<String> = emptyList(),
 )

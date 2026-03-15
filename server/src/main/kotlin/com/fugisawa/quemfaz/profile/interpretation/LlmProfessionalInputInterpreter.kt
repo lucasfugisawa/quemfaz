@@ -53,9 +53,6 @@ class LlmProfessionalInputInterpreter(
         if (interpretedServices.isEmpty()) {
             missingFields.add("services")
         }
-        if (interpretation.city == null) {
-            missingFields.add("city")
-        }
 
         if (interpretation.needsClarification) {
             followUpQuestions.addAll(interpretation.clarificationQuestions.take(2))
@@ -64,7 +61,7 @@ class LlmProfessionalInputInterpreter(
         return CreateProfessionalProfileDraftResponse(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
             interpretedServices = interpretedServices,
-            cityName = interpretation.city,
+            cityName = null,
             missingFields = missingFields,
             followUpQuestions = followUpQuestions,
             freeTextAliases = interpretedServices.map { it.displayName },
@@ -76,8 +73,8 @@ class LlmProfessionalInputInterpreter(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
             interpretedServices = emptyList(),
             cityName = null,
-            missingFields = listOf("services", "city"),
-            followUpQuestions = listOf("Pode nos contar um pouco mais sobre os serviços que você oferece?", "Em qual cidade você atende?"),
+            missingFields = listOf("services"),
+            followUpQuestions = listOf("Pode nos contar um pouco mais sobre os serviços que você oferece?"),
             freeTextAliases = emptyList(),
         )
 
@@ -124,9 +121,7 @@ class LlmProfessionalInputInterpreter(
             Rules:
             - infer services from description and map them to the canonical service ID values above
             - the "serviceIds" field must contain only ID values from the catalog
-            - extract city if present
-            - extract neighborhoods if present
-            - if important information is missing:
+            - if important information about services is missing:
               set needsClarification = true
               generate up to 2 clarificationQuestions
             - clarificationQuestions must be short and objective

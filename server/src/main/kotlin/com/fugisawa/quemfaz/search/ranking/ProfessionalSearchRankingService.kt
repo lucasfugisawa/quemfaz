@@ -13,7 +13,6 @@ class ProfessionalSearchRankingService {
         const val SECONDARY_MATCH_POINTS = 50
         const val RELATED_MATCH_POINTS = 20
 
-        const val NEIGHBORHOOD_BONUS = 30
         const val COMPLETENESS_BONUS = 15
         const val RECENTLY_ACTIVE_BONUS = 10
         const val CITY_MISMATCH_PENALTY = -50

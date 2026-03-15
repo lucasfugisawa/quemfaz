@@ -43,7 +43,7 @@ class LlmSearchQueryInterpreter(
             originalQuery = query,
             normalizedQuery = query.lowercase().trim(),
             serviceIds = serviceIds,
-            cityName = interpretation.city ?: cityContext,
+            cityName = cityContext,
             freeTextAliases = if (canonical != null) listOf(canonical.displayName) else emptyList(),
         )
     }
@@ -80,8 +80,6 @@ class LlmSearchQueryInterpreter(
             Rules:
             - identify the requested service and map it to a canonical service ID from the catalog
             - the "serviceId" field must contain only an ID value from the catalog
-            - extract city if present. If no city is mentioned, set it to null.
-            - extract neighborhoods if present. If no neighborhood is mentioned, return an empty list.
             - do not invent information
             """.trimIndent()
     }
