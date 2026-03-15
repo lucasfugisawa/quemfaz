@@ -9,7 +9,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -304,6 +303,7 @@ fun MainFlow(
                     is Screen.CitySelection -> {
                         CitySelectionScreen(
                             cities = homeViewModel.supportedCities,
+                            currentCity = currentCity,
                             onCitySelected = {
                                 homeViewModel.selectCity(it)
                                 // Always reset to Home after city selection — clears gate stack.
@@ -331,9 +331,13 @@ fun MainFlow(
                     is Screen.ProfessionalProfile -> {
                         val profileViewModel: ProfileViewModel = koinInject()
                         val profileUiState by profileViewModel.uiState.collectAsState()
+                        val profileDisabled by profileViewModel.profileDisabled.collectAsState()
                         LaunchedEffect(currentProfileId) {
                             profileViewModel.loadProfile(currentProfileId)
                             profileViewModel.trackProfileView(currentProfileId)
+                        }
+                        LaunchedEffect(profileDisabled) {
+                            if (profileDisabled) navigateBack()
                         }
                         ProfessionalProfileScreen(
                             id = currentProfileId,
@@ -356,6 +360,8 @@ fun MainFlow(
                             onReportSubmit = { reason ->
                                 profileViewModel.reportProfile(currentProfileId, reason, null)
                             },
+                            onEditProfile = { navigateTo(Screen.EditProfessionalProfile) },
+                            onDisableProfile = { profileViewModel.disableProfile() },
                             onNavigateBack = navigateBack
                         )
                     }
@@ -478,23 +484,27 @@ fun MainFlow(
                 Text("Select your city", style = MaterialTheme.typography.titleLarge)
                 Spacer(modifier = Modifier.height(Spacing.md))
                 homeViewModel.supportedCities.forEach { city ->
-                    ListItem(
-                        headlineContent = {
-                            Text(city, style = MaterialTheme.typography.bodyLarge)
-                        },
-                        trailingContent = {
-                            Icon(
-                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null,
-                            )
-                        },
-                        modifier = Modifier.clickable {
-                            homeViewModel.selectCity(city)
-                            showCitySheet = false
-                        }
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                homeViewModel.selectCity(city)
+                                showCitySheet = false
+                            }
+                            .padding(vertical = Spacing.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(
+                            selected = city == currentCity,
+                            onClick = {
+                                homeViewModel.selectCity(city)
+                                showCitySheet = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.sm))
+                        Text(city, style = MaterialTheme.typography.bodyLarge)
+                    }
                     HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = Spacing.md),
                         thickness = Spacing.divider,
                     )
                 }

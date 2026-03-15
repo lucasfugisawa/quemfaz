@@ -8,15 +8,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
+import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CitySelectionScreen(
     cities: List<String>,
+    currentCity: String? = null,
     onCitySelected: (String) -> Unit
 ) {
     Scaffold(
@@ -32,12 +33,24 @@ fun CitySelectionScreen(
                 .padding(paddingValues)
         ) {
             items(cities) { city ->
-                ListItem(
-                    headlineContent = { Text(city, style = MaterialTheme.typography.bodyLarge) },
-                    trailingContent = { Text("›", style = MaterialTheme.typography.headlineSmall) },
-                    modifier = Modifier.clickable { onCitySelected(city) }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onCitySelected(city) }
+                        .padding(horizontal = Spacing.screenEdge, vertical = Spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(
+                        selected = city == currentCity,
+                        onClick = { onCitySelected(city) }
+                    )
+                    Spacer(modifier = Modifier.width(Spacing.sm))
+                    Text(city, style = MaterialTheme.typography.bodyLarge)
+                }
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = Spacing.screenEdge),
+                    thickness = Spacing.divider,
                 )
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
             }
         }
     }
@@ -48,5 +61,11 @@ fun CitySelectionScreen(
 @LightDarkScreenPreview
 @Composable
 private fun CitySelectionPreview() {
+    AppTheme { CitySelectionScreen(cities = PreviewSamples.sampleCities, currentCity = "Franca", onCitySelected = {}) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun CitySelectionNoneSelectedPreview() {
     AppTheme { CitySelectionScreen(cities = PreviewSamples.sampleCities, onCitySelected = {}) }
 }

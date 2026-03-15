@@ -46,6 +46,7 @@ enum class ProfessionalProfileStatus {
     DRAFT,
     PUBLISHED,
     BLOCKED,
+    INACTIVE,
 }
 
 interface ProfessionalProfileRepository {

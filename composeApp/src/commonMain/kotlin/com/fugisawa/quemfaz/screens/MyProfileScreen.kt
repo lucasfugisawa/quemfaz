@@ -1,6 +1,8 @@
 package com.fugisawa.quemfaz.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,14 +53,14 @@ fun MyProfileScreen(
         onSavePhoto(data, mimeType)
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.md)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             ProfileAvatar(
                 name = "$firstName $lastName".trim().ifBlank { currentUser.firstName },
                 photoUrl = currentUser.photoUrl,
                 size = 64.dp
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Spacing.md))
             Column {
                 Text("My Profile", style = MaterialTheme.typography.headlineSmall)
                 Text(
@@ -95,7 +97,7 @@ fun MyProfileScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(Spacing.lg))
 
         OutlinedTextField(
             value = firstName,
@@ -106,7 +108,7 @@ fun MyProfileScreen(
             shape = MaterialTheme.shapes.medium
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
 
         OutlinedTextField(
             value = lastName,
@@ -117,12 +119,12 @@ fun MyProfileScreen(
             shape = MaterialTheme.shapes.medium
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.md))
 
         Button(
             onClick = { onSaveName(firstName, lastName) },
             enabled = firstName.isNotBlank() && lastName.isNotBlank() && !isSaving,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
             shape = MaterialTheme.shapes.medium
         ) {
             if (isSaving) {
@@ -132,22 +134,22 @@ fun MyProfileScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
 
         OutlinedButton(
             onClick = { imagePicker.launch() },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
             shape = MaterialTheme.shapes.medium
         ) {
             Text("Change photo")
         }
 
         if (uiState is AuthUiState.Error) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
             Text(uiState.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(Spacing.sectionGap))
         HorizontalDivider()
 
         TextButton(onClick = onNavigateToFavorites, modifier = Modifier.fillMaxWidth()) {
@@ -162,7 +164,7 @@ fun MyProfileScreen(
             Text("Professional Profile")
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(Spacing.sectionGap))
 
         TextButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
             Text("Logout", color = MaterialTheme.colorScheme.error)
