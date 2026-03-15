@@ -18,6 +18,7 @@ import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.session.SessionManager
+import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
@@ -42,6 +43,7 @@ fun OnboardingScreens(
     uiState: OnboardingUiState,
     onCreateDraft: (String) -> Unit,
     onProceedFromDraft: (CreateProfessionalProfileDraftResponse) -> Unit,
+    onProceedWithManualServices: (CreateProfessionalProfileDraftResponse, Set<String>) -> Unit,
     onPickPhoto: (draft: CreateProfessionalProfileDraftResponse) -> Unit,
     onSubmitKnownName: (knownName: String?, draft: CreateProfessionalProfileDraftResponse) -> Unit,
     onSubmitClarifications: (String, List<ClarificationAnswer>) -> Unit,
@@ -234,46 +236,73 @@ fun OnboardingScreens(
                 }
                 is OnboardingUiState.DraftReady -> {
                     val draft = state.draft
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Text("Review your profile", style = MaterialTheme.typography.headlineLarge)
-                        Text("This is how customers will see your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (draft.interpretedServices.isEmpty()) {
+                        var manualSelectedServices by remember { mutableStateOf(emptySet<String>()) }
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Text("Selecione seus serviços", style = MaterialTheme.typography.headlineLarge)
+                            Text("Não conseguimos identificar seus serviços automaticamente. Selecione abaixo os serviços que você oferece.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text("Description:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                                Text(draft.normalizedDescription, style = MaterialTheme.typography.bodyLarge)
+                            ServiceCategoryPicker(
+                                selectedServiceIds = manualSelectedServices,
+                                onSelectionChanged = { manualSelectedServices = it },
+                                modifier = Modifier.weight(1f),
+                            )
 
-                                Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                                Text("Interpreted services:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                                @OptIn(ExperimentalLayoutApi::class)
-                                FlowRow(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    draft.interpretedServices.forEach { service ->
-                                        SuggestionChip(
-                                            onClick = {},
-                                            label = { Text(service.displayName) }
-                                        )
+                            Button(
+                                onClick = { onProceedWithManualServices(draft, manualSelectedServices) },
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                enabled = manualSelectedServices.isNotEmpty(),
+                                shape = MaterialTheme.shapes.medium
+                            ) {
+                                Text("Continuar", style = MaterialTheme.typography.titleMedium)
+                            }
+                        }
+                    } else {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Text("Review your profile", style = MaterialTheme.typography.headlineLarge)
+                            Text("This is how customers will see your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                            Spacer(modifier = Modifier.height(32.dp))
+
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text("Description:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                    Text(draft.normalizedDescription, style = MaterialTheme.typography.bodyLarge)
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Text("Interpreted services:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                    @OptIn(ExperimentalLayoutApi::class)
+                                    FlowRow(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        draft.interpretedServices.forEach { service ->
+                                            SuggestionChip(
+                                                onClick = {},
+                                                label = { Text(service.displayName) }
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        Spacer(modifier = Modifier.weight(1f))
+                            Spacer(modifier = Modifier.weight(1f))
 
-                        Button(
-                            onClick = { onProceedFromDraft(draft) },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = MaterialTheme.shapes.medium
-                        ) {
-                            Text("Looks good, continue", style = MaterialTheme.typography.titleMedium)
+                            Button(
+                                onClick = { onProceedFromDraft(draft) },
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                shape = MaterialTheme.shapes.medium
+                            ) {
+                                Text("Looks good, continue", style = MaterialTheme.typography.titleMedium)
+                            }
                         }
                     }
                 }
@@ -380,13 +409,13 @@ fun OnboardingScreens(
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, onCreateDraft = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, onCreateDraft = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
@@ -395,7 +424,7 @@ private fun OnboardingDraftReadyPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.DraftReady(PreviewSamples.sampleDraftResponse),
-            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onCreateDraft = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -406,7 +435,7 @@ private fun OnboardingPublishedPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
-            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onCreateDraft = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -417,7 +446,7 @@ private fun OnboardingErrorPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
-            onCreateDraft = {}, onProceedFromDraft = {}, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onCreateDraft = {}, onProceedFromDraft = {}, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }

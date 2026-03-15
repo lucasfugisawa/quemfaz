@@ -8,15 +8,15 @@ import kotlinx.serialization.Serializable
  * Used for filtering and navigation in the UI.
  */
 @Serializable
-enum class ServiceCategory {
-    CLEANING,
-    REPAIRS,
-    PAINTING,
-    GARDEN,
-    EVENTS,
-    BEAUTY,
-    MOVING_AND_ASSEMBLY,
-    OTHER
+enum class ServiceCategory(val displayName: String) {
+    CLEANING("Limpeza"),
+    REPAIRS("Reparos"),
+    PAINTING("Pintura"),
+    GARDEN("Jardim"),
+    EVENTS("Eventos"),
+    BEAUTY("Beleza"),
+    MOVING_AND_ASSEMBLY("Mudanças e Montagem"),
+    OTHER("Outros"),
 }
 
 /**

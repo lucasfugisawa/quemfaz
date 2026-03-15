@@ -382,6 +382,7 @@ fun MainFlow(
                             uiState = uiState,
                             onCreateDraft = { viewModel.createDraft(it) },
                             onProceedFromDraft = { draft -> viewModel.proceedFromDraft(draft) },
+                            onProceedWithManualServices = { draft, serviceIds -> viewModel.proceedWithManualServices(draft, serviceIds) },
                             onPickPhoto = { _ -> imagePicker.launch() },
                             onSubmitKnownName = { knownName, draft -> viewModel.submitKnownName(knownName, draft) },
                             onSubmitClarifications = { desc, answers ->
