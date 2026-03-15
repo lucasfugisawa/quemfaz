@@ -64,7 +64,8 @@ class LlmSearchQueryInterpreterTest {
 
         val result = interpreter.interpret("pintor em Batatais", "Batatais")
 
-        assertTrue(result.serviceIds.isEmpty())
+        assertTrue(result.serviceIds.isNotEmpty())
+        assertTrue(result.llmUnavailable)
         assertEquals("Batatais", result.cityName)
     }
 }

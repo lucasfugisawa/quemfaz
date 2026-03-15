@@ -80,6 +80,7 @@ class SearchProfessionalsService(
             page = page,
             pageSize = pageSize,
             totalCount = totalCount,
+            llmUnavailable = interpreted.llmUnavailable,
         )
     }
 

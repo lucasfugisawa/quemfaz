@@ -21,4 +21,5 @@ data class InterpretedSearchQuery(
     val serviceIds: List<String>,
     val cityName: String?,
     val freeTextAliases: List<String>,
+    val llmUnavailable: Boolean = false,
 )

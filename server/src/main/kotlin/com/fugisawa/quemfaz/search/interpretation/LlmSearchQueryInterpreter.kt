@@ -37,28 +37,47 @@ class LlmSearchQueryInterpreter(
         interpretation: SearchInterpretation,
     ): InterpretedSearchQuery {
         val canonical = CanonicalServices.findById(CanonicalServiceId(interpretation.serviceId))
-        val serviceIds = if (canonical != null) listOf(canonical.id.value) else emptyList()
+
+        // If LLM returned an invalid service ID, try local matching
+        if (canonical == null) {
+            val localMatches = CanonicalServices.search(query)
+            val serviceIds = localMatches.take(1).map { it.id.value }
+            return InterpretedSearchQuery(
+                originalQuery = query,
+                normalizedQuery = query.lowercase().trim(),
+                serviceIds = serviceIds,
+                cityName = cityContext,
+                freeTextAliases = localMatches.take(1).map { it.displayName },
+                llmUnavailable = false,
+            )
+        }
 
         return InterpretedSearchQuery(
             originalQuery = query,
             normalizedQuery = query.lowercase().trim(),
-            serviceIds = serviceIds,
+            serviceIds = listOf(canonical.id.value),
             cityName = cityContext,
-            freeTextAliases = if (canonical != null) listOf(canonical.displayName) else emptyList(),
+            freeTextAliases = listOf(canonical.displayName),
+            llmUnavailable = false,
         )
     }
 
     private fun fallbackResult(
         query: String,
         cityContext: String?,
-    ): InterpretedSearchQuery =
-        InterpretedSearchQuery(
+    ): InterpretedSearchQuery {
+        val localMatches = CanonicalServices.search(query)
+        val serviceIds = localMatches.take(1).map { it.id.value }
+
+        return InterpretedSearchQuery(
             originalQuery = query,
             normalizedQuery = query.lowercase().trim(),
-            serviceIds = emptyList(),
+            serviceIds = serviceIds,
             cityName = cityContext,
-            freeTextAliases = emptyList(),
+            freeTextAliases = localMatches.take(1).map { it.displayName },
+            llmUnavailable = true,
         )
+    }
 
     companion object {
         private val CANONICAL_SERVICES_CATALOG =
