@@ -10,6 +10,7 @@ import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileService
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus
 import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.Table
@@ -58,6 +59,8 @@ object ProfessionalProfilesTable : Table("professional_profiles") {
     val lastActiveAt = timestamp("last_active_at").nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
+    val viewCount = integer("view_count").default(0)
+    val contactClickCount = integer("contact_click_count").default(0)
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -242,6 +245,35 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
             } > 0
         }
 
+    override fun incrementViewCount(id: ProfessionalProfileId) {
+        transaction {
+            ProfessionalProfilesTable.update({ ProfessionalProfilesTable.id eq id.value }) {
+                with(SqlExpressionBuilder) {
+                    it[viewCount] = viewCount + 1
+                }
+            }
+        }
+    }
+
+    override fun incrementContactClickCount(id: ProfessionalProfileId) {
+        transaction {
+            ProfessionalProfilesTable.update({ ProfessionalProfilesTable.id eq id.value }) {
+                with(SqlExpressionBuilder) {
+                    it[contactClickCount] = contactClickCount + 1
+                }
+            }
+        }
+    }
+
+    override fun updateLastActiveAt(id: ProfessionalProfileId) {
+        transaction {
+            ProfessionalProfilesTable.update({ ProfessionalProfilesTable.id eq id.value }) {
+                it[lastActiveAt] = Instant.now()
+                it[updatedAt] = Instant.now()
+            }
+        }
+    }
+
     private fun mapProfile(row: ResultRow): ProfessionalProfile {
         val profileId = row[ProfessionalProfilesTable.id]
         val neighborhoods =
@@ -291,6 +323,8 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
             lastActiveAt = row[ProfessionalProfilesTable.lastActiveAt] ?: row[ProfessionalProfilesTable.createdAt],
             createdAt = row[ProfessionalProfilesTable.createdAt],
             updatedAt = row[ProfessionalProfilesTable.updatedAt],
+            viewCount = row[ProfessionalProfilesTable.viewCount],
+            contactClickCount = row[ProfessionalProfilesTable.contactClickCount],
         )
     }
 }

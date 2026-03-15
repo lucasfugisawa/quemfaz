@@ -22,6 +22,8 @@ data class ProfessionalProfile(
     val lastActiveAt: Instant,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val viewCount: Int = 0,
+    val contactClickCount: Int = 0,
 )
 
 data class ProfessionalProfileService(
@@ -63,4 +65,8 @@ interface ProfessionalProfileRepository {
     ): Boolean
 
     fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean
+
+    fun incrementViewCount(id: ProfessionalProfileId)
+    fun incrementContactClickCount(id: ProfessionalProfileId)
+    fun updateLastActiveAt(id: ProfessionalProfileId)
 }
