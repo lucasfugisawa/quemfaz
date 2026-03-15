@@ -71,7 +71,9 @@ data class ProfessionalProfileResponse(
     val activeRecently: Boolean,
     val whatsAppPhone: String?,
     val contactPhone: String,
-    val portfolioPhotoUrls: List<String> = emptyList()
+    val portfolioPhotoUrls: List<String> = emptyList(),
+    val contactCount: Int = 0,
+    val daysSinceActive: Int? = null,
 )
 
 @Serializable

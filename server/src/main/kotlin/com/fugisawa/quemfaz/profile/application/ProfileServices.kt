@@ -20,6 +20,7 @@ import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
 import com.fugisawa.quemfaz.profile.interpretation.ProfessionalInputInterpreter
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class CreateProfessionalProfileDraftService(
@@ -226,4 +227,6 @@ private fun mapToResponse(
         whatsAppPhone = profile.whatsappPhone,
         contactPhone = profile.contactPhone ?: "",
         portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
+        contactCount = profile.contactClickCount,
+        daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),
     )

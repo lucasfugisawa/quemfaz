@@ -16,6 +16,7 @@ import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus
 import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class AddFavoriteService(
@@ -117,5 +118,7 @@ class ListFavoritesService(
             whatsAppPhone = profile.whatsappPhone,
             contactPhone = profile.contactPhone ?: "",
             portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
+            contactCount = profile.contactClickCount,
+            daysSinceActive = java.time.temporal.ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),
         )
 }

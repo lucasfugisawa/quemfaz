@@ -36,6 +36,8 @@ object PreviewSamples {
         activeRecently = true,
         whatsAppPhone = "+55 11 99999-1234",
         contactPhone = "+55 11 99999-1234",
+        contactCount = 12,
+        daysSinceActive = 1,
     )
 
     val sampleProfileLongText = sampleProfile.copy(
@@ -61,6 +63,8 @@ object PreviewSamples {
         activeRecently = false,
         whatsAppPhone = null,
         contactPhone = "+55 16 99999-0000",
+        contactCount = 0,
+        daysSinceActive = null,
     )
 
     val sampleProfile2 = ProfessionalProfileResponse(

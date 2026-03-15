@@ -17,6 +17,7 @@ import com.fugisawa.quemfaz.search.interpretation.SearchQueryInterpreter
 import com.fugisawa.quemfaz.search.ranking.ProfessionalSearchRankingService
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class SearchProfessionalsService(
@@ -108,5 +109,7 @@ class SearchProfessionalsService(
             whatsAppPhone = profile.whatsappPhone,
             contactPhone = profile.contactPhone ?: "",
             portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
+            contactCount = profile.contactClickCount,
+            daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),
         )
 }
