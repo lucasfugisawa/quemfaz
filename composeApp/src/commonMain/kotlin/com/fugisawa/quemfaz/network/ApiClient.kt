@@ -7,6 +7,7 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -55,6 +56,11 @@ class ApiClient(
         }
         install(Logging) {
             level = LogLevel.ALL
+        }
+        install(HttpTimeout) {
+            connectTimeoutMillis = 5_000
+            socketTimeoutMillis = 30_000
+            requestTimeoutMillis = 60_000
         }
         defaultRequest {
             url(baseUrl)
