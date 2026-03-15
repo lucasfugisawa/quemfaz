@@ -46,7 +46,7 @@ The search flow uses a four-stage pipeline:
 
 ### 1.3 Service Catalog
 
-Both flows depend on a predefined canonical services catalog (`CanonicalServices.kt`): **29 services across 8 categories** (Cleaning, Repairs, Painting, Garden, Events, Beauty, Moving & Assembly, Other). Each service has an ID, Portuguese display name, description, and aliases. The LLM system prompts include the full catalog, constraining the LLM to only return valid IDs.
+Both flows depend on a predefined canonical services catalog (`CanonicalServices.kt`): **23 services across 8 categories** (Cleaning, Repairs, Painting, Garden, Events, Beauty, Moving & Assembly, Other). Each service has an ID, Portuguese display name, description, and aliases. The LLM system prompts include the full catalog, constraining the LLM to only return valid IDs.
 
 ### 1.4 LLM Client
 
@@ -115,7 +115,7 @@ Both flows use `LlmAgentService`, which wraps the OpenAI API via the `ai.koog.pr
 
 **UX implications:**
 - Adds friction vs. free-text AI interpretation, but only as a fallback
-- 29 services across 8 categories is manageable for manual browsing
+- 23 services across 8 categories is manageable for manual browsing
 - Portuguese display names and clear grouping make this intuitive
 - For onboarding: multi-select needed (a professional may offer multiple services)
 - For search: single-select sufficient (matches current single-service-ID behavior)
@@ -160,7 +160,7 @@ Both flows use `LlmAgentService`, which wraps the OpenAI API via the `ai.koog.pr
 - (-) Cannot extract city/neighborhoods from text
 - (-) Complex or ambiguous descriptions produce poor or no matches
 
-**Implementation complexity:** Very low. `CanonicalServices.search()` already exists with a scoring mechanism (display name match: 100pts, alias match: 80pts, description match: 10pts). Only need to wire it as the fallback in `LlmProfessionalInputInterpreter.fallbackResponse()` and `LlmSearchQueryInterpreter.fallbackResult()`.
+**Implementation complexity:** Very low. `CanonicalServices.search()` already exists in `shared/commonMain` with a scoring mechanism (exact display name: 100pts, partial display name: 50pts, exact alias: 80pts, partial alias: 40pts, description: 10pts). Only need to wire it as the server-side fallback in `LlmProfessionalInputInterpreter.fallbackResponse()` and `LlmSearchQueryInterpreter.fallbackResult()` — both of which already import and use `CanonicalServices`.
 
 **Effect on core vision:** Minimal impact. The AI-first flow remains primary. Local matching is a reasonable approximation for simple cases. Users with complex descriptions would still need manual selection as a second-tier fallback.
 
@@ -283,7 +283,7 @@ Both flows use `LlmAgentService`, which wraps the OpenAI API via the `ai.koog.pr
 
 5. **Solves the onboarding deadlock.** The critical bug — the infinite clarification loop when the LLM is fully down — is resolved. Users always have a path to complete onboarding.
 
-6. **Search degrades gracefully.** The current silent fallback (broad results) is acceptable for search as a third tier. The chain becomes: LLM interpretation → local alias matching → broad results. Each tier is less precise but still functional.
+6. **Search degrades gracefully.** The current silent fallback (broad results) is acceptable for search as a third tier. The chain becomes: LLM interpretation → local alias matching → broad results. Each tier is less precise but still functional. Specifically: if `CanonicalServices.search()` returns matches, the top-scoring service ID is used to filter the database query (same as LLM success). If it returns no matches, the search proceeds with empty service IDs — producing the current broad-results behavior (all published professionals in city).
 
 ### Specifically not recommended:
 
@@ -297,7 +297,7 @@ Both flows use `LlmAgentService`, which wraps the OpenAI API via the `ai.koog.pr
 2. Build the manual service selection UI (grouped category list, single-select for search, multi-select for onboarding)
 3. Add the "AI unavailable" transitional state to onboarding and search screens
 4. Add "Try AI again" button alongside manual selection
-5. Fix the clarification loop: detect consecutive LLM failures and route to manual selection instead of re-entering clarification
+5. Fix the clarification loop: when `LlmProfessionalInputInterpreter.fallbackResponse()` fires (LLM failure), return a new response field (e.g., `llmUnavailable: true`) in `CreateProfessionalProfileDraftResponse`. The client checks this field: if true, it skips the clarification step and routes directly to the manual service selection screen. This is stateless — no failure counter needed. Any single LLM failure during interpretation triggers the manual fallback path. The search flow's `fallbackResult()` similarly sets an `llmUnavailable` flag, prompting the client to show the category browser
 
 ---
 
@@ -315,4 +315,4 @@ Both flows use `LlmAgentService`, which wraps the OpenAI API via the `ai.koog.pr
 | Other | 1 | Outros Serviços |
 | **Total** | **23** | |
 
-29 services with comprehensive Portuguese aliases for local text matching.
+23 services with comprehensive Portuguese aliases for local text matching.
