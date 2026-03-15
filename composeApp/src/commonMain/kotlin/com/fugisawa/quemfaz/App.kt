@@ -26,6 +26,7 @@ import com.fugisawa.quemfaz.di.appModule
 import com.fugisawa.quemfaz.domain.moderation.ReportReason
 import com.fugisawa.quemfaz.navigation.Screen
 import com.fugisawa.quemfaz.network.ApiClient
+import com.fugisawa.quemfaz.platform.PlatformBackHandler
 import com.fugisawa.quemfaz.platform.launch
 import com.fugisawa.quemfaz.platform.openUrl
 import com.fugisawa.quemfaz.platform.rememberImagePickerLauncher
@@ -133,6 +134,14 @@ fun AuthFlow(navigateTo: (Screen) -> Unit) {
     var currentAuthStep by remember { mutableStateOf("phone") }
     var phoneForOtp by remember { mutableStateOf("") }
 
+    // Allow back navigation within the auth flow (OTP → phone, name → OTP)
+    PlatformBackHandler(enabled = currentAuthStep != "phone") {
+        when (currentAuthStep) {
+            "otp" -> { currentAuthStep = "phone"; viewModel.resetToIdle() }
+            "name" -> { currentAuthStep = "otp" }
+        }
+    }
+
     when (currentAuthStep) {
         "phone" -> {
             PhoneLoginScreen(
@@ -209,6 +218,13 @@ fun MainFlow(
     val isTopLevelScreen = currentScreen == Screen.Home ||
             currentScreen == Screen.Favorites ||
             currentScreen == Screen.MyProfile
+
+    // Global back handler: pop the navigation stack on hardware/gesture back
+    // when not on a root tab screen. Screen-specific handlers (e.g. Onboarding)
+    // can override this by registering their own PlatformBackHandler.
+    PlatformBackHandler(enabled = !isTopLevelScreen) {
+        navigateBack()
+    }
 
     Scaffold(
         bottomBar = {
@@ -377,6 +393,16 @@ fun MainFlow(
                         val uiState by viewModel.uiState.collectAsState()
                         val selectedCity by viewModel.selectedCity.collectAsState()
                         val onboardingCatalog by viewModel.catalog.collectAsState()
+
+                        // Onboarding-specific back: navigate within steps for non-Idle,
+                        // pop back to previous screen for Idle/Loading.
+                        val isOnboardingInProgress = uiState is OnboardingUiState.NeedsClarification ||
+                                uiState is OnboardingUiState.DraftReady ||
+                                uiState is OnboardingUiState.PhotoRequired ||
+                                uiState is OnboardingUiState.KnownName
+                        PlatformBackHandler(enabled = isOnboardingInProgress) {
+                            viewModel.goBack()
+                        }
 
                         LaunchedEffect(currentCity) {
                             viewModel.initializeCity(currentCity)

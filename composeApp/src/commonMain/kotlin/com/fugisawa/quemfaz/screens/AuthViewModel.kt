@@ -36,6 +36,10 @@ class AuthViewModel(
     private val _hydrationFailed = MutableStateFlow(false)
     val hydrationFailed: StateFlow<Boolean> = _hydrationFailed.asStateFlow()
 
+    fun resetToIdle() {
+        _uiState.value = AuthUiState.Idle
+    }
+
     fun startOtp(phoneNumber: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
