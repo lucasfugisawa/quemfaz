@@ -1,5 +1,11 @@
 package com.fugisawa.quemfaz.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -85,7 +91,25 @@ fun OnboardingScreens(
                     .fillMaxSize()
                     .padding(top = if (showStepIndicator) Spacing.lg else Spacing.none)
             ) {
-            when (uiState) {
+            AnimatedContent(
+                targetState = uiState,
+                transitionSpec = {
+                    val isLoadingOrTerminal = targetState is OnboardingUiState.Loading ||
+                        targetState is OnboardingUiState.Error ||
+                        targetState is OnboardingUiState.Published ||
+                        initialState is OnboardingUiState.Loading ||
+                        initialState is OnboardingUiState.Error ||
+                        initialState is OnboardingUiState.Published
+                    if (isLoadingOrTerminal) {
+                        fadeIn() togetherWith fadeOut()
+                    } else {
+                        slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                    }
+                },
+                label = "onboardingContent",
+                modifier = Modifier.fillMaxSize(),
+            ) { state ->
+                when (state) {
                 is OnboardingUiState.Idle -> {
                     Column(modifier = Modifier.fillMaxSize()) {
                         Text("Become a professional", style = MaterialTheme.typography.headlineLarge)
@@ -125,7 +149,7 @@ fun OnboardingScreens(
                     }
                 }
                 is OnboardingUiState.NeedsClarification -> {
-                    val questions = uiState.draft.followUpQuestions
+                    val questions = state.draft.followUpQuestions
                     val answers = remember { mutableStateListOf(*Array(questions.size) { "" }) }
 
                     Column(modifier = Modifier.fillMaxSize()) {
@@ -155,7 +179,7 @@ fun OnboardingScreens(
                                 val clarificationAnswers = questions.mapIndexed { index, question ->
                                     ClarificationAnswer(question, answers[index])
                                 }
-                                onSubmitClarifications(uiState.originalDescription, clarificationAnswers)
+                                onSubmitClarifications(state.originalDescription, clarificationAnswers)
                             },
                             enabled = answers.any { it.isNotBlank() },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -167,7 +191,7 @@ fun OnboardingScreens(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         TextButton(
-                            onClick = { onSkipClarification(uiState.draft) },
+                            onClick = { onSkipClarification(state.draft) },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Skip and continue")
@@ -175,7 +199,7 @@ fun OnboardingScreens(
                     }
                 }
                 is OnboardingUiState.DraftReady -> {
-                    val draft = uiState.draft
+                    val draft = state.draft
                     Column(modifier = Modifier.fillMaxSize()) {
                         Text("Review your profile", style = MaterialTheme.typography.headlineLarge)
                         Text("This is how customers will see your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -231,7 +255,7 @@ fun OnboardingScreens(
                         showSkip = false,
                         isLoading = false,
                         error = null,
-                        onPickImage = { onPickPhoto(uiState.draft) },
+                        onPickImage = { onPickPhoto(state.draft) },
                         onSkip = null,
                     )
                 }
@@ -258,14 +282,14 @@ fun OnboardingScreens(
                         )
 
                         Button(
-                            onClick = { onSubmitKnownName(knownNameInput.trim().ifBlank { null }, uiState.draft) },
+                            onClick = { onSubmitKnownName(knownNameInput.trim().ifBlank { null }, state.draft) },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text("Continue")
                         }
 
                         TextButton(
-                            onClick = { onSubmitKnownName(null, uiState.draft) },
+                            onClick = { onSubmitKnownName(null, state.draft) },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text("Skip")
@@ -285,7 +309,7 @@ fun OnboardingScreens(
                         Spacer(modifier = Modifier.height(32.dp))
 
                         Button(
-                            onClick = { onFinish(uiState.profile) },
+                            onClick = { onFinish(state.profile) },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = MaterialTheme.shapes.medium
                         ) {
@@ -301,7 +325,7 @@ fun OnboardingScreens(
                     ) {
                         Text("❌", style = MaterialTheme.typography.displayLarge)
                         Text("Something went wrong", style = MaterialTheme.typography.headlineSmall)
-                        Text(uiState.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+                        Text(state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
 
                         Spacer(modifier = Modifier.height(24.dp))
 
@@ -310,6 +334,7 @@ fun OnboardingScreens(
                         }
                     }
                 }
+            }
             }
         }               // end Column
     }                   // end Box
