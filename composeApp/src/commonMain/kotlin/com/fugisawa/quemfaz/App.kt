@@ -325,7 +325,8 @@ fun MainFlow(
                             currentProfileId = id
                             navigateTo(Screen.ProfessionalProfile)
                         },
-                        onRetry = { favoritesViewModel.loadFavorites() }
+                        onRetry = { favoritesViewModel.loadFavorites() },
+                        onFindProfessionals = { navigateToTab(Screen.Home) },
                     )
                 }
                 is Screen.MyProfile -> {

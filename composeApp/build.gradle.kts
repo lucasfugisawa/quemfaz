@@ -38,7 +38,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.compose.materialIconsCore)
-            // implementation(libs.compose.materialIconsExtended)
+            implementation(libs.compose.materialIconsExtended)
             implementation(projects.shared)
 
             // Ktor client

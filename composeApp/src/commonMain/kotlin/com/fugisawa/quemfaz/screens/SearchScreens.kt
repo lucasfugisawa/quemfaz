@@ -10,7 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -69,7 +72,24 @@ fun SearchResultsScreen(
 
                     if (uiState.response.results.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No professionals found.")
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                                modifier = Modifier.padding(horizontal = Spacing.lg),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Search,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(Spacing.emptyStateIconSize),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text("No professionals found", style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    "Try a different search term or city.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     } else {
                         LazyColumn(contentPadding = PaddingValues(Spacing.md)) {

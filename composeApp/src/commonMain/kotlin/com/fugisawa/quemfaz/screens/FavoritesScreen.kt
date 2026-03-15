@@ -7,6 +7,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import com.fugisawa.quemfaz.ui.components.ErrorMessage
 import com.fugisawa.quemfaz.ui.components.FullScreenLoading
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
@@ -18,7 +24,8 @@ import com.fugisawa.quemfaz.ui.theme.Spacing
 fun FavoritesScreen(
     uiState: FavoritesUiState,
     onProfileClick: (String) -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onFindProfessionals: (() -> Unit)? = null,
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(Spacing.md)) {
         Text("Favorites", style = MaterialTheme.typography.headlineSmall)
@@ -36,16 +43,28 @@ fun FavoritesScreen(
             }
             is FavoritesUiState.Empty -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("⭐", style = MaterialTheme.typography.displayMedium)
-                        Spacer(modifier = Modifier.height(Spacing.sm))
-                        Text("No favorites yet", style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.height(Spacing.xs))
-                        Text(
-                            "Professionals you favorite will appear here.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.FavoriteBorder,
+                            contentDescription = null,
+                            modifier = Modifier.size(Spacing.emptyStateIconSize),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        Text("No favorites yet", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Professionals you save will appear here.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        if (onFindProfessionals != null) {
+                            Spacer(modifier = Modifier.height(Spacing.xs))
+                            Button(onClick = onFindProfessionals) {
+                                Text("Find professionals")
+                            }
+                        }
                     }
                 }
             }
