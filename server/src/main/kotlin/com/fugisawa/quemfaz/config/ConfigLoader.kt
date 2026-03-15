@@ -60,6 +60,10 @@ object ConfigLoader {
                 AdminConfig(
                     adminUserIds = ktorConfig.propertyOrNull("admin.userIds")?.getList() ?: emptyList(),
                 ),
+            llm =
+                LlmConfig(
+                    timeoutMs = ktorConfig.propertyOrNull("llm.timeoutMs")?.getString()?.toLong() ?: 8000L,
+                ),
         )
     }
 }

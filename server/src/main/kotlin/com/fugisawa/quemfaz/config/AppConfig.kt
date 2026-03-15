@@ -9,6 +9,7 @@ data class AppConfig(
     val otp: OtpConfig,
     val jwt: JwtConfig,
     val admin: AdminConfig,
+    val llm: LlmConfig,
 )
 
 data class AdminConfig(
@@ -50,4 +51,8 @@ data class AwsSmsConfig(
 data class OtpConfig(
     val codeLength: Int = 6,
     val expirationMinutes: Int = 5,
+)
+
+data class LlmConfig(
+    val timeoutMs: Long = 8000L,
 )
