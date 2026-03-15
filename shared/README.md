@@ -81,7 +81,10 @@ UserProfileResponse(id, phone, name, photoUrl, cityName, status)
 CreateProfessionalProfileDraftRequest(rawInput: String, inputMode: InputMode)
 CreateProfessionalProfileDraftResponse(draft: InterpretedServiceDto, ...)
 ConfirmProfessionalProfileRequest(...)
-ProfessionalProfileResponse(id, userId, services, city, neighborhoods, ...)
+ProfessionalProfileResponse(id, userId, services, city, neighborhoods, ...,
+    contactCount: Int,        // engagement: number of contact clicks
+    daysSinceActive: Int?,    // days since last activity (null if never active)
+)
 ```
 
 ### Search

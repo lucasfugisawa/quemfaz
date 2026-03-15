@@ -37,7 +37,7 @@ src/main/kotlin/com/fugisawa/quemfaz/
 
 src/main/resources/
 ├── application.conf            HOCON config with environment variable overrides
-├── db/migration/               Flyway SQL migration files (V1–V6)
+├── db/migration/               Flyway SQL migration files (V1–V9)
 └── logback.xml                 Logging config
 ```
 
@@ -128,6 +128,9 @@ Schema is managed exclusively via Flyway migrations. Never alter the schema with
 | V4 | Search query event tracking |
 | V5 | Favorites, contact clicks, profile reports |
 | V6 | Profile view events |
+| V7 | Refresh tokens |
+| V8 | Onboarding refactor |
+| V9 | Engagement counters (`view_count`, `contact_click_count` on `professional_profiles`) |
 
 Migration files: `src/main/resources/db/migration/`
 
