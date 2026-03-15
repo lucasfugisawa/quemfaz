@@ -57,7 +57,14 @@ class SearchProfessionalsService(
         // 4. Rank profiles
         val ranked = rankingService.rank(candidates, interpreted)
 
-        // 5. Map to response
+        // 5. Paginate (in-memory slice — DB still returns all candidates)
+        // TODO: move pagination to DB query when result sets grow large
+        val page = request.page.coerceAtLeast(0)
+        val pageSize = request.pageSize.coerceIn(1, 100)
+        val totalCount = ranked.size
+        val pagedResults = ranked.drop(page * pageSize).take(pageSize)
+
+        // 6. Map to response
         return SearchProfessionalsResponse(
             normalizedQuery = interpreted.normalizedQuery,
             interpretedServices =
@@ -66,10 +73,13 @@ class SearchProfessionalsService(
                     InterpretedServiceDto(serviceId, canonical?.displayName ?: serviceId, "PRIMARY")
                 },
             results =
-                ranked.map { profile ->
+                pagedResults.map { profile ->
                     val user = userRepository.findById(profile.userId)
                     mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl)
                 },
+            page = page,
+            pageSize = pageSize,
+            totalCount = totalCount,
         )
     }
 

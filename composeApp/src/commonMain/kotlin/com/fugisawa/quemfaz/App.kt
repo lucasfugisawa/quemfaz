@@ -166,6 +166,7 @@ fun MainFlow(
     val homeViewModel: HomeViewModel = koinInject()
     val searchUiState by homeViewModel.searchUiState.collectAsState()
     val favoritedProfileIds by homeViewModel.favoritedProfileIds.collectAsState()
+    val hasMoreResults by homeViewModel.hasMore.collectAsState()
 
     LaunchedEffect(homeViewModel) {
         homeViewModel.toastMessage.collect { message ->
@@ -276,7 +277,9 @@ fun MainFlow(
                             currentProfileId = id
                             navigateTo(Screen.ProfessionalProfile)
                         },
-                        onNavigateBack = navigateBack
+                        onNavigateBack = navigateBack,
+                        hasMore = hasMoreResults,
+                        onLoadMore = { homeViewModel.loadMoreResults() },
                     )
                 }
                 is Screen.ProfessionalProfile -> {

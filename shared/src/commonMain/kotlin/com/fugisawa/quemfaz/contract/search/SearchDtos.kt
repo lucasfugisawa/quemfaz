@@ -9,12 +9,17 @@ import kotlinx.serialization.Serializable
 data class SearchProfessionalsRequest(
     val query: String,
     val cityName: String?,
-    val inputMode: InputMode
+    val inputMode: InputMode,
+    val page: Int = 0,
+    val pageSize: Int = 20,
 )
 
 @Serializable
 data class SearchProfessionalsResponse(
     val normalizedQuery: String,
     val interpretedServices: List<InterpretedServiceDto>,
-    val results: List<ProfessionalProfileResponse>
+    val results: List<ProfessionalProfileResponse>,
+    val page: Int,
+    val pageSize: Int,
+    val totalCount: Int,
 )

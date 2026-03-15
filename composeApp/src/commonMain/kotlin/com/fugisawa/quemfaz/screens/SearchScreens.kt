@@ -31,7 +31,9 @@ fun SearchResultsScreen(
     favoritedProfileIds: Set<String> = emptySet(),
     onFavoriteToggle: (profileId: String) -> Unit = {},
     onProfileClick: (String) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    hasMore: Boolean = false,
+    onLoadMore: () -> Unit = {},
 ) {
     AppScreen(title = "Results for \"$query\"", onNavigateBack = onNavigateBack) {
         when (uiState) {
@@ -67,6 +69,20 @@ fun SearchResultsScreen(
                                     onFavoriteToggle = { onFavoriteToggle(profile.id) }
                                 )
                                 Spacer(modifier = Modifier.height(Spacing.sm))
+                            }
+                            if (hasMore) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(Spacing.md),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Button(onClick = onLoadMore) {
+                                            Text("Load more")
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

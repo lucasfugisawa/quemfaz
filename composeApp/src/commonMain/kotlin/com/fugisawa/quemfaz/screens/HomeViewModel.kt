@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fugisawa.quemfaz.contract.profile.InputMode
+import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsResponse
 import com.fugisawa.quemfaz.network.FeatureApiClients
@@ -39,8 +40,16 @@ class HomeViewModel(
     private val _favoritedProfileIds = MutableStateFlow<Set<String>>(emptySet())
     val favoritedProfileIds: StateFlow<Set<String>> = _favoritedProfileIds.asStateFlow()
 
+    private val _hasMore = MutableStateFlow(false)
+    val hasMore: StateFlow<Boolean> = _hasMore.asStateFlow()
+
+    // Pagination state — managed internally, reset on each new search
+    private var lastQuery: String = ""
+    private var currentPage: Int = 0
+    private val _accumulatedResults = MutableStateFlow<List<ProfessionalProfileResponse>>(emptyList())
+
     val currentCity = sessionManager.currentCity
-    
+
     val showEarnMoneyCard = sessionManager.currentUser
         .map { it?.hasProfessionalProfile != true }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -53,26 +62,44 @@ class HomeViewModel(
 
     fun search(query: String) {
         if (query.isBlank()) return
+        lastQuery = query
+        currentPage = 0
+        _accumulatedResults.value = emptyList()
+        executeSearch(page = 0)
+    }
 
+    fun loadMoreResults() {
+        val nextPage = currentPage + 1
+        currentPage = nextPage
+        executeSearch(page = nextPage)
+    }
+
+    private fun executeSearch(page: Int) {
         viewModelScope.launch {
-            _searchUiState.value = SearchUiState.Loading
+            if (page == 0) _searchUiState.value = SearchUiState.Loading
             try {
                 val response = apiClients.search(
                     SearchProfessionalsRequest(
-                        query = query,
+                        query = lastQuery,
                         cityName = currentCity.value,
-                        inputMode = InputMode.TEXT
+                        inputMode = InputMode.TEXT,
+                        page = page,
+                        pageSize = 20,
                     )
                 )
-                _searchUiState.value = SearchUiState.Success(response)
+                val accumulated = if (page == 0) response.results
+                                  else _accumulatedResults.value + response.results
+                _accumulatedResults.value = accumulated
+                _hasMore.value = accumulated.size < response.totalCount
+                _searchUiState.value = SearchUiState.Success(
+                    response.copy(results = accumulated)
+                )
                 // Load favorites to show inline favorite state on search results cards.
-                // Non-critical: failures are silent — the cards just show unfavorited state.
+                // Non-critical: failures are silent.
                 try {
                     val favs = apiClients.getFavorites()
                     _favoritedProfileIds.value = favs.favorites.map { it.id }.toSet()
-                } catch (_: Exception) {
-                    // Non-critical — favorite state on results defaults to empty
-                }
+                } catch (_: Exception) { }
             } catch (e: Exception) {
                 _searchUiState.value = SearchUiState.Error(e.message ?: "Search failed")
             }
@@ -83,7 +110,6 @@ class HomeViewModel(
         val current = _favoritedProfileIds.value
         val isCurrentlyFavorited = profileId in current
 
-        // Optimistic update — flip state immediately before network call
         _favoritedProfileIds.value = if (isCurrentlyFavorited) current - profileId else current + profileId
 
         viewModelScope.launch {
@@ -96,7 +122,6 @@ class HomeViewModel(
                     _toastMessage.emit("Added to favorites")
                 }
             } catch (e: Exception) {
-                // Revert optimistic update on failure
                 _favoritedProfileIds.value = current
                 _toastMessage.emit("Could not update favorites. Try again.")
             }

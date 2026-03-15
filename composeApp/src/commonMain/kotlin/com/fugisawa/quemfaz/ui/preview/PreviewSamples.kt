@@ -83,12 +83,18 @@ object PreviewSamples {
         normalizedQuery = "plumber",
         interpretedServices = sampleServices.take(1),
         results = listOf(sampleProfile, sampleProfile2, sampleProfileMinimal),
+        page = 0,
+        pageSize = 20,
+        totalCount = 3,
     )
 
     val sampleSearchResponseEmpty = SearchProfessionalsResponse(
         normalizedQuery = "underwater basket weaving",
         interpretedServices = emptyList(),
         results = emptyList(),
+        page = 0,
+        pageSize = 20,
+        totalCount = 0,
     )
 
     val sampleDraftResponse = CreateProfessionalProfileDraftResponse(
