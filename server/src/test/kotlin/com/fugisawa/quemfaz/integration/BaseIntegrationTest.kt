@@ -188,7 +188,7 @@ abstract class BaseIntegrationTest {
         client.post("/professional-profile/confirm") {
             contentType(ContentType.Application.Json)
             setBody(ConfirmProfessionalProfileRequest(
-                normalizedDescription = draft.normalizedDescription,
+                description = draft.normalizedDescription,
                 selectedServiceIds = draft.interpretedServices.map { it.serviceId },
                 cityName = "São Paulo",
                 contactPhone = "+5511999999999",

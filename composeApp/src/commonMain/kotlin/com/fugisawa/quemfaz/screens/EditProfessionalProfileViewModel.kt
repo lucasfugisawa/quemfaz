@@ -54,7 +54,7 @@ class EditProfessionalProfileViewModel(
             try {
                 val updated = apiClients.updateMyProfessionalProfile(
                     ConfirmProfessionalProfileRequest(
-                        normalizedDescription = description,
+                        description = description,
                         selectedServiceIds = current.services.map { it.serviceId },
                         cityName = cityName.ifBlank { null },
                         contactPhone = contactPhone,

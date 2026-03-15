@@ -76,7 +76,7 @@ class ConfirmProfessionalProfileService(
 
         val completeness =
             if (
-                request.normalizedDescription.isNotBlank() &&
+                request.description.isNotBlank() &&
                 request.selectedServiceIds.isNotEmpty() &&
                 !request.cityName.isNullOrBlank() &&
                 request.contactPhone.isNotBlank()
@@ -91,8 +91,8 @@ class ConfirmProfessionalProfileService(
                 id = profileId,
                 userId = userId,
                 knownName = null,
-                description = request.normalizedDescription,
-                normalizedDescription = request.normalizedDescription,
+                description = request.description,
+                normalizedDescription = request.description,
                 contactPhone = request.contactPhone,
                 whatsappPhone = request.whatsAppPhone,
                 cityName = request.cityName,
@@ -173,7 +173,7 @@ class UpdateProfessionalProfileService(
 
         val completeness =
             if (
-                request.normalizedDescription.isNotBlank() &&
+                request.description.isNotBlank() &&
                 request.selectedServiceIds.isNotEmpty() &&
                 !request.cityName.isNullOrBlank() &&
                 request.contactPhone.isNotBlank()
@@ -185,8 +185,8 @@ class UpdateProfessionalProfileService(
 
         val updated =
             existing.copy(
-                description = request.normalizedDescription,
-                normalizedDescription = request.normalizedDescription,
+                description = request.description,
+                normalizedDescription = request.description,
                 contactPhone = request.contactPhone,
                 whatsappPhone = request.whatsAppPhone,
                 cityName = request.cityName,

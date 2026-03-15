@@ -50,7 +50,7 @@ data class ClarifyDraftRequest(
 
 @Serializable
 data class ConfirmProfessionalProfileRequest(
-    val normalizedDescription: String,
+    val description: String,
     val selectedServiceIds: List<String>,
     val cityName: String?,
     val contactPhone: String,

@@ -159,7 +159,7 @@ class OnboardingViewModel(
             try {
                 val response = apiClients.confirmProfile(
                     ConfirmProfessionalProfileRequest(
-                        normalizedDescription = draft.normalizedDescription,
+                        description = draft.normalizedDescription,
                         selectedServiceIds = draft.interpretedServices.map { it.serviceId },
                         cityName = _selectedCity.value,
                         contactPhone = "",

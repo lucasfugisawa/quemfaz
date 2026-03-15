@@ -110,7 +110,7 @@ class ProfileServicesTest {
         val service = ConfirmProfessionalProfileService(profileRepo, userRepo, mock())
         val request =
             ConfirmProfessionalProfileRequest(
-                normalizedDescription = "Pintor experiente",
+                description = "Pintor experiente",
                 selectedServiceIds = listOf("paint-residential"),
                 cityName = "Batatais",
                 contactPhone = "16999999999",
@@ -141,7 +141,7 @@ class ProfileServicesTest {
         confirmService.execute(
             userId,
             ConfirmProfessionalProfileRequest(
-                normalizedDescription = "Pintor experiente",
+                description = "Pintor experiente",
                 selectedServiceIds = listOf("paint-residential"),
                 cityName = "Batatais",
                 contactPhone = "16999999999",
@@ -155,7 +155,7 @@ class ProfileServicesTest {
             updateService.execute(
                 userId,
                 ConfirmProfessionalProfileRequest(
-                    normalizedDescription = "Pintor e eletricista",
+                    description = "Pintor e eletricista",
                     selectedServiceIds = listOf("paint-residential", "electrical-residential"),
                     cityName = "Batatais",
                     contactPhone = "16988888888",
@@ -188,7 +188,7 @@ class ProfileServicesTest {
             service.execute(
                 userId,
                 ConfirmProfessionalProfileRequest(
-                    normalizedDescription = "Desc",
+                    description = "Desc",
                     selectedServiceIds = listOf("paint-residential"),
                     cityName = "Batatais",
                     contactPhone = "16999999999",
@@ -234,7 +234,7 @@ class ProfileServicesTest {
             service.execute(
                 userId,
                 ConfirmProfessionalProfileRequest(
-                    normalizedDescription = "New desc",
+                    description = "New desc",
                     selectedServiceIds = listOf("paint-residential"),
                     cityName = "Batatais",
                     contactPhone = "16999999999",
