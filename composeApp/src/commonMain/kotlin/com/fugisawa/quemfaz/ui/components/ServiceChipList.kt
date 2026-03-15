@@ -19,6 +19,8 @@ import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
+private const val MATCH_LEVEL_PRIMARY = "PRIMARY"
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ServiceChipList(
@@ -31,7 +33,7 @@ fun ServiceChipList(
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
     ) {
         services.take(maxItems).forEach { service ->
-            val isPrimary = service.matchLevel == "PRIMARY"
+            val isPrimary = service.matchLevel == MATCH_LEVEL_PRIMARY
             SuggestionChip(
                 onClick = {},
                 label = { Text(service.displayName) },

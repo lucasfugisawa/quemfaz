@@ -142,7 +142,7 @@ fun ProfessionalCard(
                 ProfileAvatar(
                     name = profile.knownName ?: "${profile.firstName} ${profile.lastName}",
                     photoUrl = profile.photoUrl,
-                    size = 72.dp
+                    size = Spacing.professionalAvatarSize
                 )
                 Spacer(modifier = Modifier.width(Spacing.sm + Spacing.xs))
                 Column(modifier = Modifier.weight(1f)) {
@@ -190,7 +190,7 @@ fun ProfessionalCardSkeleton() {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ShimmerBox(
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(Spacing.professionalAvatarSize)
                         .clip(CircleShape)
                 )
                 Spacer(modifier = Modifier.width(Spacing.sm + Spacing.xs))

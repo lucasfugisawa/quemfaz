@@ -24,6 +24,9 @@ import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 import org.koin.compose.koinInject
 
+// Maps each state to its step ordinal for slide direction detection.
+// Idle and NeedsClarification share index 1 — transitions between them always pass
+// through Loading (which triggers a fade), so the same-index == forward shortcut is safe.
 private fun OnboardingUiState.stepIndex() = when (this) {
     is OnboardingUiState.Idle -> 1
     is OnboardingUiState.NeedsClarification -> 1

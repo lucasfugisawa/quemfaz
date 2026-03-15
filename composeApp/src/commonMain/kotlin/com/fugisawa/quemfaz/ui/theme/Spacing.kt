@@ -15,6 +15,7 @@ object Spacing {
     val md = 16.dp
     val lg = 24.dp
     val xl = 48.dp
+    val professionalAvatarSize = 72.dp
     val portfolioPhotoSize = 96.dp
     val emptyStateIconSize = 80.dp
     val stickyBarBottomPadding = 88.dp
