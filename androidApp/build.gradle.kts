@@ -50,3 +50,49 @@ dependencies {
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
 }
+
+// Set up adb reverse port forwarding so physical devices can reach the local backend.
+// This runs automatically before each debug install — no manual `adb reverse` needed.
+abstract class AdbReverseTask : DefaultTask() {
+    @get:Input abstract val adb: Property<String>
+    @get:Input abstract val port: Property<Int>
+
+    @TaskAction
+    fun run() {
+        val adbPath = adb.get()
+        val serverPort = port.get()
+
+        val devicesProc = ProcessBuilder(adbPath, "devices")
+            .redirectErrorStream(true).start()
+        val devicesOutput = devicesProc.inputStream.bufferedReader().readText()
+        devicesProc.waitFor()
+
+        val serials = devicesOutput.lineSequence()
+            .drop(1)
+            .map { it.trim() }
+            .filter { it.endsWith("device") }
+            .map { it.substringBefore("\t") }
+            .toList()
+
+        for (serial in serials) {
+            val proc = ProcessBuilder(adbPath, "-s", serial, "reverse", "tcp:$serverPort", "tcp:$serverPort")
+                .redirectErrorStream(true).start()
+            proc.waitFor()
+            println("adb reverse tcp:$serverPort on $serial")
+        }
+        if (serials.isEmpty()) {
+            println("WARNING: No connected devices found — skipping adb reverse")
+        }
+    }
+}
+
+tasks.register<AdbReverseTask>("adbReverseLocalServer") {
+    adb.set(android.adbExecutable.absolutePath)
+    port.set(8080)
+}
+
+afterEvaluate {
+    tasks.matching { it.name.startsWith("install") && it.name.contains("Debug") }.configureEach {
+        dependsOn("adbReverseLocalServer")
+    }
+}
