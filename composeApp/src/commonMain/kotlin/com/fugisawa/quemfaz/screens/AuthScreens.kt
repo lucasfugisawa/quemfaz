@@ -12,12 +12,49 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
+
+private class BrazilianPhoneTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val digits = text.text  // already filtered to digits, max 11
+
+        val formatted = buildString {
+            for (i in digits.indices) {
+                if (i == 0) append("(")
+                append(digits[i])
+                if (i == 1) append(") ")
+                if (i == 6) append("-")
+            }
+        }
+
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int = when {
+                offset <= 1 -> minOf(offset + 1, formatted.length)
+                offset <= 6 -> minOf(offset + 3, formatted.length)
+                else        -> minOf(offset + 4, formatted.length)
+            }
+            override fun transformedToOriginal(offset: Int): Int = when {
+                offset <= 0 -> 0
+                offset <= 2 -> offset - 1
+                offset <= 4 -> 2
+                offset <= 9 -> offset - 3
+                offset <= 10 -> 7
+                else -> minOf(offset - 4, digits.length)
+            }
+        }
+
+        return TransformedText(AnnotatedString(formatted), offsetMapping)
+    }
+}
 
 @Composable
 fun PhoneLoginScreen(
@@ -38,12 +75,14 @@ fun PhoneLoginScreen(
             
             OutlinedTextField(
                 value = phone,
-                onValueChange = { phone = it },
+                onValueChange = { new -> phone = new.filter { it.isDigit() }.take(11) },
                 label = { Text("Phone Number") },
-                placeholder = { Text("+55 11 99999-9999") },
+                placeholder = { Text("(11) 99999-9999") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
+                visualTransformation = BrazilianPhoneTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             )
             
             Spacer(modifier = Modifier.height(Spacing.lg))
