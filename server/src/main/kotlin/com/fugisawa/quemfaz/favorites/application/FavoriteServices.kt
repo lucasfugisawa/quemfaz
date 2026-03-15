@@ -119,6 +119,6 @@ class ListFavoritesService(
             contactPhone = profile.contactPhone ?: "",
             portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
             contactCount = profile.contactClickCount,
-            daysSinceActive = java.time.temporal.ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),
+            daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),
         )
 }
