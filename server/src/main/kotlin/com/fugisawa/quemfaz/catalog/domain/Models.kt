@@ -18,7 +18,8 @@ enum class CatalogServiceStatus {
 
     companion object {
         fun fromDbValue(value: String): CatalogServiceStatus =
-            entries.first { it.name.equals(value, ignoreCase = true) }
+            entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
+                ?: error("Unknown catalog service status: '$value'")
     }
 }
 

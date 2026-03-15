@@ -147,8 +147,8 @@ class ExposedCatalogRepository : CatalogRepository {
         val now = Instant.now()
         CanonicalServicesTable.update({ CanonicalServicesTable.id eq serviceId }) {
             it[status] = newStatus.toDbValue()
-            it[reviewStatusReason] = reason
-            it[CanonicalServicesTable.reviewedBy] = reviewedBy
+            if (reason != null) it[reviewStatusReason] = reason
+            if (reviewedBy != null) it[CanonicalServicesTable.reviewedBy] = reviewedBy
             it[reviewedAt] = now
             it[updatedAt] = now
             if (mergedIntoServiceId != null) {
