@@ -90,6 +90,7 @@ A single Kotlin object with nested objects per feature area:
 ```kotlin
 object Strings {
     object Common { ... }
+    object Navigation { ... }
     object Home { ... }
     object Auth { ... }
     object Onboarding { ... }
@@ -101,6 +102,7 @@ object Strings {
     object BlockedUser { ... }
     object CitySelection { ... }
     object StatusChip { ... }
+    object Errors { ... }
 }
 ```
 
@@ -109,6 +111,14 @@ Each screen/component references `Strings.FeatureName.CONSTANT` instead of hardc
 ---
 
 ## String Translations
+
+### Navigation (Bottom Bar)
+
+| Key | pt-BR |
+|---|---|
+| HOME | "Início" |
+| FAVORITES | "Favoritos" |
+| PROFILE | "Perfil" |
 
 ### Home
 
@@ -121,6 +131,9 @@ Each screen/component references `Strings.FeatureName.CONSTANT` instead of hardc
 | OFFER_SERVICES | "Ofereça seus serviços" |
 | OFFER_SERVICES_DESCRIPTION | "Descreva o que você faz — nós montamos seu perfil." |
 | DISMISS | "Dispensar" |
+| ADDED_FAVORITE | "Adicionado aos favoritos" |
+| REMOVED_FAVORITE | "Removido dos favoritos" |
+| FAVORITE_ERROR | "Não foi possível atualizar favoritos. Tente novamente." |
 
 ### Auth
 
@@ -205,6 +218,7 @@ Each screen/component references `Strings.FeatureName.CONSTANT` instead of hardc
 | REPORT_ABUSIVE | "Comportamento abusivo" |
 | REPORT_OTHER | "Outro" |
 | REPORT_BUTTON | "Denunciar" |
+| FALLBACK_TITLE | "Profissional" |
 
 ### Edit Profile
 
@@ -261,6 +275,7 @@ Each screen/component references `Strings.FeatureName.CONSTANT` instead of hardc
 
 | Key | pt-BR |
 |---|---|
+| RESULTS_TITLE | "Resultados para \"%s\"" |
 | SHOWING_RESULTS | "Resultados para: %s" |
 | NO_RESULTS_TITLE | "Nenhum profissional encontrado" |
 | NO_RESULTS_SUBTITLE | "Tente buscar por outro serviço ou cidade." |
@@ -304,13 +319,31 @@ Each screen/component references `Strings.FeatureName.CONSTANT` instead of hardc
 | SAVE | "Salvar" |
 | BACK | "Voltar" |
 
+### Errors (ViewModel user-facing error messages)
+
+| Key | pt-BR |
+|---|---|
+| INVALID_OTP | "Código inválido" |
+| NAME_REQUIRED | "O nome é obrigatório" |
+| UNKNOWN_ERROR | "Erro desconhecido" |
+| FAILED_SAVE_NAME | "Não foi possível salvar o nome" |
+| FAILED_UPLOAD_PHOTO | "Não foi possível enviar a foto" |
+| FAILED_CREATE_DRAFT | "Não foi possível criar o rascunho" |
+| FAILED_PROCESS_CLARIFICATIONS | "Não foi possível processar as respostas" |
+| FAILED_PUBLISH_PROFILE | "Não foi possível publicar o perfil" |
+| FAILED_LOAD_PROFILE | "Não foi possível carregar o perfil" |
+| FAILED_SAVE_PROFILE | "Não foi possível salvar o perfil" |
+| FAILED_LOAD_FAVORITES | "Não foi possível carregar os favoritos" |
+| SEARCH_FAILED | "A busca falhou" |
+
 ---
 
 ## Implementation Notes
 
 1. **`Strings.kt` location:** `composeApp/src/commonMain/kotlin/com/fugisawa/quemfaz/ui/strings/Strings.kt`
-2. **String formatting:** Use `String.format()` or Kotlin string templates for dynamic values (e.g., `STEP_INDICATOR.format(currentStep)`)
-3. **Report reason display names:** The `toDisplayName()` extension in `shared/` should reference `Strings.Profile` constants, or the mapping should move to `composeApp/` to keep `shared/` language-agnostic
-4. **Already-Portuguese strings:** Some screens already have Portuguese strings — these will be normalized to use `Strings.*` references like everything else
-5. **Content descriptions:** Accessibility strings are also translated for screen reader users
-6. **Server messages:** Remain in English — the client handles all user-facing error presentation
+2. **String formatting:** Since `String.format()` is a JVM-only API, dynamic strings should use Kotlin functions — e.g., `fun otpSubtitle(phone: String) = "Digite o código enviado para $phone"` or a simple `replace()` helper. Alternatively, use `const val` with `%s`/`%d` placeholders and a KMP-compatible `format()` extension.
+3. **Report reason display names:** The `toDisplayName()` extension in `ProfileScreens.kt` (composeApp) should reference `Strings.Profile` constants for report reason labels.
+4. **Already-Portuguese strings:** The following screens already have some Portuguese strings that will be normalized to use `Strings.*` references: `OnboardingScreens.kt` (service selection, profile description steps), `EditProfessionalProfileScreen.kt` (services form), `SearchScreens.kt` ("Ou navegue por categoria"). The existing Portuguese text for "clientes" will be changed to "pessoas" to match our vocabulary decisions.
+5. **Content descriptions:** Accessibility strings (contentDescription) are also translated for screen reader users.
+6. **Server messages:** Remain in English — the client handles all user-facing error presentation.
+7. **`SHOWING_RESULTS` placeholder:** The `%s` receives the joined display names of interpreted services (e.g., "Pintura · Reparos"), not the raw search query. The `RESULTS_TITLE` is a separate string used for the screen title bar and receives the raw query.
