@@ -138,7 +138,7 @@ val infrastructureModule =
         single<ProfessionalProfileRepository> { ExposedProfessionalProfileRepository() }
 
         // LLM Agent Service
-        single { LlmAgentService() }
+        single { LlmAgentService(timeoutMs = get<AppConfig>().llm.timeoutMs) }
 
         // Professional Profile Interpretation
         single<ProfessionalInputInterpreter> { LlmProfessionalInputInterpreter(get()) }

@@ -13,7 +13,7 @@ class LlmSearchQueryInterpreterTest {
         response: Any? = null,
         exception: Exception? = null,
     ): LlmAgentService {
-        return object : LlmAgentService(mock()) {
+        return object : LlmAgentService(mock(), 8000L) {
             @Suppress("UNCHECKED_CAST")
             override suspend fun <T> executeStructured(
                 systemPrompt: String,

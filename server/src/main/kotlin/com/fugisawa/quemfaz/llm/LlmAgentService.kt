@@ -5,16 +5,18 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.structure.executeStructured
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 import org.slf4j.LoggerFactory
 
 open class LlmAgentService(
     @PublishedApi internal val promptExecutor: PromptExecutor,
+    private val timeoutMs: Long = 8000L,
 ) {
     private val logger = LoggerFactory.getLogger(LlmAgentService::class.java)
 
-    constructor() : this(createExecutor())
+    constructor(timeoutMs: Long = 8000L) : this(createExecutor(), timeoutMs)
 
     open suspend fun <T> executeStructured(
         systemPrompt: String,
@@ -22,15 +24,17 @@ open class LlmAgentService(
         serializer: KSerializer<T>,
     ): T {
         val result =
-            promptExecutor.executeStructured(
-                prompt =
-                    prompt("quemfaz-structured") {
-                        system(systemPrompt)
-                        user(userMessage)
-                    },
-                model = OpenAIModels.Chat.GPT4oMini,
-                serializer = serializer,
-            )
+            withTimeout(timeoutMs) {
+                promptExecutor.executeStructured(
+                    prompt =
+                        prompt("quemfaz-structured") {
+                            system(systemPrompt)
+                            user(userMessage)
+                        },
+                    model = OpenAIModels.Chat.GPT4oMini,
+                    serializer = serializer,
+                )
+            }
         return result.getOrThrow().data
     }
 
