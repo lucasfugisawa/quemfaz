@@ -109,7 +109,8 @@ fun ProfessionalProfileScreen(
 
                     StatusChipRow(
                         activeRecently = profile.activeRecently,
-                        profileComplete = profile.profileComplete
+                        profileComplete = profile.profileComplete,
+                        daysSinceActive = profile.daysSinceActive,
                     )
                     if (profile.activeRecently || profile.profileComplete) {
                         Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))

@@ -12,13 +12,27 @@ import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
 @Composable
-fun StatusChipRow(activeRecently: Boolean, profileComplete: Boolean) {
-    if (!activeRecently && !profileComplete) return
+fun StatusChipRow(
+    activeRecently: Boolean,
+    profileComplete: Boolean,
+    daysSinceActive: Int? = null,
+) {
+    val activityText = when {
+        daysSinceActive == 0 -> "Active today"
+        daysSinceActive == 1 -> "Active yesterday"
+        daysSinceActive != null && daysSinceActive in 2..7 -> "Active $daysSinceActive days ago"
+        daysSinceActive != null && daysSinceActive in 8..30 -> "Active this month"
+        daysSinceActive != null && daysSinceActive >= 31 -> null  // spec: 31+ → hidden
+        activeRecently -> "Active recently"  // fallback for old responses without daysSinceActive
+        else -> null
+    }
+    val showActivity = activityText != null
+    if (!showActivity && !profileComplete) return
     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-        if (activeRecently) {
+        if (activityText != null) {
             SuggestionChip(
                 onClick = {},
-                label = { Text("Active recently", style = MaterialTheme.typography.labelSmall) }
+                label = { Text(activityText, style = MaterialTheme.typography.labelSmall) }
             )
         }
         if (profileComplete) {
@@ -35,11 +49,11 @@ fun StatusChipRow(activeRecently: Boolean, profileComplete: Boolean) {
 @LightDarkPreview
 @Composable
 private fun StatusChipRowBothPreview() {
-    AppTheme { Surface { StatusChipRow(activeRecently = true, profileComplete = true) } }
+    AppTheme { Surface { StatusChipRow(activeRecently = true, profileComplete = true, daysSinceActive = 0) } }
 }
 
 @LightDarkPreview
 @Composable
 private fun StatusChipRowActiveOnlyPreview() {
-    AppTheme { Surface { StatusChipRow(activeRecently = true, profileComplete = false) } }
+    AppTheme { Surface { StatusChipRow(activeRecently = true, profileComplete = false, daysSinceActive = 3) } }
 }
