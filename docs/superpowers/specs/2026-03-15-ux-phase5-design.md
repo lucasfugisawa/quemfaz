@@ -43,7 +43,7 @@ The engagement tracking infrastructure (profile views, contact clicks) was built
 
 ### Design
 
-**Database migration (V8):** Add denormalized counters to `professional_profiles`:
+**Database migration (V9):** Add denormalized counters to `professional_profiles`:
 
 ```sql
 ALTER TABLE professional_profiles
@@ -82,13 +82,12 @@ ALTER TABLE professional_profiles
 
 ### Files
 
-- **Create:** `server/src/main/resources/db/migration/V8__engagement_counters.sql`
-- **Modify:** `server/.../engagement/application/TrackProfileViewService.kt` — increment counter + update `lastActiveAt`
-- **Modify:** `server/.../engagement/application/TrackContactClickService.kt` — increment counter + update `lastActiveAt`
-- **Modify:** `server/.../engagement/infrastructure/ExposedProfileViewEventRepository.kt` or profile repository — add increment method
-- **Modify:** `server/.../engagement/infrastructure/ExposedContactClickEventRepository.kt` or profile repository — add increment method
+- **Create:** `server/src/main/resources/db/migration/V9__engagement_counters.sql`
+- **Modify:** `server/.../profile/domain/Models.kt` — add `viewCount`, `contactClickCount` fields to `ProfessionalProfile` data class; add `incrementEngagementCounters(id, views, clicks)` and `updateLastActiveAt(id)` to `ProfessionalProfileRepository` interface
+- **Modify:** `server/.../profile/infrastructure/ExposedProfessionalProfileRepository.kt` — implement `incrementEngagementCounters` and `updateLastActiveAt`; add `viewCount`/`contactClickCount` columns to Exposed table and `mapProfile()`
+- **Modify:** `server/.../engagement/application/TrackProfileViewService.kt` — after event insert, call `profileRepository.incrementEngagementCounters()` + `updateLastActiveAt()`
+- **Modify:** `server/.../engagement/application/TrackContactClickService.kt` — after event insert, call `profileRepository.incrementEngagementCounters()` + `updateLastActiveAt()`
 - **Modify:** `server/.../search/ranking/ProfessionalSearchRankingService.kt` — add 2 new scoring factors
-- **Modify:** `server/.../profile/domain/ProfessionalProfile.kt` — add `viewCount`, `contactClickCount` fields
 - **Modify:** `shared/.../contract/profile/ProfileDtos.kt` — add `contactCount: Int` to `ProfessionalProfileResponse`
 - **Modify:** `server/.../profile/application/ProfileServices.kt` — map `contactClickCount` to `contactCount` in response
 
@@ -102,11 +101,13 @@ ALTER TABLE professional_profiles
 
 ### Design
 
-**DTO change:** Add `daysSinceActive: Int?` to `ProfessionalProfileResponse` in `shared/contract/`. Null if `lastActiveAt` is null. Computed server-side as `ChronoUnit.DAYS.between(lastActiveAt, now)`.
+**DTO change:** Add `daysSinceActive: Int?` to `ProfessionalProfileResponse` in `shared/contract/`. Computed server-side as `ChronoUnit.DAYS.between(lastActiveAt, now)`.
+
+**Nullability note:** The DB column `last_active_at` is nullable. The repository currently falls back to `createdAt` when it is null, so the domain field `lastActiveAt: Instant` is never null in practice. `daysSinceActive` will therefore always be non-null for existing profiles. However, the DTO field remains `Int?` for forward-compatibility if the fallback is ever removed.
 
 **Keep `activeRecently: Boolean`** — no breaking change. The boolean is still useful for chip visibility logic.
 
-**Server mapping:** `SearchProfessionalsService` and `ProfileServices` compute `daysSinceActive` when mapping to the response DTO. With Section 1's fix to `lastActiveAt`, this now reflects real engagement activity.
+**Server mapping:** Each service that builds `ProfessionalProfileResponse` has its own private `mapToResponse()` — there is no shared mapping function. Therefore `daysSinceActive` must be computed independently in `SearchProfessionalsService.mapToResponse()`, `ProfileServices.mapToResponse()`, and `FavoriteServices.mapToResponse()`. With Section 1's fix to `lastActiveAt`, this now reflects real engagement activity.
 
 **UI change in `StatusChipRow`** (used by `ProfessionalCard` and `ProfileHeader`):
 
@@ -121,8 +122,9 @@ ALTER TABLE professional_profiles
 ### Files
 
 - **Modify:** `shared/.../contract/profile/ProfileDtos.kt` — add `daysSinceActive: Int?`
-- **Modify:** `server/.../search/application/SearchProfessionalsService.kt` — compute `daysSinceActive`
-- **Modify:** `server/.../profile/application/ProfileServices.kt` — compute `daysSinceActive`
+- **Modify:** `server/.../search/application/SearchProfessionalsService.kt` — compute `daysSinceActive` in `mapToResponse()`
+- **Modify:** `server/.../profile/application/ProfileServices.kt` — compute `daysSinceActive` in `mapToResponse()`
+- **Modify:** `server/.../favorites/application/FavoriteServices.kt` — compute `daysSinceActive` in `mapToResponse()`
 - **Modify:** `composeApp/.../ui/components/StatusChipRow.kt` — accept `daysSinceActive`, display granular text
 
 ---
@@ -143,7 +145,7 @@ private data class CachedSearch(
     val accumulatedResults: List<ProfessionalProfileResponse>,
     val currentPage: Int,
     val hasMore: Boolean,
-    val timestamp: Long,  // System.currentTimeMillis()
+    val timestamp: Long,  // kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
 )
 
 private val searchCache = LinkedHashMap<String, CachedSearch>(5, 0.75f, true)
@@ -151,16 +153,18 @@ private val searchCache = LinkedHashMap<String, CachedSearch>(5, 0.75f, true)
 
 **Cache key:** `"$query:$cityName"` (normalized lowercase).
 
+**Timestamps use `kotlinx.datetime.Clock.System.now().toEpochMilliseconds()`** — KMP-safe alternative to `System.currentTimeMillis()` which is JVM-only and unavailable in `commonMain`.
+
 **TTL:** 10 minutes. On `search(query)`:
 1. Compute cache key.
-2. If entry exists and `System.currentTimeMillis() - entry.timestamp < 600_000`: restore UI state from cache (set Success, restore accumulated results, page number, hasMore). Return without server call.
+2. If entry exists and `Clock.System.now().toEpochMilliseconds() - entry.timestamp < 600_000`: restore UI state from cache (set Success, restore accumulated results, page number, hasMore). Return without server call.
 3. Otherwise: fetch from server, store result in cache. Evict oldest entry if cache exceeds 5 entries.
 
 **`loadMoreResults()` updates the cache entry** — the cached entry is replaced with the new accumulated results and incremented page number.
 
 **Cache invalidation:**
 - Clear entire cache on `toggleFavoriteFromSearch()` (favorited state would be stale in cached results)
-- Clear entire cache on logout (via SessionManager observation or explicit call)
+- Clear entire cache on logout: observe `sessionManager.authState` in `HomeViewModel.init {}` and call `searchCache.clear()` when state transitions to `Unauthenticated` or `Blocked`
 
 **No server or shared contract changes.**
 
@@ -210,8 +214,8 @@ No server responses include `Cache-Control` headers. All responses are treated a
 
 | Endpoint | Header | Rationale |
 |----------|--------|-----------|
-| `GET /profile/{id}` | `Cache-Control: public, max-age=120` | Profile detail changes infrequently; 2-min cache reduces round-trips on back-navigation |
-| `GET /profile/me` | `Cache-Control: private, no-cache` | Own profile must always reflect latest edits |
+| `GET /professional-profile/{profileId}` | `Cache-Control: public, max-age=120` | Profile detail changes infrequently; 2-min cache reduces round-trips on back-navigation |
+| `GET /professional-profile/me` | `Cache-Control: private, no-cache` | Own profile must always reflect latest edits |
 
 **No caching on POST endpoints** — search, engagement tracking, auth, favorites are all POST. HTTP semantics already prevent caching.
 
@@ -219,7 +223,7 @@ No server responses include `Cache-Control` headers. All responses are treated a
 
 ### Files
 
-- **Modify:** `server/.../profile/routing/ProfileRoutes.kt` — add Cache-Control header to `GET /profile/{id}` and `GET /profile/me`
+- **Modify:** `server/.../profile/routing/ProfileRoutes.kt` — add Cache-Control header to `GET /professional-profile/{profileId}` and `GET /professional-profile/me`
 
 ---
 
@@ -234,6 +238,12 @@ Items 1 and 2 both modify `ProfessionalProfileResponse` in `shared/contract/prof
 - **Server:** Integration tests for ranking with engagement scores, counter increment on event tracking, recency computation, Cache-Control headers
 - **Client:** No automated UI tests (consistent with existing test coverage)
 
+### Documentation Maintenance
+
+Per project guidelines, the following docs must be updated alongside this implementation:
+- `server/README.md` — update schema section for V9 migration (new columns on `professional_profiles`)
+- `shared/README.md` — update DTO section for new `ProfessionalProfileResponse` fields (`contactCount`, `daysSinceActive`)
+
 ### Migration Safety
 
-V8 migration adds two `INTEGER DEFAULT 0` columns — non-destructive, no data loss, no table lock on small tables.
+V9 migration adds two `INTEGER DEFAULT 0` columns — non-destructive, no data loss, no table lock on small tables.
