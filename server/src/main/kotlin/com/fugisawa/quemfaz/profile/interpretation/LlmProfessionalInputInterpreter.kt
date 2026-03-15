@@ -88,6 +88,9 @@ class LlmProfessionalInputInterpreter(
 
         return CreateProfessionalProfileDraftResponse(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
+            editedDescription = interpretation.editedDescription.ifBlank {
+                inputText.replaceFirstChar { it.uppercase() }
+            },
             interpretedServices = finalServices,
             cityName = null,
             missingFields = missingFields,
@@ -113,6 +116,7 @@ class LlmProfessionalInputInterpreter(
 
         return CreateProfessionalProfileDraftResponse(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
+            editedDescription = inputText.replaceFirstChar { it.uppercase() },
             interpretedServices = interpretedServices,
             cityName = null,
             missingFields = if (interpretedServices.isEmpty()) listOf("services") else emptyList(),
