@@ -25,6 +25,7 @@ data class CreateProfessionalProfileDraftRequest(
 @Serializable
 data class CreateProfessionalProfileDraftResponse(
     val normalizedDescription: String,
+    val editedDescription: String = "",
     val interpretedServices: List<InterpretedServiceDto>,
     val cityName: String?,
     val missingFields: List<String>,
