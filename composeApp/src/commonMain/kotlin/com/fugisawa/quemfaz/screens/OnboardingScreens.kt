@@ -22,6 +22,7 @@ import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
+import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
 // Maps each state to its step ordinal for slide direction detection.
@@ -152,14 +153,33 @@ fun OnboardingScreens(
                     }
                 }
                 is OnboardingUiState.Loading -> {
+                    val phrases = listOf(
+                        "Interpreting your description...",
+                        "Analyzing your services...",
+                        "Organizing your profile...",
+                        "Almost ready..."
+                    )
+                    var phraseIndex by remember { mutableStateOf(0) }
+                    LaunchedEffect(Unit) {
+                        while (true) {
+                            delay(1800L)
+                            phraseIndex = (phraseIndex + 1) % phrases.size
+                        }
+                    }
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Interpreting your description...", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                        AnimatedContent(
+                            targetState = phraseIndex,
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            label = "loadingPhrase",
+                        ) { index ->
+                            Text(phrases[index], style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
                 is OnboardingUiState.NeedsClarification -> {
