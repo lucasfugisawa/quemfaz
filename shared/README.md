@@ -79,9 +79,11 @@ UserProfileResponse(id, phone, name, photoUrl, cityName, status)
 
 ```kotlin
 CreateProfessionalProfileDraftRequest(rawInput: String, inputMode: InputMode)
-CreateProfessionalProfileDraftResponse(draft: InterpretedServiceDto, ...)
+CreateProfessionalProfileDraftResponse(draft: InterpretedServiceDto, ...,
+    llmUnavailable: Boolean,  // indicates if LLM was unavailable during interpretation
+)
 ConfirmProfessionalProfileRequest(...)
-ProfessionalProfileResponse(id, userId, services, city, neighborhoods, ...,
+ProfessionalProfileResponse(id, userId, services, city, ...,
     contactCount: Int,        // engagement: number of contact clicks
     daysSinceActive: Int?,    // days since last activity (null if never active)
 )
@@ -91,7 +93,9 @@ ProfessionalProfileResponse(id, userId, services, city, neighborhoods, ...,
 
 ```kotlin
 SearchProfessionalsRequest(query: String, cityName: String, inputMode: InputMode)
-SearchProfessionalsResponse(results: List<ProfessionalSearchResult>)
+SearchProfessionalsResponse(results: List<ProfessionalSearchResult>,
+    llmUnavailable: Boolean,  // indicates if LLM was unavailable during query interpretation
+)
 ```
 
 ---

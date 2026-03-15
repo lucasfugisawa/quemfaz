@@ -131,6 +131,7 @@ Schema is managed exclusively via Flyway migrations. Never alter the schema with
 | V7 | Refresh tokens |
 | V8 | Onboarding refactor |
 | V9 | Engagement counters (`view_count`, `contact_click_count` on `professional_profiles`) |
+| V10 | Remove neighborhoods (drop `professional_profile_neighborhoods` table, drop `search_queries.neighborhoods_json`) |
 
 Migration files: `src/main/resources/db/migration/`
 
