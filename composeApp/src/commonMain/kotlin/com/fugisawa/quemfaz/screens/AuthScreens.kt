@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
@@ -68,16 +69,16 @@ fun PhoneLoginScreen(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Welcome to Quem Faz", style = MaterialTheme.typography.headlineLarge)
-            Text("Find professionals or offer your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(Strings.Auth.WELCOME_TITLE, style = MaterialTheme.typography.headlineLarge)
+            Text(Strings.Auth.WELCOME_SUBTITLE, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             
             Spacer(modifier = Modifier.height(Spacing.xl))
             
             OutlinedTextField(
                 value = phone,
                 onValueChange = { new -> phone = new.filter { it.isDigit() }.take(11) },
-                label = { Text("Phone Number") },
-                placeholder = { Text("(11) 99999-9999") },
+                label = { Text(Strings.Auth.PHONE_LABEL) },
+                placeholder = { Text(Strings.Auth.PHONE_PLACEHOLDER) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = MaterialTheme.shapes.medium,
@@ -96,10 +97,10 @@ fun PhoneLoginScreen(
                 if (uiState is AuthUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
                 } else {
-                    Text("Continue", style = MaterialTheme.typography.titleMedium)
+                    Text(Strings.Common.CONTINUE, style = MaterialTheme.typography.titleMedium)
                 }
             }
-            
+
             if (uiState is AuthUiState.Error) {
                 Spacer(modifier = Modifier.height(Spacing.formFieldGap))
                 Text(uiState.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
@@ -121,8 +122,8 @@ fun OtpVerificationScreen(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Verify OTP", style = MaterialTheme.typography.headlineLarge)
-            Text("Enter the code sent to $phone", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(Strings.Auth.OTP_TITLE, style = MaterialTheme.typography.headlineLarge)
+            Text(Strings.Auth.otpSubtitle(phone), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             
             Spacer(modifier = Modifier.height(Spacing.xl))
             
@@ -142,7 +143,7 @@ fun OtpVerificationScreen(
                 if (uiState is AuthUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
                 } else {
-                    Text("Verify and Login", style = MaterialTheme.typography.titleMedium)
+                    Text(Strings.Auth.OTP_CONFIRM, style = MaterialTheme.typography.titleMedium)
                 }
             }
             
@@ -167,12 +168,12 @@ fun NameInputScreen(
             .padding(Spacing.screenEdge),
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
-        Text("What's your name?", style = MaterialTheme.typography.headlineMedium)
+        Text(Strings.Auth.NAME_TITLE, style = MaterialTheme.typography.headlineMedium)
 
         OutlinedTextField(
             value = displayName,
             onValueChange = { displayName = it },
-            label = { Text("Full name") },
+            label = { Text(Strings.Auth.NAME_LABEL) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             shape = MaterialTheme.shapes.medium,
@@ -201,7 +202,7 @@ fun NameInputScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text("Continue")
+                Text(Strings.Common.CONTINUE)
             }
         }
     }
@@ -243,12 +244,12 @@ fun ProfilePhotoScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             if (isLoading) CircularProgressIndicator(Modifier.size(20.dp))
-            else Text("Choose photo")
+            else Text(Strings.Auth.PHOTO_CHOOSE)
         }
 
         if (showSkip && onSkip != null) {
             TextButton(onClick = onSkip) {
-                Text("Skip for now")
+                Text(Strings.Auth.PHOTO_SKIP)
             }
         }
     }

@@ -8,6 +8,7 @@ import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
+import com.fugisawa.quemfaz.ui.strings.Strings
 import io.ktor.client.plugins.ResponseException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,7 +52,7 @@ class AuthViewModel(
                     _uiState.value = AuthUiState.Error(response.message)
                 }
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.message ?: "Unknown error")
+                _uiState.value = AuthUiState.Error(e.message ?: Strings.Errors.UNKNOWN_ERROR)
             }
         }
     }
@@ -73,24 +74,24 @@ class AuthViewModel(
                         _uiState.value = AuthUiState.Success
                     }
                 } else {
-                    _uiState.value = AuthUiState.Error("Invalid OTP")
+                    _uiState.value = AuthUiState.Error(Strings.Errors.INVALID_OTP)
                 }
             } catch (e: ResponseException) {
                 if (e.response.status == HttpStatusCode.Forbidden) {
                     // Server returned 403: user is blocked.
                     sessionManager.setBlocked()
                 } else {
-                    _uiState.value = AuthUiState.Error("Invalid OTP code")
+                    _uiState.value = AuthUiState.Error(Strings.Errors.INVALID_OTP)
                 }
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.message ?: "Unknown error")
+                _uiState.value = AuthUiState.Error(e.message ?: Strings.Errors.UNKNOWN_ERROR)
             }
         }
     }
 
     fun submitName(firstName: String, lastName: String) {
         if (firstName.isBlank()) {
-            _uiState.value = AuthUiState.Error("Name is required")
+            _uiState.value = AuthUiState.Error(Strings.Errors.NAME_REQUIRED)
             return
         }
         viewModelScope.launch {
@@ -102,7 +103,7 @@ class AuthViewModel(
                 sessionManager.setCurrentUser(response)
                 _uiState.value = AuthUiState.Success
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.message ?: "Failed to save name")
+                _uiState.value = AuthUiState.Error(e.message ?: Strings.Errors.FAILED_SAVE_NAME)
             }
         }
     }
@@ -118,7 +119,7 @@ class AuthViewModel(
                 sessionManager.setCurrentUser(userResponse)
                 _uiState.value = AuthUiState.Success
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.message ?: "Failed to upload photo")
+                _uiState.value = AuthUiState.Error(e.message ?: Strings.Errors.FAILED_UPLOAD_PHOTO)
             }
         }
     }
