@@ -163,7 +163,7 @@ fun AuthFlow(navigateTo: (Screen) -> Unit) {
         }
         "name" -> {
             NameInputScreen(
-                onSubmitName = { firstName, lastName -> viewModel.submitName(firstName, lastName) },
+                onSubmitName = { fullName -> viewModel.submitName(fullName) },
                 uiState = uiState,
             )
         }
@@ -351,11 +351,11 @@ fun MainFlow(
                                 val profile = (profileUiState as? ProfileUiState.Content)?.profile
                                 when (channel) {
                                     ContactChannelDto.WHATSAPP -> {
-                                        val digits = profile?.whatsAppPhone?.filter { it.isDigit() }
+                                        val digits = profile?.phone?.filter { it.isDigit() }
                                         if (!digits.isNullOrBlank()) openUrl("https://wa.me/$digits")
                                     }
                                     ContactChannelDto.PHONE_CALL -> {
-                                        val phone = profile?.contactPhone?.ifBlank { null }
+                                        val phone = profile?.phone?.ifBlank { null }
                                         if (phone != null) openUrl("tel:$phone")
                                     }
                                 }
@@ -390,7 +390,7 @@ fun MainFlow(
                             currentUser = currentUser,
                             uiState = authUiState,
                             hydrationFailed = hydrationFailed,
-                            onSaveName = { firstName, lastName -> authViewModel.submitName(firstName, lastName) },
+                            onSaveName = { fullName -> authViewModel.submitName(fullName) },
                             onSavePhoto = { data, mimeType -> authViewModel.submitPhoto(data, mimeType) },
                             onNavigateToFavorites = { navigateToTab(Screen.Favorites) },
                             onChangeCity = { navigateTo(Screen.CitySelection) },
@@ -460,8 +460,8 @@ fun MainFlow(
                             catalog = editCatalog,
                             onAddService = viewModel::addService,
                             onRemoveService = viewModel::removeService,
-                            onSave = { desc, city, contact, whatsapp ->
-                                viewModel.saveProfile(desc, city, contact, whatsapp)
+                            onSave = { desc, city, phone ->
+                                viewModel.saveProfile(desc, city, phone)
                             },
                             onNavigateBack = navigateBack,
                             onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }

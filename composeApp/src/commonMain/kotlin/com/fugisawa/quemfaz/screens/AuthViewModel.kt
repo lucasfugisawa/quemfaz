@@ -89,8 +89,8 @@ class AuthViewModel(
         }
     }
 
-    fun submitName(firstName: String, lastName: String) {
-        if (firstName.isBlank()) {
+    fun submitName(fullName: String) {
+        if (fullName.isBlank()) {
             _uiState.value = AuthUiState.Error(Strings.Errors.NAME_REQUIRED)
             return
         }
@@ -98,7 +98,7 @@ class AuthViewModel(
             _uiState.value = AuthUiState.Loading
             try {
                 val response = apiClients.submitName(
-                    CompleteUserProfileRequest(firstName.trim(), lastName.trim())
+                    CompleteUserProfileRequest(fullName = fullName.trim())
                 )
                 sessionManager.setCurrentUser(response)
                 _uiState.value = AuthUiState.Success

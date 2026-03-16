@@ -157,10 +157,12 @@ fun OtpVerificationScreen(
 
 @Composable
 fun NameInputScreen(
-    onSubmitName: (firstName: String, lastName: String) -> Unit,
+    onSubmitName: (fullName: String) -> Unit,
     uiState: AuthUiState,
 ) {
     var displayName by remember { mutableStateOf("") }
+    val trimmed = displayName.trim()
+    val hasAtLeastTwoWords = trimmed.split("\\s+".toRegex()).size >= 2
 
     Column(
         modifier = Modifier
@@ -188,11 +190,8 @@ fun NameInputScreen(
         }
 
         Button(
-            onClick = {
-                val parts = displayName.trim().split(" ", limit = 2)
-                onSubmitName(parts[0], if (parts.size > 1) parts[1] else "")
-            },
-            enabled = displayName.isNotBlank() && uiState !is AuthUiState.Loading,
+            onClick = { onSubmitName(trimmed) },
+            enabled = hasAtLeastTwoWords && uiState !is AuthUiState.Loading,
             modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
             shape = MaterialTheme.shapes.medium,
         ) {
@@ -360,11 +359,11 @@ private fun OtpVerificationErrorPreview() {
 @LightDarkScreenPreview
 @Composable
 private fun NameInputIdlePreview() {
-    AppTheme { NameInputScreen(onSubmitName = { _, _ -> }, uiState = AuthUiState.ProfileCompletionRequired) }
+    AppTheme { NameInputScreen(onSubmitName = { _ -> }, uiState = AuthUiState.ProfileCompletionRequired) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun NameInputLoadingPreview() {
-    AppTheme { NameInputScreen(onSubmitName = { _, _ -> }, uiState = AuthUiState.Loading) }
+    AppTheme { NameInputScreen(onSubmitName = { _ -> }, uiState = AuthUiState.Loading) }
 }

@@ -49,7 +49,7 @@ fun ProfessionalProfileScreen(
     var showReportDialog by remember { mutableStateOf(false) }
     var showDisableDialog by remember { mutableStateOf(false) }
 
-    val title = (uiState as? ProfileUiState.Content)?.profile?.let { it.knownName ?: "${it.firstName} ${it.lastName}" } ?: Strings.Profile.FALLBACK_TITLE
+    val title = (uiState as? ProfileUiState.Content)?.profile?.let { it.knownName ?: it.fullName } ?: Strings.Profile.FALLBACK_TITLE
     val isOwnProfile = (uiState as? ProfileUiState.Content)?.isOwnProfile == true
 
     if (showReportDialog) {
@@ -234,14 +234,14 @@ fun ProfileHeader(
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         ProfileAvatar(
-            name = profile.knownName ?: "${profile.firstName} ${profile.lastName}",
+            name = profile.knownName ?: profile.fullName,
             photoUrl = profile.photoUrl,
             size = 80.dp,
             textStyle = MaterialTheme.typography.headlineLarge
         )
         Spacer(modifier = Modifier.width(Spacing.md))
         Column(modifier = Modifier.weight(1f)) {
-            Text(profile.knownName ?: "${profile.firstName} ${profile.lastName}", style = MaterialTheme.typography.headlineSmall)
+            Text(profile.knownName ?: profile.fullName, style = MaterialTheme.typography.headlineSmall)
             Text(profile.cityName, style = MaterialTheme.typography.bodyMedium)
         }
         if (showFavorite) {

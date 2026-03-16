@@ -193,13 +193,13 @@ fun ProfessionalCard(
         Column(modifier = Modifier.padding(Spacing.md)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ProfileAvatar(
-                    name = profile.knownName ?: "${profile.firstName} ${profile.lastName}",
+                    name = profile.knownName ?: profile.fullName,
                     photoUrl = profile.photoUrl,
                     size = Spacing.professionalAvatarSize
                 )
                 Spacer(modifier = Modifier.width(Spacing.sm + Spacing.xs))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(profile.knownName ?: "${profile.firstName} ${profile.lastName}", style = MaterialTheme.typography.titleMedium)
+                    Text(profile.knownName ?: profile.fullName, style = MaterialTheme.typography.titleMedium)
                     Text(profile.cityName, style = MaterialTheme.typography.bodySmall)
                 }
                 // Inline favorite button — only shown when a toggle callback is provided

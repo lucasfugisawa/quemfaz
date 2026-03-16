@@ -419,7 +419,7 @@ fun OnboardingScreens(
                 is OnboardingUiState.PhotoRequired -> {
                     val sessionManager: SessionManager = koinInject()
                     val currentUser by sessionManager.currentUser.collectAsState()
-                    val displayName = currentUser?.let { "${it.firstName} ${it.lastName}" } ?: ""
+                    val displayName = currentUser?.fullName ?: ""
 
                     ProfilePhotoScreen(
                         currentPhotoUrl = currentUser?.photoUrl,

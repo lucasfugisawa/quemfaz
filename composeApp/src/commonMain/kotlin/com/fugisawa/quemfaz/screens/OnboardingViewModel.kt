@@ -203,8 +203,6 @@ class OnboardingViewModel(
                         description = confirmedDescription,
                         selectedServiceIds = confirmedServiceIds,
                         cityName = _selectedCity.value,
-                        contactPhone = "",
-                        whatsAppPhone = null,
                         portfolioPhotoUrls = emptyList(),
                     )
                 )

@@ -121,8 +121,7 @@ object Strings {
         const val ADD = "Adicionar"
         const val DESCRIPTION = "Descrição"
         const val CITY = "Cidade"
-        const val CONTACT_PHONE = "Telefone de contato"
-        const val WHATSAPP_PHONE = "Telefone do WhatsApp"
+        const val PHONE = "Telefone"
         const val SAVE_SUCCESS = "Perfil salvo com sucesso."
     }
 
@@ -132,8 +131,7 @@ object Strings {
         const val ADD_PHOTO_TITLE = "Adicione uma foto de perfil"
         const val ADD_PHOTO_SUBTITLE = "Profissionais com foto recebem mais contatos."
         const val ADD_PHOTO_BUTTON = "Adicionar foto"
-        const val FIRST_NAME = "Nome"
-        const val LAST_NAME = "Sobrenome"
+        const val FULL_NAME = "Nome completo"
         const val SAVE_NAME = "Salvar nome"
         const val CHANGE_PHOTO = "Trocar foto"
         const val MY_FAVORITES = "Meus favoritos"
