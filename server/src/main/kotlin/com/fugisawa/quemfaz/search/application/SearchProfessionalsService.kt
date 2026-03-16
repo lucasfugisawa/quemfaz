@@ -11,6 +11,8 @@ import com.fugisawa.quemfaz.core.id.UserId
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfile
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
+import com.fugisawa.quemfaz.search.domain.SearchEvent
+import com.fugisawa.quemfaz.search.domain.SearchEventRepository
 import com.fugisawa.quemfaz.search.domain.SearchQuery
 import com.fugisawa.quemfaz.search.domain.SearchQueryRepository
 import com.fugisawa.quemfaz.search.interpretation.SearchQueryInterpreter
@@ -24,6 +26,7 @@ class SearchProfessionalsService(
     private val interpreter: SearchQueryInterpreter,
     private val rankingService: ProfessionalSearchRankingService,
     private val searchQueryRepository: SearchQueryRepository,
+    private val searchEventRepository: SearchEventRepository,
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
@@ -52,6 +55,24 @@ class SearchProfessionalsService(
                 createdAt = Instant.now(),
             )
         searchQueryRepository.create(searchQuery)
+
+        // 2b. Log search events for popular-searches analytics
+        if (interpreted.serviceIds.isNotEmpty() && city != null) {
+            val now = Instant.now()
+            val events = interpreted.serviceIds.map { serviceId ->
+                SearchEvent(
+                    id = UUID.randomUUID().toString(),
+                    resolvedServiceId = serviceId,
+                    cityName = city,
+                    createdAt = now,
+                )
+            }
+            try {
+                searchEventRepository.logEvents(events)
+            } catch (e: Exception) {
+                logger.warn("Failed to log search events", e)
+            }
+        }
 
         // 3. Retrieve candidate profiles
         val candidates = profileRepository.search(interpreted.serviceIds, city)

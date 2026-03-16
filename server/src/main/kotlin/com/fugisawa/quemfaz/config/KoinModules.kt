@@ -66,8 +66,11 @@ import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.infrastructure.persistence.ExposedProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.interpretation.LlmProfessionalInputInterpreter
 import com.fugisawa.quemfaz.profile.interpretation.ProfessionalInputInterpreter
+import com.fugisawa.quemfaz.search.application.PopularSearchesService
 import com.fugisawa.quemfaz.search.application.SearchProfessionalsService
+import com.fugisawa.quemfaz.search.domain.SearchEventRepository
 import com.fugisawa.quemfaz.search.domain.SearchQueryRepository
+import com.fugisawa.quemfaz.search.infrastructure.persistence.ExposedSearchEventRepository
 import com.fugisawa.quemfaz.search.infrastructure.persistence.ExposedSearchQueryRepository
 import com.fugisawa.quemfaz.search.interpretation.LlmSearchQueryInterpreter
 import com.fugisawa.quemfaz.search.interpretation.SearchQueryInterpreter
@@ -175,6 +178,7 @@ val infrastructureModule =
 
         // Search Repositories
         single<SearchQueryRepository> { ExposedSearchQueryRepository() }
+        single<SearchEventRepository> { ExposedSearchEventRepository() }
 
         // Search Interpretation
         single<SearchQueryInterpreter> { LlmSearchQueryInterpreter(get(), get(), get()) }
@@ -183,7 +187,8 @@ val infrastructureModule =
         single { ProfessionalSearchRankingService() }
 
         // Search Services
-        single { SearchProfessionalsService(get(), get(), get(), get(), get(), get(), get()) }
+        single { SearchProfessionalsService(get(), get(), get(), get(), get(), get(), get(), get()) }
+        single { PopularSearchesService(get()) }
 
         // Favorites
         single<FavoriteRepository> { ExposedFavoriteRepository() }

@@ -17,6 +17,9 @@ import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileService
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus
 import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
 import com.fugisawa.quemfaz.search.domain.InterpretedSearchQuery
+import com.fugisawa.quemfaz.search.domain.PopularServiceResult
+import com.fugisawa.quemfaz.search.domain.SearchEvent
+import com.fugisawa.quemfaz.search.domain.SearchEventRepository
 import com.fugisawa.quemfaz.search.domain.SearchQuery
 import com.fugisawa.quemfaz.search.domain.SearchQueryRepository
 import com.fugisawa.quemfaz.search.interpretation.SearchQueryInterpreter
@@ -35,6 +38,19 @@ class SearchProfessionalsServiceTest {
             lastSaved = searchQuery
             return searchQuery
         }
+    }
+
+    private class FakeSearchEventRepository : SearchEventRepository {
+        val logged = mutableListOf<SearchEvent>()
+
+        override fun logEvents(events: List<SearchEvent>) {
+            logged.addAll(events)
+        }
+
+        override fun getPopularServices(cityName: String?, limit: Int, windowDays: Int): List<PopularServiceResult> =
+            emptyList()
+
+        override fun countSearchesInWindow(cityName: String, windowDays: Int): Long = 0
     }
 
     private class FakeProfileRepository(
@@ -132,6 +148,7 @@ class SearchProfessionalsServiceTest {
                 interpreter = FakeInterpreter(),
                 rankingService = ProfessionalSearchRankingService(),
                 searchQueryRepository = searchQueryRepo,
+                searchEventRepository = FakeSearchEventRepository(),
                 profileRepository = FakeProfileRepository(listOf(profile)),
                 userRepository = FakeUserRepository(),
                 catalogService = mock(),
