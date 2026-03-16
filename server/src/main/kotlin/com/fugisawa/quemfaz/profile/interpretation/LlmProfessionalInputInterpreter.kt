@@ -167,12 +167,26 @@ class LlmProfessionalInputInterpreter(
             If the description mentions a service that does NOT exist in the catalog:
             - DO NOT force-map it to an unrelated service
             - Instead, add it to the "unmatchedDescriptions" array with the raw description
-            - Classify its safety: "safe", "unsafe", or "uncertain"
-            - For "unsafe" or "uncertain", provide a brief "safetyReason"
+            - Classify its safety: "safe" or "unsafe"
+            - For "unsafe", provide a brief "safetyReason"
 
-            A service is "unsafe" if it involves illegal activities, legally regulated services
-            the platform cannot verify, or anything that would expose the platform to legal
-            or reputational risk.
+            Safety classification:
+            - "safe": any legitimate economic activity, regardless of whether it requires licenses,
+              certifications, or professional registration. This platform is a marketplace — it does
+              not verify credentials. That is the provider's and client's responsibility.
+            - "unsafe": ONLY activities that are clearly illegal under Brazilian law. Examples:
+              drug trafficking, weapons sales, fencing stolen goods, sexual exploitation,
+              money laundering, fraud schemes.
+
+            Do NOT classify as "unsafe" merely because:
+            - The service requires a license or registration (CREA, CRM, OAB, etc.)
+            - The service involves regulated materials (gas, electricity)
+            - The service involves food preparation (padeiro, confeiteiro, cozinheiro)
+            - The service involves physical risk (construction, roofing, waterproofing)
+            - You are unfamiliar with the term or regional slang
+
+            When in doubt, classify as "safe". The platform prefers to accept legitimate services
+            and let the admin review process handle edge cases.
 
             Supported services catalog:
             $catalog
@@ -180,10 +194,24 @@ class LlmProfessionalInputInterpreter(
             Rules:
             - infer services from description and map them to the canonical service ID values above
             - the "serviceIds" field must contain only ID values from the catalog
-            - if important information about services is missing:
-              set needsClarification = true
-              generate up to 2 clarificationQuestions
             - clarificationQuestions must be short and objective
+
+            IMPORTANT — Clarification rules:
+            Request clarification (needsClarification = true) ONLY when the professional's description
+            is genuinely ambiguous — when you cannot determine what kind of work they do.
+
+            Do NOT request clarification just because the described service is not in the catalog.
+            If you understand what they do but there is no matching catalog entry, add it to
+            unmatchedDescriptions with classification "safe" and set needsClarification = false.
+
+            Examples of when to clarify:
+            - "Eu faço de tudo" — too vague, clarify
+            - "Trabalho com manutenção" — somewhat vague, clarify what kind
+
+            Examples of when NOT to clarify:
+            - "Sou padeiro" — clear profession, not in catalog — unmatched, safe, no clarification
+            - "Instalo câmeras" — clear service, not in catalog — unmatched, safe, no clarification
+            - "Faço calhas e rufos" — clear trade, not in catalog — unmatched, safe, no clarification
 
             Description editing:
             You must also produce an "editedDescription" field — a lightly edited version of the user's
