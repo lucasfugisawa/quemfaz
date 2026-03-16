@@ -1,6 +1,8 @@
 package com.fugisawa.quemfaz.profile.application
 
 import com.fugisawa.quemfaz.auth.domain.User
+import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentity
+import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.auth.domain.UserStatus
 import com.fugisawa.quemfaz.catalog.application.CatalogService
@@ -107,14 +109,35 @@ class ProfileServicesTest {
         }
     }
 
+    private class FakeUserPhoneAuthIdentityRepository : UserPhoneAuthIdentityRepository {
+        val identities = mutableMapOf<String, UserPhoneAuthIdentity>()
+
+        override fun findByPhoneNumber(phoneNumber: String) =
+            identities.values.find { it.phoneNumber == phoneNumber }
+
+        override fun findByUserId(userId: UserId) =
+            identities.values.find { it.userId == userId }
+
+        override fun create(identity: UserPhoneAuthIdentity) =
+            identity.also { identities[it.id] = it }
+
+        override fun markVerified(id: String, verifiedAt: Instant): Boolean {
+            val i = identities[id] ?: return false
+            identities[id] = i.copy(isVerified = true, verifiedAt = verifiedAt)
+            return true
+        }
+    }
+
     @Test
     fun `should confirm and publish professional profile`() {
         val profileRepo = FakeProfessionalProfileRepository()
         val userRepo = FakeUserRepository()
+        val phoneAuthRepo = FakeUserPhoneAuthIdentityRepository()
         val userId = UserId("user-123")
-        userRepo.create(User(userId, "John Doe", "https://example.com/photo.jpg", UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now()))
+        userRepo.create(User(userId, "John Doe", "https://example.com/photo.jpg", UserStatus.ACTIVE, dateOfBirth = java.time.LocalDate.of(1990, 1, 1), createdAt = Instant.now(), updatedAt = Instant.now()))
+        phoneAuthRepo.create(UserPhoneAuthIdentity("id-123", userId, "+5516999999999", true, Instant.now(), Instant.now(), Instant.now()))
 
-        val service = ConfirmProfessionalProfileService(profileRepo, userRepo, mock())
+        val service = ConfirmProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
         val request =
             ConfirmProfessionalProfileRequest(
                 description = "Pintor experiente",
@@ -137,11 +160,13 @@ class ProfileServicesTest {
     fun `should update existing professional profile`() {
         val profileRepo = FakeProfessionalProfileRepository()
         val userRepo = FakeUserRepository()
+        val phoneAuthRepo = FakeUserPhoneAuthIdentityRepository()
         val userId = UserId("user-123")
-        userRepo.create(User(userId, "John Doe", "https://example.com/photo.jpg", UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now()))
+        userRepo.create(User(userId, "John Doe", "https://example.com/photo.jpg", UserStatus.ACTIVE, dateOfBirth = java.time.LocalDate.of(1990, 1, 1), createdAt = Instant.now(), updatedAt = Instant.now()))
+        phoneAuthRepo.create(UserPhoneAuthIdentity("id-123", userId, "+5516999999999", true, Instant.now(), Instant.now(), Instant.now()))
 
         // Create initial profile via confirm service
-        val confirmService = ConfirmProfessionalProfileService(profileRepo, userRepo, mock())
+        val confirmService = ConfirmProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
         confirmService.execute(
             userId,
             ConfirmProfessionalProfileRequest(
@@ -152,7 +177,7 @@ class ProfileServicesTest {
             ),
         )
 
-        val updateService = UpdateProfessionalProfileService(profileRepo, userRepo, mock())
+        val updateService = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
         val result =
             updateService.execute(
                 userId,
@@ -178,10 +203,11 @@ class ProfileServicesTest {
     fun `should return NotFound when updating profile that does not exist`() {
         val profileRepo = FakeProfessionalProfileRepository()
         val userRepo = FakeUserRepository()
+        val phoneAuthRepo = FakeUserPhoneAuthIdentityRepository()
         val userId = UserId("user-no-profile")
         userRepo.create(User(userId, "Jane", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now()))
 
-        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock())
+        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
         val result =
             service.execute(
                 userId,
@@ -200,6 +226,7 @@ class ProfileServicesTest {
     fun `should return Blocked when updating a blocked profile`() {
         val profileRepo = FakeProfessionalProfileRepository()
         val userRepo = FakeUserRepository()
+        val phoneAuthRepo = FakeUserPhoneAuthIdentityRepository()
         val userId = UserId("user-blocked")
         userRepo.create(User(userId, "Blocked User", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now()))
 
@@ -212,8 +239,6 @@ class ProfileServicesTest {
                 null,
                 "Desc",
                 "Desc",
-                "123",
-                null,
                 "City",
                 emptyList(),
                 emptyList(),
@@ -225,7 +250,7 @@ class ProfileServicesTest {
             ),
         )
 
-        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock())
+        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
         val result =
             service.execute(
                 userId,
@@ -244,12 +269,13 @@ class ProfileServicesTest {
     fun `should get public profile only if published`() {
         val profileRepo = FakeProfessionalProfileRepository()
         val userRepo = FakeUserRepository()
+        val phoneAuthRepo = FakeUserPhoneAuthIdentityRepository()
         val userId = UserId("user-123")
         val profileId = ProfessionalProfileId("prof-123")
 
         userRepo.create(User(userId, "John Doe", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now()))
 
-        val service = GetPublicProfessionalProfileService(profileRepo, userRepo, mock())
+        val service = GetPublicProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
 
         // No profile yet
         assertEquals(null, service.execute(profileId))
@@ -262,8 +288,6 @@ class ProfileServicesTest {
                 null,
                 "Desc",
                 "Desc",
-                "123",
-                "123",
                 "City",
                 emptyList(),
                 emptyList(),

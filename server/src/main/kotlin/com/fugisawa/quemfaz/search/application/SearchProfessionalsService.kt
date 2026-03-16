@@ -1,5 +1,6 @@
 package com.fugisawa.quemfaz.search.application
 
+import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
@@ -26,6 +27,7 @@ class SearchProfessionalsService(
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
+    private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -75,7 +77,8 @@ class SearchProfessionalsService(
             results =
                 pagedResults.map { profile ->
                     val user = userRepository.findById(profile.userId)
-                    mapToResponse(profile, user?.fullName ?: "", user?.photoUrl)
+                    val phone = phoneAuthRepository.findByUserId(profile.userId)?.phoneNumber ?: ""
+                    mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, phone)
                 },
             page = page,
             pageSize = pageSize,
@@ -89,6 +92,7 @@ class SearchProfessionalsService(
         profile: ProfessionalProfile,
         fullName: String,
         userPhotoUrl: String?,
+        phone: String,
     ): ProfessionalProfileResponse =
         ProfessionalProfileResponse(
             id = profile.id.value,
@@ -104,7 +108,7 @@ class SearchProfessionalsService(
                 },
             profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
             activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
-            phone = profile.contactPhone ?: profile.whatsappPhone ?: "",
+            phone = phone,
             portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
             contactCount = profile.contactClickCount,
             daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),

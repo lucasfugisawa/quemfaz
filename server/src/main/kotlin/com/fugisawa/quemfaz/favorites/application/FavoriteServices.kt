@@ -1,5 +1,6 @@
 package com.fugisawa.quemfaz.favorites.application
 
+import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.contract.favorites.FavoritesListResponse
@@ -74,6 +75,7 @@ class ListFavoritesService(
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
+    private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
 ) {
     fun execute(userId: UserId): FavoritesListResponse {
         val favorites = favoriteRepository.listByUserId(userId)
@@ -82,7 +84,8 @@ class ListFavoritesService(
                 val profile = profileRepository.findById(fav.professionalProfileId)
                 if (profile != null && profile.status == ProfessionalProfileStatus.PUBLISHED) {
                     val user = userRepository.findById(profile.userId)
-                    mapToResponse(profile, user?.fullName ?: "", user?.photoUrl)
+                    val phone = phoneAuthRepository.findByUserId(profile.userId)?.phoneNumber ?: ""
+                    mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, phone)
                 } else {
                     null
                 }
@@ -94,6 +97,7 @@ class ListFavoritesService(
         profile: ProfessionalProfile,
         fullName: String,
         userPhotoUrl: String?,
+        phone: String,
     ): ProfessionalProfileResponse =
         ProfessionalProfileResponse(
             id = profile.id.value,
@@ -109,7 +113,7 @@ class ListFavoritesService(
                 },
             profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
             activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
-            phone = profile.contactPhone ?: profile.whatsappPhone ?: "",
+            phone = phone,
             portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
             contactCount = profile.contactClickCount,
             daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),

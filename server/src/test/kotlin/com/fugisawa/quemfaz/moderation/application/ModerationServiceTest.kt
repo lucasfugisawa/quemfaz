@@ -161,8 +161,6 @@ class ModerationServiceTest {
         null,
         "Desc",
         "Desc",
-        "123",
-        "123",
         "City",
         emptyList(),
         emptyList(),

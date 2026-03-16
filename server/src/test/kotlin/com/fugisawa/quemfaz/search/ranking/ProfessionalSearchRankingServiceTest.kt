@@ -29,8 +29,6 @@ class ProfessionalSearchRankingServiceTest {
         knownName = null,
         description = "Description $id",
         normalizedDescription = "Description $id",
-        contactPhone = "123456",
-        whatsappPhone = "123456",
         cityName = "Batatais",
         services = services,
         portfolioPhotos = emptyList(),

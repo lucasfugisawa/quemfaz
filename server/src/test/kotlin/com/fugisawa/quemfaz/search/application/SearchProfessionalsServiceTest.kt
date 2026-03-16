@@ -1,6 +1,8 @@
 package com.fugisawa.quemfaz.search.application
 
 import com.fugisawa.quemfaz.auth.domain.User
+import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentity
+import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.auth.domain.UserStatus
 import com.fugisawa.quemfaz.catalog.application.CatalogService
@@ -90,6 +92,13 @@ class SearchProfessionalsServiceTest {
         ): Boolean = false
     }
 
+    private class FakePhoneAuthRepository : UserPhoneAuthIdentityRepository {
+        override fun findByPhoneNumber(phoneNumber: String): UserPhoneAuthIdentity? = null
+        override fun findByUserId(userId: UserId): UserPhoneAuthIdentity? = null
+        override fun create(identity: UserPhoneAuthIdentity) = identity
+        override fun markVerified(id: String, verifiedAt: Instant): Boolean = false
+    }
+
     private class FakeInterpreter : SearchQueryInterpreter {
         override fun interpret(
             query: String,
@@ -107,8 +116,6 @@ class SearchProfessionalsServiceTest {
                 knownName = null,
                 description = "Desc",
                 normalizedDescription = "Desc",
-                contactPhone = "123",
-                whatsappPhone = "123",
                 cityName = "Batatais",
                 services = listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
                 portfolioPhotos = emptyList(),
@@ -128,6 +135,7 @@ class SearchProfessionalsServiceTest {
                 profileRepository = FakeProfileRepository(listOf(profile)),
                 userRepository = FakeUserRepository(),
                 catalogService = mock(),
+                phoneAuthRepository = FakePhoneAuthRepository(),
             )
 
         val request = SearchProfessionalsRequest("faxina", "Batatais", InputMode.TEXT)

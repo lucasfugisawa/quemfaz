@@ -29,8 +29,6 @@ object ProfessionalProfilesTable : Table("professional_profiles") {
     val knownName = varchar("known_name", 255).nullable()
     val description = text("description").nullable()
     val normalizedDescription = text("normalized_description").nullable()
-    val contactPhone = varchar("contact_phone", 50).nullable()
-    val whatsappPhone = varchar("whatsapp_phone", 50).nullable()
     val cityName = varchar("city_name", 255).nullable()
     val completeness =
         customEnumeration(
@@ -121,8 +119,6 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
                     it[knownName] = profile.knownName
                     it[description] = profile.description
                     it[normalizedDescription] = profile.normalizedDescription
-                    it[contactPhone] = profile.contactPhone
-                    it[whatsappPhone] = profile.whatsappPhone
                     it[cityName] = profile.cityName
                     it[completeness] = profile.completeness
                     it[status] = profile.status
@@ -136,8 +132,6 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
                     it[knownName] = profile.knownName
                     it[description] = profile.description
                     it[normalizedDescription] = profile.normalizedDescription
-                    it[contactPhone] = profile.contactPhone
-                    it[whatsappPhone] = profile.whatsappPhone
                     it[cityName] = profile.cityName
                     it[completeness] = profile.completeness
                     it[status] = profile.status
@@ -292,8 +286,6 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
             knownName = row[ProfessionalProfilesTable.knownName],
             description = row[ProfessionalProfilesTable.description],
             normalizedDescription = row[ProfessionalProfilesTable.normalizedDescription],
-            contactPhone = row[ProfessionalProfilesTable.contactPhone],
-            whatsappPhone = row[ProfessionalProfilesTable.whatsappPhone],
             cityName = row[ProfessionalProfilesTable.cityName],
             services = services,
             portfolioPhotos = portfolioPhotos,

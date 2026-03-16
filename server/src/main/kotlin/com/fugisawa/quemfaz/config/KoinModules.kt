@@ -166,10 +166,10 @@ val infrastructureModule =
         // Professional Profile Services
         single { CreateProfessionalProfileDraftService(get()) }
         single { ClarifyProfessionalProfileDraftService(get()) }
-        single { ConfirmProfessionalProfileService(get(), get(), get()) }
-        single { GetMyProfessionalProfileService(get(), get(), get()) }
-        single { GetPublicProfessionalProfileService(get(), get(), get()) }
-        single { UpdateProfessionalProfileService(get(), get(), get()) }
+        single { ConfirmProfessionalProfileService(get(), get(), get(), get()) }
+        single { GetMyProfessionalProfileService(get(), get(), get(), get()) }
+        single { GetPublicProfessionalProfileService(get(), get(), get(), get()) }
+        single { UpdateProfessionalProfileService(get(), get(), get(), get()) }
         single { DisableProfessionalProfileService(get()) }
         single { SetKnownNameService(get()) }
 
@@ -183,13 +183,13 @@ val infrastructureModule =
         single { ProfessionalSearchRankingService() }
 
         // Search Services
-        single { SearchProfessionalsService(get(), get(), get(), get(), get(), get()) }
+        single { SearchProfessionalsService(get(), get(), get(), get(), get(), get(), get()) }
 
         // Favorites
         single<FavoriteRepository> { ExposedFavoriteRepository() }
         single { AddFavoriteService(get(), get()) }
         single { RemoveFavoriteService(get()) }
-        single { ListFavoritesService(get(), get(), get(), get()) }
+        single { ListFavoritesService(get(), get(), get(), get(), get()) }
 
         // Engagement
         single<ContactClickEventRepository> { ExposedContactClickEventRepository() }

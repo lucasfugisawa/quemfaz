@@ -1,5 +1,6 @@
 package com.fugisawa.quemfaz.profile.application
 
+import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.contract.profile.ClarifyDraftRequest
@@ -20,6 +21,8 @@ import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
 import com.fugisawa.quemfaz.profile.interpretation.ProfessionalInputInterpreter
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.LocalDate
+import java.time.Period
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
@@ -50,6 +53,7 @@ class ConfirmProfessionalProfileService(
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
+    private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -59,6 +63,8 @@ class ConfirmProfessionalProfileService(
     ): ProfessionalProfileResponse {
         val user = userRepository.findById(userId) ?: throw IllegalStateException("User not found")
         require(user.photoUrl != null) { "Profile photo is required to confirm a professional profile" }
+        requireNotNull(user.dateOfBirth) { "DATE_OF_BIRTH_REQUIRED" }
+        require(Period.between(user.dateOfBirth, LocalDate.now()).years >= 18) { "UNDERAGE" }
 
         val existingProfile = profileRepository.findByUserId(userId)
 
@@ -92,8 +98,6 @@ class ConfirmProfessionalProfileService(
                 knownName = null,
                 description = request.description,
                 normalizedDescription = request.description,
-                contactPhone = null,
-                whatsappPhone = null,
                 cityName = request.cityName,
                 services = services,
                 portfolioPhotos = portfolioPhotos,
@@ -106,7 +110,8 @@ class ConfirmProfessionalProfileService(
 
         val savedProfile = profileRepository.save(profile)
 
-        return mapToResponse(savedProfile, user.fullName, user.photoUrl, catalogService)
+        val phone = phoneAuthRepository.findByUserId(userId)?.phoneNumber ?: ""
+        return mapToResponse(savedProfile, user.fullName, user.photoUrl, phone, catalogService)
     }
 }
 
@@ -114,11 +119,13 @@ class GetMyProfessionalProfileService(
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
+    private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
 ) {
     fun execute(userId: UserId): ProfessionalProfileResponse? {
         val profile = profileRepository.findByUserId(userId) ?: return null
         val user = userRepository.findById(userId)
-        return mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, catalogService)
+        val phone = phoneAuthRepository.findByUserId(userId)?.phoneNumber ?: ""
+        return mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, phone, catalogService)
     }
 }
 
@@ -126,13 +133,15 @@ class GetPublicProfessionalProfileService(
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
+    private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
 ) {
     fun execute(profileId: ProfessionalProfileId): ProfessionalProfileResponse? {
         val profile = profileRepository.findById(profileId) ?: return null
         if (profile.status != ProfessionalProfileStatus.PUBLISHED) return null
 
         val user = userRepository.findById(profile.userId)
-        return mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, catalogService)
+        val phone = phoneAuthRepository.findByUserId(profile.userId)?.phoneNumber ?: ""
+        return mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, phone, catalogService)
     }
 }
 
@@ -168,6 +177,7 @@ class UpdateProfessionalProfileService(
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
+    private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
 ) {
     fun execute(
         userId: UserId,
@@ -210,8 +220,6 @@ class UpdateProfessionalProfileService(
             existing.copy(
                 description = request.description,
                 normalizedDescription = request.description,
-                contactPhone = null,
-                whatsappPhone = null,
                 cityName = request.cityName,
                 services = services,
                 portfolioPhotos = portfolioPhotos,
@@ -223,7 +231,8 @@ class UpdateProfessionalProfileService(
 
         val saved = profileRepository.save(updated)
 
-        return UpdateProfileResult.Success(mapToResponse(saved, user.fullName, user.photoUrl, catalogService))
+        val phone = phoneAuthRepository.findByUserId(userId)?.phoneNumber ?: ""
+        return UpdateProfileResult.Success(mapToResponse(saved, user.fullName, user.photoUrl, phone, catalogService))
     }
 }
 
@@ -231,6 +240,7 @@ private fun mapToResponse(
     profile: ProfessionalProfile,
     fullName: String,
     userPhotoUrl: String?,
+    phone: String,
     catalogService: CatalogService,
 ): ProfessionalProfileResponse =
     ProfessionalProfileResponse(
@@ -246,7 +256,7 @@ private fun mapToResponse(
         },
         profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
         activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
-        phone = profile.contactPhone ?: profile.whatsappPhone ?: "",
+        phone = phone,
         portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
         contactCount = profile.contactClickCount,
         daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),
