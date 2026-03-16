@@ -218,7 +218,7 @@ Professionals must be 18+ but there is no age verification in the current flow.
 
 - Add `date_of_birth` column to `users` table (nullable `DATE`)
 - Add `dateOfBirth` to `UserProfileResponse`
-- New endpoint to save birth date: `PUT /api/users/me/date-of-birth` with `UpdateDateOfBirthRequest(dateOfBirth: String)` (ISO date format)
+- New endpoint to save birth date: `PUT /auth/me/date-of-birth` with `UpdateDateOfBirthRequest(dateOfBirth: String)` (ISO date format) — under `/auth` for consistency with existing user endpoints
 - Server validates 18+ both when saving birth date and before creating professional profile draft
 - Client validates 18+ locally before submitting (immediate feedback)
 - If the user already has a `date_of_birth` stored (e.g., from a previous onboarding attempt), skip the birth date step in the onboarding flow
