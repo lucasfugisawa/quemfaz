@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.fugisawa.quemfaz.LocalBaseUrl
 import com.fugisawa.quemfaz.ui.preview.LightDarkPreview
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 
@@ -30,17 +31,26 @@ fun ProfileAvatar(
     textStyle: TextStyle = MaterialTheme.typography.titleLarge,
     modifier: Modifier = Modifier
 ) {
+    val baseUrl = LocalBaseUrl.current
+    val resolvedUrl = remember(photoUrl, baseUrl) {
+        when {
+            photoUrl.isNullOrBlank() -> null
+            photoUrl.startsWith("http://") || photoUrl.startsWith("https://") -> photoUrl
+            else -> "$baseUrl$photoUrl"
+        }
+    }
+
     Surface(
         modifier = modifier.size(size),
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.primaryContainer
     ) {
         Box(contentAlignment = Alignment.Center) {
-            if (!photoUrl.isNullOrBlank()) {
-                var imageLoadFailed by remember(photoUrl) { mutableStateOf(false) }
+            if (resolvedUrl != null) {
+                var imageLoadFailed by remember(resolvedUrl) { mutableStateOf(false) }
                 if (!imageLoadFailed) {
                     AsyncImage(
-                        model = photoUrl,
+                        model = resolvedUrl,
                         contentDescription = name,
                         modifier = Modifier.fillMaxSize().clip(MaterialTheme.shapes.medium),
                         contentScale = ContentScale.Crop,

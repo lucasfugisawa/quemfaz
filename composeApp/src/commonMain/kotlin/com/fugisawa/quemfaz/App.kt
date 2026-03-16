@@ -16,13 +16,11 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
-import com.fugisawa.quemfaz.ui.theme.Spacing
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.fugisawa.quemfaz.contract.engagement.ContactChannelDto
 import com.fugisawa.quemfaz.di.appModule
-import com.fugisawa.quemfaz.domain.moderation.ReportReason
 import com.fugisawa.quemfaz.navigation.Screen
 import com.fugisawa.quemfaz.network.ApiClient
 import com.fugisawa.quemfaz.platform.PlatformBackHandler
@@ -34,8 +32,11 @@ import com.fugisawa.quemfaz.session.AuthState
 import com.fugisawa.quemfaz.session.SessionManager
 import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
+import com.fugisawa.quemfaz.ui.theme.Spacing
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
+
+val LocalBaseUrl = staticCompositionLocalOf { BASE_URL_DEFAULT }
 
 enum class NavigationDirection { TAB, PUSH, POP }
 
@@ -44,7 +45,8 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
     KoinApplication(application = {
         modules(appModule)
     }) {
-        AppTheme {
+        CompositionLocalProvider(LocalBaseUrl provides baseUrl) {
+            AppTheme {
             val sessionManager = koinInject<SessionManager>()
             val authState by sessionManager.authState.collectAsState()
             val currentCity by sessionManager.currentCity.collectAsState()
@@ -122,6 +124,7 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
                     }
                 }
             }
+        }
         }
     }
 }
