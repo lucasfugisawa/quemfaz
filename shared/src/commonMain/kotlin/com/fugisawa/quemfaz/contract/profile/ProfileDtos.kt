@@ -46,6 +46,7 @@ data class ClarifyDraftRequest(
     val originalDescription: String,
     val clarificationAnswers: List<ClarificationAnswer>,
     val inputMode: InputMode = InputMode.TEXT,
+    val clarificationRound: Int = 1,
 )
 
 @Serializable
