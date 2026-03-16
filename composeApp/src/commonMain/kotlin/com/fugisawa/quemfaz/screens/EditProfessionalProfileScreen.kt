@@ -30,7 +30,7 @@ fun EditProfessionalProfileScreen(
     catalog: CatalogResponse?,
     onAddService: (String) -> Unit,
     onRemoveService: (String) -> Unit,
-    onSave: (description: String, city: String, phone: String) -> Unit,
+    onSave: (description: String, city: String) -> Unit,
     onNavigateBack: () -> Unit,
     onGoToOnboarding: () -> Unit,
 ) {
@@ -116,11 +116,10 @@ private fun EditProfileForm(
     catalog: CatalogResponse?,
     onAddService: (String) -> Unit,
     onRemoveService: (String) -> Unit,
-    onSave: (description: String, city: String, phone: String) -> Unit,
+    onSave: (description: String, city: String) -> Unit,
 ) {
     var description by remember(profile.id) { mutableStateOf(profile.description) }
     var city by remember(profile.id) { mutableStateOf(profile.cityName) }
-    var phone by remember(profile.id) { mutableStateOf(profile.phone) }
 
     Column(
         modifier = Modifier
@@ -235,17 +234,6 @@ private fun EditProfileForm(
             shape = MaterialTheme.shapes.medium
         )
 
-        Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
-
-        OutlinedTextField(
-            value = phone,
-            onValueChange = { phone = it },
-            label = { Text(Strings.EditProfile.PHONE) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            shape = MaterialTheme.shapes.medium
-        )
-
         Spacer(modifier = Modifier.height(Spacing.lg))
 
         if (isSaved) {
@@ -259,7 +247,7 @@ private fun EditProfileForm(
 
         Button(
             onClick = {
-                onSave(description, city, phone)
+                onSave(description, city)
             },
             enabled = !isSaving,
             modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
@@ -283,7 +271,7 @@ private fun EditProfileLoadingPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Loading,
             editedServiceIds = emptyList(), catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -295,7 +283,7 @@ private fun EditProfileNoProfilePreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.NoProfile,
             editedServiceIds = emptyList(), catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -308,7 +296,7 @@ private fun EditProfileReadyPreview() {
             uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -321,7 +309,7 @@ private fun EditProfileSavingPreview() {
             uiState = EditProfileUiState.Saving(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -334,7 +322,7 @@ private fun EditProfileSavedPreview() {
             uiState = EditProfileUiState.Saved(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }
@@ -346,7 +334,7 @@ private fun EditProfileErrorPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Error("Failed to load profile. Please try again later."),
             editedServiceIds = emptyList(), catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
         )
     }
 }

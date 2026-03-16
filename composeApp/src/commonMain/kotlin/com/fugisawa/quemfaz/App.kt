@@ -491,8 +491,8 @@ fun MainFlow(
                             catalog = editCatalog,
                             onAddService = viewModel::addService,
                             onRemoveService = viewModel::removeService,
-                            onSave = { desc, city, phone ->
-                                viewModel.saveProfile(desc, city, phone)
+                            onSave = { desc, city ->
+                                viewModel.saveProfile(desc, city)
                             },
                             onNavigateBack = navigateBack,
                             onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }
