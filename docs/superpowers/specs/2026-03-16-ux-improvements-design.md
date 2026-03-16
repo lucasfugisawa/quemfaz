@@ -108,7 +108,8 @@ Top-to-bottom layout:
 
 - Every search that resolves to canonical services via LLM interpretation logs a search event
 - Search events are recorded during the existing search flow (no new logging endpoint)
-- Fields: `id` (TEXT), `resolved_service_id` (TEXT, FK to services), `city_name` (TEXT), `created_at` (TIMESTAMP)
+- Fields: `id` (TEXT, UUID), `resolved_service_id` (TEXT, FK to services), `city_name` (TEXT), `created_at` (TIMESTAMP)
+- Server caches aggregation results (refresh every 15 minutes) to avoid computing on every home screen load
 - Search events are logged after LLM interpretation resolves services. If no services are resolved, no event is logged.
 - Aggregation: count by service per city, ordered by frequency, within a rolling 30-day window
 - **Per-city with global fallback:** show city-level results when sufficient data exists (server-configured threshold, initially 10 searches in the window), otherwise show platform-wide results. The endpoint signals which mode was used so the UI can adjust the header (e.g., "Mais buscados na sua cidade" vs "Mais buscados no QuemFaz").
@@ -131,6 +132,8 @@ Top-to-bottom layout:
 - Displays all service categories from the existing category model
 - Flat list grouped by category, each category as a section header with its services listed below
 - Tapping a service triggers a search for that service
+- Reuses existing `CatalogApiClient.getCatalog()` endpoint — no new API needed
+- Standard loading/error states
 
 ---
 
@@ -219,7 +222,12 @@ Professionals must be 18+ but there is no age verification in the current flow.
 - Server validates 18+ both when saving birth date and before creating professional profile draft
 - Client validates 18+ locally before submitting (immediate feedback)
 - If the user already has a `date_of_birth` stored (e.g., from a previous onboarding attempt), skip the birth date step in the onboarding flow
-- New `OnboardingUiState.BirthDateRequired` state added before `Idle`
+- New `OnboardingUiState.BirthDateRequired` state is the initial onboarding state (replaces `Idle` as the starting state)
+- After birth date is saved, transition to `Idle` (description input)
+- If user already has `date_of_birth` stored, skip directly to `Idle`
+- Back press from `BirthDateRequired` exits onboarding (pops back to the previous screen in the nav stack)
+- Server rejects draft creation with HTTP 422 if `date_of_birth` is missing or user is under 18. Error response: `{ "error": "UNDERAGE" }` or `{ "error": "DATE_OF_BIRTH_REQUIRED" }`
+- `dateOfBirth` is `String` in ISO-8601 format (e.g., "1990-05-15") in all DTOs
 
 ---
 
@@ -246,7 +254,7 @@ Professional profiles have separate `contactPhone` and `whatsAppPhone` fields th
 
 **DTO changes:**
 - Remove `whatsAppPhone` and `contactPhone` from `ProfessionalProfileResponse`
-- Add a single `phone` field to `ProfessionalProfileResponse`, populated by the server from the user's account phone number. This is necessary because the profile view is used for viewing other users' profiles, not just your own.
+- Add a single `phone` field to `ProfessionalProfileResponse`, populated by the server from the user's account phone number. This is necessary because the profile view is used for viewing other users' profiles, not just your own. Note: this is consistent with the current behavior where `contactPhone` is already visible to all profile viewers — the difference is that now the professional cannot set a different contact number.
 - Remove `contactPhone` and `whatsAppPhone` from `ConfirmProfessionalProfileRequest`
 - Update `EditProfessionalProfileViewModel.saveProfile()` to remove phone parameters
 
