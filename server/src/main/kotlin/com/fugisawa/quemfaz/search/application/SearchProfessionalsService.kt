@@ -75,7 +75,7 @@ class SearchProfessionalsService(
             results =
                 pagedResults.map { profile ->
                     val user = userRepository.findById(profile.userId)
-                    mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl)
+                    mapToResponse(profile, user?.fullName ?: "", user?.photoUrl)
                 },
             page = page,
             pageSize = pageSize,
@@ -87,14 +87,12 @@ class SearchProfessionalsService(
 
     private fun mapToResponse(
         profile: ProfessionalProfile,
-        firstName: String,
-        lastName: String,
+        fullName: String,
         userPhotoUrl: String?,
     ): ProfessionalProfileResponse =
         ProfessionalProfileResponse(
             id = profile.id.value,
-            firstName = firstName,
-            lastName = lastName,
+            fullName = fullName,
             knownName = profile.knownName,
             photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
             description = profile.normalizedDescription ?: "",
@@ -106,8 +104,7 @@ class SearchProfessionalsService(
                 },
             profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
             activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
-            whatsAppPhone = profile.whatsappPhone,
-            contactPhone = profile.contactPhone ?: "",
+            phone = profile.contactPhone ?: profile.whatsappPhone ?: "",
             portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
             contactCount = profile.contactClickCount,
             daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),

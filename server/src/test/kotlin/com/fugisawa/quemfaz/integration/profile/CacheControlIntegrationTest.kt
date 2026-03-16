@@ -23,7 +23,7 @@ class CacheControlIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `GET public profile returns Cache-Control public header`() = integrationTestApplication {
         val token = obtainAuthToken("+5511900000060")
-        completeNameStep(token, "Cache", "Test")
+        completeNameStep(token, "Cache Test")
         setUserPhoto(token, "/api/images/test-photo-id")
         createAndConfirmProfile(token)
 
@@ -38,7 +38,7 @@ class CacheControlIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `GET own profile returns Cache-Control private no-cache header`() = integrationTestApplication {
         val token = obtainAuthToken("+5511900000061")
-        completeNameStep(token, "Cache", "Private")
+        completeNameStep(token, "Cache Private")
         setUserPhoto(token, "/api/images/test-photo-id")
         createAndConfirmProfile(token)
 

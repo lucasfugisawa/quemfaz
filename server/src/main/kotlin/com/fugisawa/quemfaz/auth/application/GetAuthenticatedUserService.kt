@@ -22,12 +22,12 @@ class GetAuthenticatedUserService(
         return UserProfileResponse(
             id = user.id.value,
             phoneNumber = phoneIdentity?.phoneNumber ?: "",
-            firstName = user.firstName,
-            lastName = user.lastName,
+            fullName = user.fullName,
             photoUrl = user.photoUrl,
             cityName = null,
             status = user.status.name,
             hasProfessionalProfile = profile != null,
+            dateOfBirth = user.dateOfBirth?.toString(),
         )
     }
 }

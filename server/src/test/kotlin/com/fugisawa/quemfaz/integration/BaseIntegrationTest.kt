@@ -156,12 +156,11 @@ abstract class BaseIntegrationTest {
 
     protected suspend fun ApplicationTestBuilder.completeNameStep(
         token: String,
-        firstName: String,
-        lastName: String,
+        fullName: String,
     ) {
         createTestClient(token).post("/auth/profile") {
             contentType(ContentType.Application.Json)
-            setBody(CompleteUserProfileRequest(firstName = firstName, lastName = lastName))
+            setBody(CompleteUserProfileRequest(fullName = fullName))
         }
     }
 
@@ -191,8 +190,6 @@ abstract class BaseIntegrationTest {
                 description = draft.normalizedDescription,
                 selectedServiceIds = draft.interpretedServices.map { it.serviceId },
                 cityName = "São Paulo",
-                contactPhone = "+5511999999999",
-                whatsAppPhone = "+5511999999999",
                 portfolioPhotoUrls = emptyList(),
             ))
         }

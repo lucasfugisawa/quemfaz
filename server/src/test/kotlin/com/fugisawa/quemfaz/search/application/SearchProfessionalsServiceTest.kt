@@ -76,9 +76,11 @@ class SearchProfessionalsServiceTest {
     private class FakeUserRepository : UserRepository {
         override fun create(user: User): User = user
 
-        override fun findById(id: UserId): User = User(id, "User", id.value, null, UserStatus.ACTIVE, Instant.now(), Instant.now())
+        override fun findById(id: UserId): User = User(id, "User ${id.value}", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now())
 
-        override fun updateName(id: UserId, firstName: String, lastName: String): User? = null
+        override fun updateName(id: UserId, fullName: String): User? = null
+
+        override fun updateDateOfBirth(id: UserId, dateOfBirth: java.time.LocalDate): User? = null
 
         override fun updatePhotoUrl(id: UserId, photoUrl: String): User? = null
 

@@ -31,12 +31,12 @@ class SetProfilePhotoService(
             UserProfileResponse(
                 id = user.id.value,
                 phoneNumber = identity?.phoneNumber ?: "",
-                firstName = user.firstName,
-                lastName = user.lastName,
+                fullName = user.fullName,
                 photoUrl = request.photoUrl,
                 cityName = null,
                 status = user.status.name,
                 hasProfessionalProfile = profileExists,
+                dateOfBirth = user.dateOfBirth?.toString(),
             ),
         )
     }

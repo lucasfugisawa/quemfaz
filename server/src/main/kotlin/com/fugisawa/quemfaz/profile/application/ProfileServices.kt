@@ -78,8 +78,7 @@ class ConfirmProfessionalProfileService(
             if (
                 request.description.isNotBlank() &&
                 request.selectedServiceIds.isNotEmpty() &&
-                !request.cityName.isNullOrBlank() &&
-                request.contactPhone.isNotBlank()
+                !request.cityName.isNullOrBlank()
             ) {
                 ProfileCompleteness.COMPLETE
             } else {
@@ -93,8 +92,8 @@ class ConfirmProfessionalProfileService(
                 knownName = null,
                 description = request.description,
                 normalizedDescription = request.description,
-                contactPhone = request.contactPhone,
-                whatsappPhone = request.whatsAppPhone,
+                contactPhone = null,
+                whatsappPhone = null,
                 cityName = request.cityName,
                 services = services,
                 portfolioPhotos = portfolioPhotos,
@@ -107,7 +106,7 @@ class ConfirmProfessionalProfileService(
 
         val savedProfile = profileRepository.save(profile)
 
-        return mapToResponse(savedProfile, user.firstName, user.lastName, user.photoUrl, catalogService)
+        return mapToResponse(savedProfile, user.fullName, user.photoUrl, catalogService)
     }
 }
 
@@ -119,7 +118,7 @@ class GetMyProfessionalProfileService(
     fun execute(userId: UserId): ProfessionalProfileResponse? {
         val profile = profileRepository.findByUserId(userId) ?: return null
         val user = userRepository.findById(userId)
-        return mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl, catalogService)
+        return mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, catalogService)
     }
 }
 
@@ -133,7 +132,7 @@ class GetPublicProfessionalProfileService(
         if (profile.status != ProfessionalProfileStatus.PUBLISHED) return null
 
         val user = userRepository.findById(profile.userId)
-        return mapToResponse(profile, user?.firstName ?: "", user?.lastName ?: "", user?.photoUrl, catalogService)
+        return mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, catalogService)
     }
 }
 
@@ -193,8 +192,7 @@ class UpdateProfessionalProfileService(
             if (
                 request.description.isNotBlank() &&
                 request.selectedServiceIds.isNotEmpty() &&
-                !request.cityName.isNullOrBlank() &&
-                request.contactPhone.isNotBlank()
+                !request.cityName.isNullOrBlank()
             ) {
                 ProfileCompleteness.COMPLETE
             } else {
@@ -212,8 +210,8 @@ class UpdateProfessionalProfileService(
             existing.copy(
                 description = request.description,
                 normalizedDescription = request.description,
-                contactPhone = request.contactPhone,
-                whatsappPhone = request.whatsAppPhone,
+                contactPhone = null,
+                whatsappPhone = null,
                 cityName = request.cityName,
                 services = services,
                 portfolioPhotos = portfolioPhotos,
@@ -225,21 +223,19 @@ class UpdateProfessionalProfileService(
 
         val saved = profileRepository.save(updated)
 
-        return UpdateProfileResult.Success(mapToResponse(saved, user.firstName, user.lastName, user.photoUrl, catalogService))
+        return UpdateProfileResult.Success(mapToResponse(saved, user.fullName, user.photoUrl, catalogService))
     }
 }
 
 private fun mapToResponse(
     profile: ProfessionalProfile,
-    firstName: String,
-    lastName: String,
+    fullName: String,
     userPhotoUrl: String?,
     catalogService: CatalogService,
 ): ProfessionalProfileResponse =
     ProfessionalProfileResponse(
         id = profile.id.value,
-        firstName = firstName,
-        lastName = lastName,
+        fullName = fullName,
         knownName = profile.knownName,
         photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
         description = profile.description ?: "",
@@ -250,8 +246,7 @@ private fun mapToResponse(
         },
         profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
         activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
-        whatsAppPhone = profile.whatsappPhone,
-        contactPhone = profile.contactPhone ?: "",
+        phone = profile.contactPhone ?: profile.whatsappPhone ?: "",
         portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
         contactCount = profile.contactClickCount,
         daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),

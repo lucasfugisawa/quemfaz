@@ -32,7 +32,7 @@ class EngagementCounterIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `tracking profile view increments view count and updates profile response`() = integrationTestApplication {
         val token = obtainAuthToken("+5511900000050")
-        completeNameStep(token, "Test", "Professional")
+        completeNameStep(token, "Test Professional")
         setUserPhoto(token, "/api/images/test-photo-id")
         createAndConfirmProfile(token)
 
@@ -55,7 +55,7 @@ class EngagementCounterIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `tracking contact click increments contact count`() = integrationTestApplication {
         val token = obtainAuthToken("+5511900000051")
-        completeNameStep(token, "Test", "Click")
+        completeNameStep(token, "Test Click")
         setUserPhoto(token, "/api/images/test-photo-id")
         createAndConfirmProfile(token)
 

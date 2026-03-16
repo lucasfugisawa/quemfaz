@@ -18,13 +18,14 @@ class CompleteUserProfileService(
         request: CompleteUserProfileRequest,
     ): CompleteProfileResult =
         transaction {
-            if (request.firstName.isBlank() || request.lastName.isBlank()) {
-                return@transaction CompleteProfileResult.Failure("First name and last name are required")
+            val trimmedName = request.fullName.trim()
+            if (trimmedName.split("\\s+".toRegex()).size < 2) {
+                return@transaction CompleteProfileResult.Failure("Full name must contain at least first and last name")
             }
 
             val user = userRepository.findById(userId) ?: return@transaction CompleteProfileResult.Failure("User not found")
 
-            userRepository.updateName(userId, request.firstName.trim(), request.lastName.trim())
+            userRepository.updateName(userId, trimmedName)
 
             val identity = userPhoneAuthIdentityRepository.findByUserId(userId)
             val profileExists = profileRepository.findByUserId(userId) != null
@@ -33,12 +34,12 @@ class CompleteUserProfileService(
                 UserProfileResponse(
                     id = user.id.value,
                     phoneNumber = identity?.phoneNumber ?: "unknown",
-                    firstName = request.firstName,
-                    lastName = request.lastName,
+                    fullName = trimmedName,
                     photoUrl = null,
                     cityName = null,
                     status = user.status.name,
                     hasProfessionalProfile = profileExists,
+                    dateOfBirth = user.dateOfBirth?.toString(),
                 ),
             )
         }

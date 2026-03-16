@@ -72,7 +72,7 @@ class VerifyOtpService(
                                 success = true,
                                 userId = user.id.value,
                                 isNewUser = false,
-                                requiresProfileCompletion = user.firstName.isBlank(),
+                                requiresProfileCompletion = user.fullName.isBlank(),
                                 token = token,
                                 refreshToken = refreshTokenValue,
                             ),
@@ -85,8 +85,7 @@ class VerifyOtpService(
                 val newUser =
                     User(
                         id = userId,
-                        firstName = "",
-                        lastName = "",
+                        fullName = "",
                         photoUrl = null,
                         status = UserStatus.ACTIVE,
                         createdAt = Instant.now(),

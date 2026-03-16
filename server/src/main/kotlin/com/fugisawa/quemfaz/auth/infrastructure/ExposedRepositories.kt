@@ -17,16 +17,17 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import java.time.Instant
+import java.time.LocalDate
 
 object UsersTable : Table("users") {
     val id = varchar("id", 128)
-    val firstName = varchar("first_name", 255)
-    val lastName  = varchar("last_name", 255)
+    val fullName = text("full_name")
     val photoUrl = varchar("photo_url", 1024).nullable()
     val status =
         customEnumeration(
@@ -40,6 +41,7 @@ object UsersTable : Table("users") {
                 pgObject
             },
         )
+    val dateOfBirth = date("date_of_birth").nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
 
@@ -86,10 +88,10 @@ class ExposedUserRepository : UserRepository {
         transaction {
             UsersTable.insert {
                 it[id] = user.id.value
-                it[firstName] = user.firstName
-                it[lastName]  = user.lastName
+                it[fullName] = user.fullName
                 it[photoUrl] = user.photoUrl
                 it[status] = user.status
+                it[dateOfBirth] = user.dateOfBirth
                 it[createdAt] = user.createdAt
                 it[updatedAt] = user.updatedAt
             }
@@ -105,12 +107,20 @@ class ExposedUserRepository : UserRepository {
                 .singleOrNull()
         }
 
-    override fun updateName(id: UserId, firstName: String, lastName: String): User? =
+    override fun updateName(id: UserId, fullName: String): User? =
         transaction {
             UsersTable.update({ UsersTable.id eq id.value }) {
-                it[UsersTable.firstName] = firstName
-                it[UsersTable.lastName]  = lastName
-                it[updatedAt]            = Instant.now()
+                it[UsersTable.fullName] = fullName
+                it[updatedAt]           = Instant.now()
+            }
+            findById(id)
+        }
+
+    override fun updateDateOfBirth(id: UserId, dateOfBirth: LocalDate): User? =
+        transaction {
+            UsersTable.update({ UsersTable.id eq id.value }) {
+                it[UsersTable.dateOfBirth] = dateOfBirth
+                it[updatedAt]              = Instant.now()
             }
             findById(id)
         }
@@ -138,10 +148,10 @@ class ExposedUserRepository : UserRepository {
     private fun mapUser(it: ResultRow) =
         User(
             id = UserId(it[UsersTable.id]),
-            firstName = it[UsersTable.firstName],
-            lastName  = it[UsersTable.lastName],
+            fullName = it[UsersTable.fullName],
             photoUrl = it[UsersTable.photoUrl],
             status = it[UsersTable.status],
+            dateOfBirth = it[UsersTable.dateOfBirth],
             createdAt = it[UsersTable.createdAt],
             updatedAt = it[UsersTable.updatedAt],
         )

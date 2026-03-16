@@ -9,11 +9,13 @@ import com.fugisawa.quemfaz.auth.application.SetProfilePhotoService
 import com.fugisawa.quemfaz.auth.application.StartOtpService
 import com.fugisawa.quemfaz.auth.application.VerifyOtpResult
 import com.fugisawa.quemfaz.auth.application.VerifyOtpService
+import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
 import com.fugisawa.quemfaz.contract.auth.LogoutRequest
 import com.fugisawa.quemfaz.contract.auth.RefreshTokenRequest
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
+import com.fugisawa.quemfaz.contract.auth.UpdateDateOfBirthRequest
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.core.id.UserId
 import io.ktor.http.HttpHeaders
@@ -27,8 +29,11 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import org.koin.ktor.ext.inject
+import java.time.LocalDate
+import java.time.Period
 
 fun Route.authRoutes() {
     val startOtpService by inject<StartOtpService>()
@@ -37,6 +42,7 @@ fun Route.authRoutes() {
     val completeUserProfileService by inject<CompleteUserProfileService>()
     val getAuthenticatedUserService by inject<GetAuthenticatedUserService>()
     val setProfilePhotoService by inject<SetProfilePhotoService>()
+    val userRepository by inject<UserRepository>()
 
     route("/auth") {
         post("/start-otp") {
@@ -122,6 +128,23 @@ fun Route.authRoutes() {
                 } catch (e: IllegalArgumentException) {
                     call.respond(HttpStatusCode.NotFound, e.message ?: "User not found")
                 }
+            }
+
+            put("/me/date-of-birth") {
+                val principal = call.principal<JWTPrincipal>()
+                val userId =
+                    principal?.payload?.getClaim("userId")?.asString()
+                        ?: return@put call.respond(HttpStatusCode.Unauthorized)
+
+                val request = call.receive<UpdateDateOfBirthRequest>()
+                val birthDate = LocalDate.parse(request.dateOfBirth)
+                val age = Period.between(birthDate, LocalDate.now()).years
+                if (age < 18) {
+                    call.respond(HttpStatusCode.UnprocessableEntity, mapOf("error" to "UNDERAGE"))
+                    return@put
+                }
+                userRepository.updateDateOfBirth(UserId(userId), birthDate)
+                call.respond(HttpStatusCode.OK)
             }
         }
     }

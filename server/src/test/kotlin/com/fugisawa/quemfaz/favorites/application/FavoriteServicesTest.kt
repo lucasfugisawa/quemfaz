@@ -95,7 +95,9 @@ class FavoriteServicesTest {
 
         override fun findById(id: UserId): User? = null
 
-        override fun updateName(id: UserId, firstName: String, lastName: String): User? = null
+        override fun updateName(id: UserId, fullName: String): User? = null
+
+        override fun updateDateOfBirth(id: UserId, dateOfBirth: java.time.LocalDate): User? = null
 
         override fun updatePhotoUrl(id: UserId, photoUrl: String): User? = null
 

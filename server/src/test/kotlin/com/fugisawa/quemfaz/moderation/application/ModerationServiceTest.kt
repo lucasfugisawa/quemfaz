@@ -83,7 +83,9 @@ class ModerationServiceTest {
 
         override fun findById(id: UserId) = users[id.value]
 
-        override fun updateName(id: UserId, firstName: String, lastName: String): User? = null
+        override fun updateName(id: UserId, fullName: String): User? = null
+
+        override fun updateDateOfBirth(id: UserId, dateOfBirth: java.time.LocalDate): User? = null
 
         override fun updatePhotoUrl(id: UserId, photoUrl: String): User? = null
 
@@ -140,7 +142,7 @@ class ModerationServiceTest {
 
         val userId = UserId("user-1")
         val profileId = ProfessionalProfileId("prof-1")
-        userRepo.create(User(userId, "John", "", null, UserStatus.ACTIVE, Instant.now(), Instant.now()))
+        userRepo.create(User(userId, "John", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now()))
         profileRepo.save(createProfile(profileId, userId, ProfessionalProfileStatus.PUBLISHED))
 
         moderationService.blockUser(userId)

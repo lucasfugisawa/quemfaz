@@ -26,7 +26,7 @@ class SetKnownNameIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should set known name on existing profile`() = integrationTestApplication {
         val token = obtainAuthToken("+5511900000010")
-        completeNameStep(token, "Lucas", "Test")
+        completeNameStep(token, "Lucas Test")
         setUserPhoto(token, "/api/images/test-photo-id")
         createAndConfirmProfile(token)
 
@@ -41,7 +41,7 @@ class SetKnownNameIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when no profile exists`() = integrationTestApplication {
         val token = obtainAuthToken("+5511900000011")
-        completeNameStep(token, "Lucas", "Test")
+        completeNameStep(token, "Lucas Test")
 
         val client = createTestClient(token)
         val response = client.put("/professional-profile/known-name") {

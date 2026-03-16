@@ -2,13 +2,16 @@ package com.fugisawa.quemfaz.auth.domain
 
 import com.fugisawa.quemfaz.core.id.UserId
 import java.time.Instant
+import java.time.LocalDate
 
 interface UserRepository {
     fun create(user: User): User
 
     fun findById(id: UserId): User?
 
-    fun updateName(id: UserId, firstName: String, lastName: String): User?
+    fun updateName(id: UserId, fullName: String): User?
+
+    fun updateDateOfBirth(id: UserId, dateOfBirth: LocalDate): User?
 
     fun updatePhotoUrl(id: UserId, photoUrl: String): User?
 

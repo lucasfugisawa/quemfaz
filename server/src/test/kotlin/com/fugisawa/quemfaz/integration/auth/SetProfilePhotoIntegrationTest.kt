@@ -30,7 +30,7 @@ class SetProfilePhotoIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should set photo URL when given a valid internal URL`() = integrationTestApplication {
         val token = obtainAuthToken("+5511900000010")
-        completeNameStep(token, "João", "Silva")
+        completeNameStep(token, "João Silva")
         val client = createTestClient(token)
 
         val response = client.post("/auth/photo") {
@@ -45,7 +45,7 @@ class SetProfilePhotoIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should reject arbitrary external URL`() = integrationTestApplication {
         val token = obtainAuthToken("+5511900000011")
-        completeNameStep(token, "Ana", "Souza")
+        completeNameStep(token, "Ana Souza")
         val client = createTestClient(token)
 
         val response = client.post("/auth/photo") {

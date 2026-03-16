@@ -2,13 +2,14 @@ package com.fugisawa.quemfaz.auth.domain
 
 import com.fugisawa.quemfaz.core.id.UserId
 import java.time.Instant
+import java.time.LocalDate
 
 data class User(
     val id: UserId,
-    val firstName: String,
-    val lastName: String,
+    val fullName: String,
     val photoUrl: String?,
     val status: UserStatus,
+    val dateOfBirth: LocalDate? = null,
     val createdAt: Instant,
     val updatedAt: Instant,
 )

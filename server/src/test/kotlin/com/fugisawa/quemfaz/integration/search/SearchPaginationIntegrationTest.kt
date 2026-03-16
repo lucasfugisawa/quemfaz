@@ -29,7 +29,7 @@ class SearchPaginationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `search response includes pagination metadata`() = integrationTestApplication {
         val token = obtainAuthToken("+5511900000031")
-        completeNameStep(token, "Test", "Painter")
+        completeNameStep(token, "Test Painter")
         createAndConfirmProfile(token)
 
         val client = createTestClient()

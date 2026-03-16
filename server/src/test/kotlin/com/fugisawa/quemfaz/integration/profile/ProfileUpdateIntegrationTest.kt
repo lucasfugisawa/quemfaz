@@ -31,7 +31,7 @@ class ProfileUpdateIntegrationTest : BaseIntegrationTest() {
     fun `updating profile can change services`() = integrationTestApplication {
         // Set up user: auth + name + photo (required before confirming a profile)
         val token = obtainAuthToken("+5516900000070")
-        completeNameStep(token, "Test", "User")
+        completeNameStep(token, "Test User")
         setUserPhoto(token, "/api/images/profileupdatetestphoto0001")
         val client = createTestClient(token)
 
@@ -42,8 +42,6 @@ class ProfileUpdateIntegrationTest : BaseIntegrationTest() {
                 description = "Pintor residencial",
                 selectedServiceIds = listOf("paint-residential"),
                 cityName = "Franca",
-                contactPhone = "16999999999",
-                whatsAppPhone = null,
                 portfolioPhotoUrls = emptyList(),
             ))
         }
@@ -55,8 +53,6 @@ class ProfileUpdateIntegrationTest : BaseIntegrationTest() {
                 description = "Pintor residencial",
                 selectedServiceIds = listOf("paint-residential", "paint-commercial"),
                 cityName = "Franca",
-                contactPhone = "16999999999",
-                whatsAppPhone = null,
                 portfolioPhotoUrls = emptyList(),
             ))
         }
