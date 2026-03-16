@@ -14,6 +14,7 @@ import com.fugisawa.quemfaz.platform.rememberImagePickerLauncher
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
@@ -34,9 +35,9 @@ fun MyProfileScreen(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (hydrationFailed) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Error loading profile", color = MaterialTheme.colorScheme.error)
+                    Text(Strings.MyProfile.ERROR_LOADING, color = MaterialTheme.colorScheme.error)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = onRetry) { Text("Retry") }
+                    Button(onClick = onRetry) { Text(Strings.Common.RETRY) }
                 }
             } else {
                 CircularProgressIndicator()
@@ -62,7 +63,7 @@ fun MyProfileScreen(
             )
             Spacer(modifier = Modifier.width(Spacing.md))
             Column {
-                Text("My Profile", style = MaterialTheme.typography.headlineSmall)
+                Text(Strings.MyProfile.TITLE, style = MaterialTheme.typography.headlineSmall)
                 Text(
                     currentUser.phoneNumber,
                     style = MaterialTheme.typography.bodyMedium,
@@ -81,17 +82,17 @@ fun MyProfileScreen(
             ) {
                 Column(modifier = Modifier.padding(Spacing.md)) {
                     Text(
-                        "Add a profile photo",
+                        Strings.MyProfile.ADD_PHOTO_TITLE,
                         style = MaterialTheme.typography.titleSmall,
                     )
                     Spacer(modifier = Modifier.height(Spacing.xs))
                     Text(
-                        "Clients are more likely to contact professionals with a photo.",
+                        Strings.MyProfile.ADD_PHOTO_SUBTITLE,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     TextButton(onClick = { imagePicker.launch() }) {
-                        Text("Add photo")
+                        Text(Strings.MyProfile.ADD_PHOTO_BUTTON)
                     }
                 }
             }
@@ -102,7 +103,7 @@ fun MyProfileScreen(
         OutlinedTextField(
             value = firstName,
             onValueChange = { firstName = it },
-            label = { Text("First name") },
+            label = { Text(Strings.MyProfile.FIRST_NAME) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             shape = MaterialTheme.shapes.medium
@@ -113,7 +114,7 @@ fun MyProfileScreen(
         OutlinedTextField(
             value = lastName,
             onValueChange = { lastName = it },
-            label = { Text("Last name") },
+            label = { Text(Strings.MyProfile.LAST_NAME) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             shape = MaterialTheme.shapes.medium
@@ -130,7 +131,7 @@ fun MyProfileScreen(
             if (isSaving) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
             } else {
-                Text("Save name")
+                Text(Strings.MyProfile.SAVE_NAME)
             }
         }
 
@@ -141,7 +142,7 @@ fun MyProfileScreen(
             modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
             shape = MaterialTheme.shapes.medium
         ) {
-            Text("Change photo")
+            Text(Strings.MyProfile.CHANGE_PHOTO)
         }
 
         if (uiState is AuthUiState.Error) {
@@ -153,21 +154,21 @@ fun MyProfileScreen(
         HorizontalDivider()
 
         TextButton(onClick = onNavigateToFavorites, modifier = Modifier.fillMaxWidth()) {
-            Text("My Favorites")
+            Text(Strings.MyProfile.MY_FAVORITES)
         }
 
         TextButton(onClick = onChangeCity, modifier = Modifier.fillMaxWidth()) {
-            Text("Change City")
+            Text(Strings.MyProfile.CHANGE_CITY)
         }
 
         TextButton(onClick = onManageProfessionalProfile, modifier = Modifier.fillMaxWidth()) {
-            Text("Professional Profile")
+            Text(Strings.MyProfile.PROFESSIONAL_PROFILE)
         }
 
         Spacer(modifier = Modifier.height(Spacing.sectionGap))
 
         TextButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
-            Text("Logout", color = MaterialTheme.colorScheme.error)
+            Text(Strings.MyProfile.LOGOUT, color = MaterialTheme.colorScheme.error)
         }
     }
 }
