@@ -25,3 +25,15 @@ data class SearchProfessionalsResponse(
     val llmUnavailable: Boolean = false,
     val blockedDescriptions: List<String> = emptyList(),
 )
+
+@Serializable
+data class PopularServiceDto(
+    val serviceId: String,
+    val displayName: String
+)
+
+@Serializable
+data class PopularServicesResponse(
+    val services: List<PopularServiceDto>,
+    val isLocalResults: Boolean
+)

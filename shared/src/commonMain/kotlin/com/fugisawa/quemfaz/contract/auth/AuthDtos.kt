@@ -45,8 +45,7 @@ data class RefreshTokenResponse(
 
 @Serializable
 data class CompleteUserProfileRequest(
-    val firstName: String,
-    val lastName: String
+    val fullName: String
 )
 
 @Serializable
@@ -58,12 +57,17 @@ data class SetProfilePhotoRequest(
 data class UserProfileResponse(
     val id: String,
     val phoneNumber: String,
-    val firstName: String,
-    val lastName: String,
+    val fullName: String,
     val photoUrl: String?,
     val cityName: String?,
     val status: String,
     val hasProfessionalProfile: Boolean = false,
+    val dateOfBirth: String? = null,
+)
+
+@Serializable
+data class UpdateDateOfBirthRequest(
+    val dateOfBirth: String  // ISO-8601 format, e.g. "1990-05-15"
 )
 
 @Serializable

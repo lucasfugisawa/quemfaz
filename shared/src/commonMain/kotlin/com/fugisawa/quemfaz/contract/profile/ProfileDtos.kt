@@ -53,16 +53,13 @@ data class ConfirmProfessionalProfileRequest(
     val description: String,
     val selectedServiceIds: List<String>,
     val cityName: String?,
-    val contactPhone: String,
-    val whatsAppPhone: String?,
     val portfolioPhotoUrls: List<String>
 )
 
 @Serializable
 data class ProfessionalProfileResponse(
     val id: String,
-    val firstName: String,
-    val lastName: String,
+    val fullName: String,
     val knownName: String?,
     val photoUrl: String?,
     val description: String,
@@ -70,8 +67,7 @@ data class ProfessionalProfileResponse(
     val services: List<InterpretedServiceDto>,
     val profileComplete: Boolean,
     val activeRecently: Boolean,
-    val whatsAppPhone: String?,
-    val contactPhone: String,
+    val phone: String,
     val portfolioPhotoUrls: List<String> = emptyList(),
     val contactCount: Int = 0,
     val daysSinceActive: Int? = null,
