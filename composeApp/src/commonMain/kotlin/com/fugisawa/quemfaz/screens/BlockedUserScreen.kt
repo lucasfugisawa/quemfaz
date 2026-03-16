@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 
 @Composable
@@ -19,16 +20,16 @@ fun BlockedUserScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Account Blocked", style = MaterialTheme.typography.headlineMedium)
+        Text(Strings.BlockedUser.TITLE, style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Your account has been temporarily blocked. If you believe this was a mistake, please contact our support team.",
+            Strings.BlockedUser.MESSAGE,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(32.dp))
         Button(onClick = onContactSupport) {
-            Text("Contact Support")
+            Text(Strings.BlockedUser.CONTACT_SUPPORT)
         }
     }
 }

@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
@@ -23,7 +24,7 @@ fun CitySelectionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Select your city") },
+                title = { Text(Strings.CitySelection.TITLE) },
             )
         }
     ) { paddingValues ->
