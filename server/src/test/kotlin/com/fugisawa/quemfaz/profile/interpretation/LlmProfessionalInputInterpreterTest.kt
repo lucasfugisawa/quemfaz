@@ -103,10 +103,28 @@ class LlmProfessionalInputInterpreterTest {
             listOf(
                 ClarificationAnswer("Que tipo de pintura você faz?", "Residencial"),
             )
-        val response = interpreter.interpretWithClarifications("Faço pintura", answers, InputMode.TEXT)
+        val response = interpreter.interpretWithClarifications("Faço pintura", answers, InputMode.TEXT, clarificationRound = 1)
 
         assertTrue(response.interpretedServices.any { it.serviceId == "paint-residential" })
         assertTrue(response.followUpQuestions.isEmpty())
+    }
+
+    @Test
+    fun `should force no clarification on round 1 or higher`() {
+        val service =
+            createFakeService(
+                OnboardingInterpretation(
+                    serviceIds = emptyList(),
+                    needsClarification = true,
+                    clarificationQuestions = listOf("More detail?"),
+                ),
+            )
+        val interpreter = LlmProfessionalInputInterpreter(service, mockCatalogService, mockSignalCaptureService)
+
+        val answers = listOf(ClarificationAnswer("What do you do?", "Sou padeiro"))
+        val response = interpreter.interpretWithClarifications("Sou padeiro", answers, InputMode.TEXT, clarificationRound = 1)
+
+        assertTrue(response.followUpQuestions.isEmpty(), "Should have no follow-up questions after round 1")
     }
 
     @Test
