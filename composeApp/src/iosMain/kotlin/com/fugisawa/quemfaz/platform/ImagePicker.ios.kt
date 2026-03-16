@@ -12,6 +12,9 @@ import platform.UIKit.UIApplication
 import platform.darwin.NSObject
 import platform.Foundation.NSData
 import platform.UniformTypeIdentifiers.UTTypeImage
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
+import platform.posix.memcpy
 
 actual class ImagePickerLauncher(
     internal val launchFn: () -> Unit,
@@ -58,5 +61,10 @@ actual fun ImagePickerLauncher.launch() = launchFn()
 @OptIn(ExperimentalForeignApi::class)
 private fun NSData.toByteArray(): ByteArray {
     val size = this.length.toInt()
-    return ByteArray(size) { i -> bytes?.get(i)?.toByte() ?: 0 }
+    if (size == 0) return ByteArray(0)
+    val result = ByteArray(size)
+    result.usePinned { pinned ->
+        memcpy(pinned.addressOf(0), this.bytes, this.length)
+    }
+    return result
 }

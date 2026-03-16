@@ -21,15 +21,17 @@ actual fun rememberImagePickerLauncher(
             input.type = "file"
             input.accept = "image/jpeg,image/png,image/webp"
             input.onchange = {
-                val file = input.files?.get(0) ?: return@onchange Unit
-                val reader = FileReader()
-                reader.onload = { _ ->
-                    val arrayBuffer = reader.result
-                    val jsArray = js("new Uint8Array(arrayBuffer)") as ByteArray
-                    onImageSelected(jsArray, file.type)
-                    Unit
+                val file = input.files?.get(0)
+                if (file != null) {
+                    val reader = FileReader()
+                    reader.onload = { _ ->
+                        val arrayBuffer = reader.result
+                        val jsArray = js("new Uint8Array(arrayBuffer)") as ByteArray
+                        onImageSelected(jsArray, file.type)
+                        Unit
+                    }
+                    reader.readAsArrayBuffer(file)
                 }
-                reader.readAsArrayBuffer(file)
                 Unit
             }
             input.click()

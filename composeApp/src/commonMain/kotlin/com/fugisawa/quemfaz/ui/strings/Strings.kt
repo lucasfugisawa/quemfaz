@@ -178,7 +178,7 @@ object Strings {
         const val ACTIVE_RECENTLY = "Ativo(a) recentemente"
         const val COMPLETE_PROFILE = "Completar perfil"
 
-        fun activeDaysAgo(days: Long) = "Ativo(a) há $days dias"
+        fun activeDaysAgo(days: Int) = "Ativo(a) há $days dias"
     }
 
     object Errors {
