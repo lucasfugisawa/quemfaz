@@ -53,7 +53,7 @@ fun OnboardingScreens(
     selectedCity: String?,
     catalog: CatalogResponse?,
     onSubmitDateOfBirth: (dateOfBirth: String) -> Unit,
-    onCreateDraft: (String) -> Unit,
+    onCreateDraft: (String, InputMode) -> Unit,
     onSelectCity: (String) -> Unit,
     onProceedFromServices: (CreateProfessionalProfileDraftResponse, List<String>) -> Unit,
     onProceedWithManualServices: (CreateProfessionalProfileDraftResponse, Set<String>) -> Unit,
@@ -66,6 +66,7 @@ fun OnboardingScreens(
     onFinish: (ProfessionalProfileResponse) -> Unit,
 ) {
     var inputText by remember { mutableStateOf("") }
+    var usedVoice by remember { mutableStateOf(false) }
     var currentStep by remember { mutableStateOf(0) }
 
     // Update currentStep whenever uiState changes to a non-Loading, non-terminal state.
@@ -199,8 +200,19 @@ fun OnboardingScreens(
                                         if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
                                             dateError = Strings.Onboarding.BIRTH_DATE_INVALID
                                         } else {
-                                            // Server validates 18+ age requirement authoritatively.
-                                            onSubmitDateOfBirth(isoDate)
+                                            // Client-side 18+ age check (server also validates authoritatively)
+                                            val today = kotlinx.datetime.Clock.System.now()
+                                                .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault())
+                                                .date
+                                            val birthDate = kotlinx.datetime.LocalDate(year, month, day)
+                                            val age = today.year - birthDate.year -
+                                                if (today.monthNumber < birthDate.monthNumber ||
+                                                    (today.monthNumber == birthDate.monthNumber && today.dayOfMonth < birthDate.dayOfMonth)) 1 else 0
+                                            if (age < 18) {
+                                                dateError = Strings.Onboarding.BIRTH_DATE_UNDERAGE
+                                            } else {
+                                                onSubmitDateOfBirth(isoDate)
+                                            }
                                         }
                                     } catch (e: Exception) {
                                         dateError = Strings.Onboarding.BIRTH_DATE_INVALID
@@ -247,14 +259,17 @@ fun OnboardingScreens(
                             Spacer(modifier = Modifier.height(Spacing.md))
 
                             VoiceInputButton(
-                                onTranscription = { inputText = it },
+                                onTranscription = {
+                                    inputText = it
+                                    usedVoice = true
+                                },
                             )
                         }
 
                         Spacer(modifier = Modifier.height(Spacing.md))
 
                         Button(
-                            onClick = { onCreateDraft(inputText) },
+                            onClick = { onCreateDraft(inputText, if (usedVoice) InputMode.VOICE else InputMode.TEXT) },
                             modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                             enabled = inputText.isNotBlank(),
                             shape = MaterialTheme.shapes.medium
@@ -593,7 +608,7 @@ fun OnboardingScreens(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        Button(onClick = { onCreateDraft(inputText) }) {
+                        Button(onClick = { onCreateDraft(inputText, InputMode.TEXT) }) {
                             Text(Strings.Common.RETRY)
                         }
                     }
@@ -609,19 +624,19 @@ fun OnboardingScreens(
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingBirthDatePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.BirthDateRequired, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.BirthDateRequired, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
@@ -632,7 +647,7 @@ private fun OnboardingReviewServicesPreview() {
             uiState = OnboardingUiState.ReviewServices(PreviewSamples.sampleDraftResponse),
             selectedCity = "Franca",
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -648,7 +663,7 @@ private fun OnboardingReviewDescriptionPreview() {
             ),
             selectedCity = "Franca",
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -661,7 +676,7 @@ private fun OnboardingPublishedPreview() {
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
             selectedCity = null,
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -674,7 +689,7 @@ private fun OnboardingErrorPreview() {
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
             selectedCity = null,
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = {}, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }

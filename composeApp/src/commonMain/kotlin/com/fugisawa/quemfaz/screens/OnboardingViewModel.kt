@@ -85,9 +85,11 @@ class OnboardingViewModel(
             _uiState.value = OnboardingUiState.Loading
             try {
                 apiClients.updateDateOfBirth(UpdateDateOfBirthRequest(dateOfBirth))
+                val updatedUser = apiClients.getCurrentProfile()
+                sessionManager.setCurrentUser(updatedUser)
                 _uiState.value = OnboardingUiState.Idle
             } catch (e: Exception) {
-                _uiState.value = OnboardingUiState.Error("Não foi possível salvar a data de nascimento.")
+                _uiState.value = OnboardingUiState.Error(Strings.Errors.FAILED_SAVE_DATE_OF_BIRTH)
             }
         }
     }

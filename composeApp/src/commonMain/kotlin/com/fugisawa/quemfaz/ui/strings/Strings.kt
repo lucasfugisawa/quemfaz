@@ -200,6 +200,7 @@ object Strings {
         const val FAILED_LOAD_PROFILE = "Não foi possível carregar o perfil"
         const val FAILED_SAVE_PROFILE = "Não foi possível salvar o perfil"
         const val FAILED_LOAD_FAVORITES = "Não foi possível carregar os favoritos"
+        const val FAILED_SAVE_DATE_OF_BIRTH = "Não foi possível salvar a data de nascimento"
         const val SEARCH_FAILED = "A busca falhou"
     }
 }

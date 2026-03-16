@@ -444,7 +444,7 @@ fun MainFlow(
                             selectedCity = selectedCity,
                             catalog = onboardingCatalog,
                             onSubmitDateOfBirth = { viewModel.submitDateOfBirth(it) },
-                            onCreateDraft = { viewModel.createDraft(it) },
+                            onCreateDraft = { text, mode -> viewModel.createDraft(text, mode) },
                             onSelectCity = { viewModel.selectCity(it) },
                             onProceedFromServices = { draft, serviceIds -> viewModel.proceedFromServices(draft, serviceIds) },
                             onProceedWithManualServices = { draft, serviceIds -> viewModel.proceedWithManualServices(draft, serviceIds) },
