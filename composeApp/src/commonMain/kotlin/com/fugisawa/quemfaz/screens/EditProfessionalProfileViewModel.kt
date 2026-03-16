@@ -7,6 +7,7 @@ import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.network.FeatureApiClients
+import com.fugisawa.quemfaz.ui.strings.Strings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -93,7 +94,7 @@ class EditProfessionalProfileViewModel(
                 _editedServiceIds.value = updated.services.map { it.serviceId }
                 _uiState.value = EditProfileUiState.Saved(updated)
             } catch (e: Exception) {
-                _uiState.value = EditProfileUiState.Error(e.message ?: "Failed to save profile")
+                _uiState.value = EditProfileUiState.Error(e.message ?: Strings.Errors.FAILED_SAVE_PROFILE)
             }
         }
     }
