@@ -8,6 +8,7 @@ import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
+import com.fugisawa.quemfaz.ui.strings.Strings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -87,7 +88,7 @@ class OnboardingViewModel(
                     _uiState.value = OnboardingUiState.NeedsClarification(inputText, response)
                 }
             } catch (e: Exception) {
-                _uiState.value = OnboardingUiState.Error(e.message ?: "Failed to create draft")
+                _uiState.value = OnboardingUiState.Error(e.message ?: Strings.Errors.FAILED_CREATE_DRAFT)
             }
         }
     }
@@ -105,7 +106,7 @@ class OnboardingViewModel(
                     _uiState.value = OnboardingUiState.NeedsClarification(originalDescription, response)
                 }
             } catch (e: Exception) {
-                _uiState.value = OnboardingUiState.Error(e.message ?: "Failed to process clarifications")
+                _uiState.value = OnboardingUiState.Error(e.message ?: Strings.Errors.FAILED_PROCESS_CLARIFICATIONS)
             }
         }
     }
@@ -165,7 +166,7 @@ class OnboardingViewModel(
                 sessionManager.setCurrentUser(userResponse)
                 _uiState.value = OnboardingUiState.KnownName(draft, confirmedServiceIds, confirmedDescription)
             } catch (e: Exception) {
-                _uiState.value = OnboardingUiState.Error(e.message ?: "Failed to upload photo")
+                _uiState.value = OnboardingUiState.Error(e.message ?: Strings.Errors.FAILED_UPLOAD_PHOTO)
             }
         }
     }
@@ -212,7 +213,7 @@ class OnboardingViewModel(
                 }
                 _uiState.value = OnboardingUiState.Published(response)
             } catch (e: Exception) {
-                _uiState.value = OnboardingUiState.Error(e.message ?: "Failed to publish profile")
+                _uiState.value = OnboardingUiState.Error(e.message ?: Strings.Errors.FAILED_PUBLISH_PROFILE)
             }
         }
     }

@@ -27,6 +27,7 @@ import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.Spacing
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
@@ -100,14 +101,14 @@ fun OnboardingScreens(
                 ) {
                     if (showBack) {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.Common.BACK)
                         }
                     } else {
                         Spacer(modifier = Modifier.width(Spacing.smallButtonHeight))
                     }
                     if (showStepIndicator) {
                         Text(
-                            text = "Step $currentStep of 5",
+                            text = Strings.Onboarding.stepIndicator(currentStep),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f),
@@ -145,8 +146,8 @@ fun OnboardingScreens(
                         Column(
                             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
                         ) {
-                            Text("Become a professional", style = MaterialTheme.typography.headlineLarge)
-                            Text("Describe your services in your own words. We'll help you organize them.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(Strings.Onboarding.BECOME_PROFESSIONAL, style = MaterialTheme.typography.headlineLarge)
+                            Text(Strings.Onboarding.DESCRIBE_SERVICES, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                             Spacer(modifier = Modifier.height(Spacing.sectionGap))
 
@@ -154,7 +155,7 @@ fun OnboardingScreens(
                                 value = inputText,
                                 onValueChange = { inputText = it },
                                 modifier = Modifier.fillMaxWidth().height(200.dp),
-                                placeholder = { Text("e.g. I am a residential painter with 10 years of experience. I work in Batatais and Ribeirão Preto. I also do small wall repairs.") },
+                                placeholder = { Text(Strings.Onboarding.DESCRIPTION_PLACEHOLDER) },
                                 shape = MaterialTheme.shapes.medium
                             )
                         }
@@ -167,17 +168,17 @@ fun OnboardingScreens(
                             enabled = inputText.isNotBlank(),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Text("Analyze my services", style = MaterialTheme.typography.titleMedium)
+                            Text(Strings.Onboarding.ANALYZE_SERVICES, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(Spacing.md))
                     }
                 }
                 is OnboardingUiState.Loading -> {
                     val phrases = listOf(
-                        "Interpreting your description...",
-                        "Analyzing your services...",
-                        "Organizing your profile...",
-                        "Almost ready..."
+                        Strings.Onboarding.LOADING_INTERPRETING,
+                        Strings.Onboarding.LOADING_ANALYZING,
+                        Strings.Onboarding.LOADING_ORGANIZING,
+                        Strings.Onboarding.LOADING_ALMOST_READY
                     )
                     var phraseIndex by remember { mutableStateOf(0) }
                     LaunchedEffect(Unit) {
@@ -210,8 +211,8 @@ fun OnboardingScreens(
                         Column(
                             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
                         ) {
-                            Text("We need a bit more info", style = MaterialTheme.typography.headlineLarge)
-                            Text("Please answer the questions below so we can better understand your services.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(Strings.Onboarding.MORE_INFO_TITLE, style = MaterialTheme.typography.headlineLarge)
+                            Text(Strings.Onboarding.MORE_INFO_SUBTITLE, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                             Spacer(modifier = Modifier.height(Spacing.lg))
 
@@ -222,7 +223,7 @@ fun OnboardingScreens(
                                     value = answers[index],
                                     onValueChange = { answers[index] = it },
                                     modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("Your answer") },
+                                    placeholder = { Text(Strings.Onboarding.YOUR_ANSWER) },
                                     singleLine = true,
                                     shape = MaterialTheme.shapes.medium
                                 )
@@ -243,7 +244,7 @@ fun OnboardingScreens(
                             modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Text("Submit answers", style = MaterialTheme.typography.titleMedium)
+                            Text(Strings.Onboarding.SUBMIT_ANSWERS, style = MaterialTheme.typography.titleMedium)
                         }
 
                         Spacer(modifier = Modifier.height(Spacing.sm))
@@ -252,7 +253,7 @@ fun OnboardingScreens(
                             onClick = { onSkipClarification(state.draft) },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Skip and continue")
+                            Text(Strings.Onboarding.SKIP_AND_CONTINUE)
                         }
                         Spacer(modifier = Modifier.height(Spacing.sm))
                     }
@@ -262,8 +263,8 @@ fun OnboardingScreens(
                     if (draft.interpretedServices.isEmpty()) {
                         var manualSelectedServices by remember { mutableStateOf(emptySet<String>()) }
                         Column(modifier = Modifier.fillMaxSize()) {
-                            Text("Selecione seus serviços", style = MaterialTheme.typography.headlineLarge)
-                            Text("Não conseguimos identificar seus serviços automaticamente. Selecione abaixo os serviços que você oferece.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(Strings.Onboarding.SELECT_SERVICES_TITLE, style = MaterialTheme.typography.headlineLarge)
+                            Text(Strings.Onboarding.SELECT_SERVICES_SUBTITLE, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                             Spacer(modifier = Modifier.height(16.dp))
 
@@ -289,7 +290,7 @@ fun OnboardingScreens(
                                 enabled = manualSelectedServices.isNotEmpty(),
                                 shape = MaterialTheme.shapes.medium
                             ) {
-                                Text("Continuar", style = MaterialTheme.typography.titleMedium)
+                                Text(Strings.Common.CONTINUE, style = MaterialTheme.typography.titleMedium)
                             }
                         }
                     } else {
@@ -299,8 +300,8 @@ fun OnboardingScreens(
                             Column(
                                 modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
                             ) {
-                                Text("Review your services", style = MaterialTheme.typography.headlineLarge)
-                                Text("These are the services we identified.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(Strings.Onboarding.REVIEW_TITLE, style = MaterialTheme.typography.headlineLarge)
+                                Text(Strings.Onboarding.REVIEW_SUBTITLE, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                                 Spacer(modifier = Modifier.height(Spacing.sectionGap))
 
@@ -309,7 +310,7 @@ fun OnboardingScreens(
                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                                 ) {
                                     Column(modifier = Modifier.padding(Spacing.md)) {
-                                        Text("Interpreted services:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                        Text(Strings.Onboarding.INTERPRETED_SERVICES, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                                         @OptIn(ExperimentalLayoutApi::class)
                                         FlowRow(
                                             modifier = Modifier.fillMaxWidth(),
@@ -328,7 +329,7 @@ fun OnboardingScreens(
                                 Spacer(modifier = Modifier.height(Spacing.lg))
 
                                 // City selector
-                                Text("Your city:", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                Text(Strings.Onboarding.YOUR_CITY, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                                 Spacer(modifier = Modifier.height(Spacing.sm))
                                 @OptIn(ExperimentalMaterial3Api::class)
                                 ExposedDropdownMenuBox(
@@ -340,8 +341,8 @@ fun OnboardingScreens(
                                         value = selectedCity ?: "",
                                         onValueChange = {},
                                         readOnly = true,
-                                        label = { Text("City") },
-                                        placeholder = { Text("Select a city") },
+                                        label = { Text(Strings.Onboarding.CITY_LABEL) },
+                                        placeholder = { Text(Strings.Onboarding.CITY_PLACEHOLDER) },
                                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityDropdownExpanded) },
                                         modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                                         shape = MaterialTheme.shapes.medium,
@@ -372,7 +373,7 @@ fun OnboardingScreens(
                                 modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                                 shape = MaterialTheme.shapes.medium
                             ) {
-                                Text("Looks good, continue", style = MaterialTheme.typography.titleMedium)
+                                Text(Strings.Onboarding.LOOKS_GOOD, style = MaterialTheme.typography.titleMedium)
                             }
                             Spacer(modifier = Modifier.height(Spacing.md))
                         }
@@ -388,9 +389,9 @@ fun OnboardingScreens(
                             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(Spacing.md),
                         ) {
-                            Text("Descrição do perfil", style = MaterialTheme.typography.headlineLarge)
+                            Text(Strings.Onboarding.PROFILE_DESCRIPTION_TITLE, style = MaterialTheme.typography.headlineLarge)
                             Text(
-                                "Esta é a descrição que os clientes verão no seu perfil. Você pode editá-la se quiser.",
+                                Strings.Onboarding.PROFILE_DESCRIPTION_SUBTITLE,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -398,7 +399,7 @@ fun OnboardingScreens(
                                 value = descriptionText,
                                 onValueChange = { descriptionText = it },
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
-                                label = { Text("Descrição") },
+                                label = { Text(Strings.Onboarding.PROFILE_DESCRIPTION_LABEL) },
                                 maxLines = 8,
                                 shape = MaterialTheme.shapes.medium,
                             )
@@ -410,7 +411,7 @@ fun OnboardingScreens(
                             modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                             shape = MaterialTheme.shapes.medium,
                         ) {
-                            Text("Continuar", style = MaterialTheme.typography.titleMedium)
+                            Text(Strings.Common.CONTINUE, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(Spacing.md))
                     }
@@ -423,7 +424,7 @@ fun OnboardingScreens(
                     ProfilePhotoScreen(
                         currentPhotoUrl = currentUser?.photoUrl,
                         displayName = displayName,
-                        headline = "Add a profile photo so clients can recognize you.",
+                        headline = Strings.Auth.PHOTO_PROMPT,
                         showSkip = false,
                         isLoading = false,
                         error = null,
@@ -438,17 +439,17 @@ fun OnboardingScreens(
                         modifier = Modifier.fillMaxSize().padding(0.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        Text("Do you have a known name?", style = MaterialTheme.typography.headlineMedium)
+                        Text(Strings.Auth.KNOWN_NAME_TITLE, style = MaterialTheme.typography.headlineMedium)
                         Text(
-                            "If clients know you by a nickname or trade name, enter it here.",
+                            Strings.Auth.KNOWN_NAME_SUBTITLE,
                             style = MaterialTheme.typography.bodyMedium,
                         )
 
                         OutlinedTextField(
                             value = knownNameInput,
                             onValueChange = { knownNameInput = it },
-                            label = { Text("Known name (optional)") },
-                            placeholder = { Text("e.g. Joãozinho da Tinta") },
+                            label = { Text(Strings.Auth.KNOWN_NAME_LABEL) },
+                            placeholder = { Text(Strings.Auth.KNOWN_NAME_PLACEHOLDER) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                         )
@@ -457,14 +458,14 @@ fun OnboardingScreens(
                             onClick = { onSubmitKnownName(knownNameInput.trim().ifBlank { null }, state.confirmedServiceIds, state.confirmedDescription) },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text("Continue")
+                            Text(Strings.Common.CONTINUE)
                         }
 
                         TextButton(
                             onClick = { onSubmitKnownName(null, state.confirmedServiceIds, state.confirmedDescription) },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text("Skip")
+                            Text(Strings.Auth.SKIP)
                         }
                     }
                 }
@@ -475,8 +476,8 @@ fun OnboardingScreens(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text("🎉", style = MaterialTheme.typography.displayLarge)
-                        Text("Profile Published!", style = MaterialTheme.typography.headlineMedium)
-                        Text("You're now visible to customers.", style = MaterialTheme.typography.bodyMedium)
+                        Text(Strings.Onboarding.PROFILE_PUBLISHED, style = MaterialTheme.typography.headlineMedium)
+                        Text(Strings.Onboarding.PROFILE_PUBLISHED_SUBTITLE, style = MaterialTheme.typography.bodyMedium)
 
                         Spacer(modifier = Modifier.height(32.dp))
 
@@ -485,7 +486,7 @@ fun OnboardingScreens(
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Text("View my profile", style = MaterialTheme.typography.titleMedium)
+                            Text(Strings.Onboarding.VIEW_MY_PROFILE, style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 }
@@ -496,13 +497,13 @@ fun OnboardingScreens(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text("❌", style = MaterialTheme.typography.displayLarge)
-                        Text("Something went wrong", style = MaterialTheme.typography.headlineSmall)
+                        Text(Strings.Onboarding.ERROR_TITLE, style = MaterialTheme.typography.headlineSmall)
                         Text(state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(onClick = { onCreateDraft(inputText) }) {
-                            Text("Retry")
+                            Text(Strings.Common.RETRY)
                         }
                     }
                 }
