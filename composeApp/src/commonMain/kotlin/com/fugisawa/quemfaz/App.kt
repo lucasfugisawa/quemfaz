@@ -453,7 +453,13 @@ fun MainFlow(
                             onSubmitKnownName = { knownName, serviceIds, description -> viewModel.submitKnownName(knownName, serviceIds, description) },
                             onSubmitClarifications = { desc, answers -> viewModel.submitClarifications(desc, answers) },
                             onSkipClarification = { draft -> viewModel.skipClarification(draft) },
-                            onBack = { viewModel.goBack() },
+                            onBack = {
+                                if (uiState is OnboardingUiState.BirthDateRequired) {
+                                    navigateBack()
+                                } else {
+                                    viewModel.goBack()
+                                }
+                            },
                             onFinish = { profile ->
                                 currentProfileId = profile.id
                                 navigateToTab(Screen.Home)
