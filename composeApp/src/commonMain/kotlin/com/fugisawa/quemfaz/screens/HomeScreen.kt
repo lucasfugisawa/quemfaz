@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.unit.sp
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.theme.AppTheme
@@ -46,7 +47,7 @@ fun HomeScreen(
                         Text("📍", style = MaterialTheme.typography.titleLarge)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            currentCity ?: "Select City",
+                            currentCity ?: Strings.Home.SELECT_CITY,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -74,7 +75,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                "What do you\nneed today?",
+                Strings.Home.TITLE,
                 style = MaterialTheme.typography.displayMedium,
                 lineHeight = 52.sp
             )
@@ -85,7 +86,7 @@ fun HomeScreen(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Plumber, tutor, cleaner, electrician...") },
+                placeholder = { Text(Strings.Home.SEARCH_PLACEHOLDER) },
                 leadingIcon = { Text("🔍", modifier = Modifier.padding(start = 8.dp)) },
                 trailingIcon = {
                     IconButton(onClick = { /* Voice placeholder */ }, enabled = false) {
@@ -117,7 +118,7 @@ fun HomeScreen(
                 enabled = isSearchEnabled,
                 shape = MaterialTheme.shapes.medium
             ) {
-                Text("Search", style = MaterialTheme.typography.titleMedium)
+                Text(Strings.Home.SEARCH, style = MaterialTheme.typography.titleMedium)
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -137,9 +138,9 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Offer your services", style = MaterialTheme.typography.titleMedium)
+                                Text(Strings.Home.OFFER_SERVICES, style = MaterialTheme.typography.titleMedium)
                                 Text(
-                                    "Describe what you do — AI builds your profile.",
+                                    Strings.Home.OFFER_SERVICES_DESCRIPTION,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 )
@@ -153,7 +154,7 @@ fun HomeScreen(
                     ) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Dismiss",
+                            contentDescription = Strings.Home.DISMISS,
                             modifier = Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.onSecondaryContainer,
                         )

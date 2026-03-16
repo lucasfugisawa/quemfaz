@@ -32,6 +32,7 @@ import com.fugisawa.quemfaz.platform.rememberImagePickerLauncher
 import com.fugisawa.quemfaz.screens.*
 import com.fugisawa.quemfaz.session.AuthState
 import com.fugisawa.quemfaz.session.SessionManager
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
@@ -236,10 +237,10 @@ fun MainFlow(
                             Icon(
                                 imageVector = if (currentScreen == Screen.Home) Icons.Filled.Home
                                               else Icons.Outlined.Home,
-                                contentDescription = "Home"
+                                contentDescription = Strings.Navigation.HOME
                             )
                         },
-                        label = { Text("Home") }
+                        label = { Text(Strings.Navigation.HOME) }
                     )
                     NavigationBarItem(
                         selected = currentScreen == Screen.Favorites,
@@ -248,10 +249,10 @@ fun MainFlow(
                             Icon(
                                 imageVector = if (currentScreen == Screen.Favorites) Icons.Filled.Favorite
                                               else Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Favorites"
+                                contentDescription = Strings.Navigation.FAVORITES
                             )
                         },
-                        label = { Text("Favorites") }
+                        label = { Text(Strings.Navigation.FAVORITES) }
                     )
                     NavigationBarItem(
                         selected = currentScreen == Screen.MyProfile,
@@ -260,10 +261,10 @@ fun MainFlow(
                             Icon(
                                 imageVector = if (currentScreen == Screen.MyProfile) Icons.Filled.Person
                                               else Icons.Outlined.Person,
-                                contentDescription = "Profile"
+                                contentDescription = Strings.Navigation.PROFILE
                             )
                         },
-                        label = { Text("Profile") }
+                        label = { Text(Strings.Navigation.PROFILE) }
                     )
                 }
             }
@@ -481,7 +482,7 @@ fun MainFlow(
                     .padding(horizontal = Spacing.screenEdge)
                     .padding(bottom = Spacing.xl)
             ) {
-                Text("Select your city", style = MaterialTheme.typography.titleLarge)
+                Text(Strings.CitySelection.TITLE, style = MaterialTheme.typography.titleLarge)
                 Spacer(modifier = Modifier.height(Spacing.md))
                 homeViewModel.supportedCities.forEach { city ->
                     Row(

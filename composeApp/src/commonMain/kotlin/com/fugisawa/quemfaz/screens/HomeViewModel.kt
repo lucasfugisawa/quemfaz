@@ -8,6 +8,7 @@ import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsResponse
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -188,7 +189,7 @@ class HomeViewModel(
                     _favoritedProfileIds.value = favs.favorites.map { it.id }.toSet()
                 } catch (_: Exception) { }
             } catch (e: Exception) {
-                _searchUiState.value = SearchUiState.Error(e.message ?: "Search failed")
+                _searchUiState.value = SearchUiState.Error(e.message ?: Strings.Errors.SEARCH_FAILED)
             } finally {
                 if (page > 0) isLoadingMore = false
             }
@@ -212,14 +213,14 @@ class HomeViewModel(
             try {
                 if (isCurrentlyFavorited) {
                     apiClients.removeFavorite(profileId)
-                    _toastMessage.emit("Removed from favorites")
+                    _toastMessage.emit(Strings.Home.REMOVED_FAVORITE)
                 } else {
                     apiClients.addFavorite(profileId)
-                    _toastMessage.emit("Added to favorites")
+                    _toastMessage.emit(Strings.Home.ADDED_FAVORITE)
                 }
             } catch (e: Exception) {
                 _favoritedProfileIds.value = current
-                _toastMessage.emit("Could not update favorites. Try again.")
+                _toastMessage.emit(Strings.Home.FAVORITE_ERROR)
             }
         }
     }
