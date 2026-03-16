@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.ui.preview.LightDarkPreview
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
@@ -26,7 +27,7 @@ fun ErrorMessage(
         Text(message, color = MaterialTheme.colorScheme.error)
         if (onRetry != null) {
             Spacer(modifier = Modifier.height(Spacing.sm))
-            Button(onClick = onRetry) { Text("Retry") }
+            Button(onClick = onRetry) { Text(Strings.Common.RETRY) }
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.Surface
 import com.fugisawa.quemfaz.ui.preview.LightDarkPreview
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
@@ -18,12 +19,12 @@ fun StatusChipRow(
     daysSinceActive: Int? = null,
 ) {
     val activityText = when {
-        daysSinceActive == 0 -> "Active today"
-        daysSinceActive == 1 -> "Active yesterday"
-        daysSinceActive != null && daysSinceActive in 2..7 -> "Active $daysSinceActive days ago"
-        daysSinceActive != null && daysSinceActive in 8..30 -> "Active this month"
+        daysSinceActive == 0 -> Strings.StatusChip.ACTIVE_TODAY
+        daysSinceActive == 1 -> Strings.StatusChip.ACTIVE_YESTERDAY
+        daysSinceActive != null && daysSinceActive in 2..7 -> Strings.StatusChip.activeDaysAgo(daysSinceActive)
+        daysSinceActive != null && daysSinceActive in 8..30 -> Strings.StatusChip.ACTIVE_THIS_MONTH
         daysSinceActive != null && daysSinceActive >= 31 -> null  // spec: 31+ → hidden
-        activeRecently -> "Active recently"  // fallback for old responses without daysSinceActive
+        activeRecently -> Strings.StatusChip.ACTIVE_RECENTLY  // fallback for old responses without daysSinceActive
         else -> null
     }
     val showActivity = activityText != null
@@ -38,7 +39,7 @@ fun StatusChipRow(
         if (profileComplete) {
             SuggestionChip(
                 onClick = {},
-                label = { Text("Complete profile", style = MaterialTheme.typography.labelSmall) }
+                label = { Text(Strings.StatusChip.COMPLETE_PROFILE, style = MaterialTheme.typography.labelSmall) }
             )
         }
     }
