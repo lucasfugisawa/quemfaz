@@ -30,6 +30,7 @@ import com.fugisawa.quemfaz.ui.components.ServiceChipList
 import com.fugisawa.quemfaz.ui.components.StatusChipRow
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
@@ -48,7 +49,7 @@ fun ProfessionalProfileScreen(
     var showReportDialog by remember { mutableStateOf(false) }
     var showDisableDialog by remember { mutableStateOf(false) }
 
-    val title = (uiState as? ProfileUiState.Content)?.profile?.let { it.knownName ?: "${it.firstName} ${it.lastName}" } ?: "Professional"
+    val title = (uiState as? ProfileUiState.Content)?.profile?.let { it.knownName ?: "${it.firstName} ${it.lastName}" } ?: Strings.Profile.FALLBACK_TITLE
     val isOwnProfile = (uiState as? ProfileUiState.Content)?.isOwnProfile == true
 
     if (showReportDialog) {
@@ -64,9 +65,9 @@ fun ProfessionalProfileScreen(
     if (showDisableDialog) {
         AlertDialog(
             onDismissRequest = { showDisableDialog = false },
-            title = { Text("Disable Professional Profile") },
+            title = { Text(Strings.Profile.DISABLE_DIALOG_TITLE) },
             text = {
-                Text("Your professional profile will be deactivated and hidden from search results. Your account will remain intact. You can re-enable it anytime by adding services again.")
+                Text(Strings.Profile.DISABLE_DIALOG_MESSAGE)
             },
             confirmButton = {
                 Button(
@@ -76,11 +77,11 @@ fun ProfessionalProfileScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Disable")
+                    Text(Strings.Profile.DISABLE_BUTTON)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDisableDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showDisableDialog = false }) { Text(Strings.Common.CANCEL) }
             }
         )
     }
@@ -120,7 +121,7 @@ fun ProfessionalProfileScreen(
                             itemsIndexed(profile.portfolioPhotoUrls, key = { _, url -> url }) { index, url ->
                                 AsyncImage(
                                     model = url,
-                                    contentDescription = "Portfolio photo ${index + 1} of ${profile.portfolioPhotoUrls.size}",
+                                    contentDescription = Strings.Profile.portfolioPhotoDescription(index + 1, profile.portfolioPhotoUrls.size),
                                     modifier = Modifier
                                         .size(Spacing.portfolioPhotoSize)
                                         .clip(MaterialTheme.shapes.medium),
@@ -146,7 +147,7 @@ fun ProfessionalProfileScreen(
                     }
 
                     if (profile.services.isNotEmpty()) {
-                        Text("Services", style = MaterialTheme.typography.titleMedium)
+                        Text(Strings.Profile.SERVICES, style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(Spacing.sm))
                         ServiceChipList(services = profile.services)
                         Spacer(modifier = Modifier.height(Spacing.lg))
@@ -157,14 +158,14 @@ fun ProfessionalProfileScreen(
                             onClick = { showDisableDialog = true },
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         ) {
-                            Text("Disable Professional Profile", color = MaterialTheme.colorScheme.error)
+                            Text(Strings.Profile.DISABLE_PROFILE, color = MaterialTheme.colorScheme.error)
                         }
                     } else {
                         TextButton(
                             onClick = { showReportDialog = true },
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         ) {
-                            Text("Report Profile", color = MaterialTheme.colorScheme.error)
+                            Text(Strings.Profile.REPORT_PROFILE, color = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -184,7 +185,7 @@ fun ProfessionalProfileScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                         ) {
-                            Text("Edit Profile")
+                            Text(Strings.Profile.EDIT_PROFILE)
                         }
                     } else {
                         Row(
@@ -197,13 +198,13 @@ fun ProfessionalProfileScreen(
                                 onClick = { onContactClick(ContactChannelDto.WHATSAPP) },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("WhatsApp")
+                                Text(Strings.Profile.WHATSAPP)
                             }
                             Button(
                                 onClick = { onContactClick(ContactChannelDto.PHONE_CALL) },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Call")
+                                Text(Strings.Profile.CALL)
                             }
                         }
                     }
@@ -262,10 +263,10 @@ fun ReportDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Report Profile") },
+        title = { Text(Strings.Profile.REPORT_DIALOG_TITLE) },
         text = {
             Column {
-                Text("Select a reason:", style = MaterialTheme.typography.bodyMedium)
+                Text(Strings.Profile.REPORT_SELECT_REASON, style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 ReportReason.entries.forEach { reason ->
                     Row(
@@ -288,22 +289,22 @@ fun ReportDialog(
                 onClick = { selectedReason?.let { onSubmit(it) } },
                 enabled = selectedReason != null
             ) {
-                Text("Report")
+                Text(Strings.Profile.REPORT_BUTTON)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(Strings.Common.CANCEL) }
         }
     )
 }
 
 private fun ReportReason.toDisplayName(): String = when (this) {
-    ReportReason.SPAM -> "Spam"
-    ReportReason.INAPPROPRIATE_CONTENT -> "Inappropriate content"
-    ReportReason.WRONG_PHONE_NUMBER -> "Wrong phone number"
-    ReportReason.FAKE_PROFILE -> "Fake profile"
-    ReportReason.ABUSIVE_BEHAVIOR -> "Abusive behavior"
-    ReportReason.OTHER -> "Other"
+    ReportReason.SPAM -> Strings.Profile.REPORT_SPAM
+    ReportReason.INAPPROPRIATE_CONTENT -> Strings.Profile.REPORT_INAPPROPRIATE
+    ReportReason.WRONG_PHONE_NUMBER -> Strings.Profile.REPORT_WRONG_PHONE
+    ReportReason.FAKE_PROFILE -> Strings.Profile.REPORT_FAKE
+    ReportReason.ABUSIVE_BEHAVIOR -> Strings.Profile.REPORT_ABUSIVE
+    ReportReason.OTHER -> Strings.Profile.REPORT_OTHER
 }
 
 // ── Previews ──

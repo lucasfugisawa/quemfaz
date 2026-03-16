@@ -10,6 +10,7 @@ import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.domain.moderation.ReportReason
 import com.fugisawa.quemfaz.domain.moderation.ReportTargetType
 import com.fugisawa.quemfaz.network.FeatureApiClients
+import com.fugisawa.quemfaz.ui.strings.Strings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,7 +52,7 @@ class ProfileViewModel(
                 }
                 _uiState.value = ProfileUiState.Content(profile, isFavorite = isFavorite, isOwnProfile = isOwn)
             } catch (e: Exception) {
-                _uiState.value = ProfileUiState.Error(e.message ?: "Failed to load profile")
+                _uiState.value = ProfileUiState.Error(e.message ?: Strings.Errors.FAILED_LOAD_PROFILE)
             }
         }
     }
