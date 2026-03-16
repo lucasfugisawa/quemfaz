@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.ui.theme.Spacing
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 private sealed class CatalogUiState {
@@ -29,14 +30,18 @@ fun CategoryBrowsingScreen(
 ) {
     val catalogApiClient = koinInject<CatalogApiClient>()
     var uiState by remember { mutableStateOf<CatalogUiState>(CatalogUiState.Loading) }
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
+    suspend fun loadCatalog() {
+        uiState = CatalogUiState.Loading
         uiState = try {
             CatalogUiState.Success(catalogApiClient.getCatalog())
         } catch (e: Exception) {
             CatalogUiState.Error(e.message ?: "Erro ao carregar categorias")
         }
     }
+
+    LaunchedEffect(Unit) { loadCatalog() }
 
     Scaffold(
         topBar = {
@@ -74,10 +79,7 @@ fun CategoryBrowsingScreen(
                             color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(Spacing.md))
-                        Button(onClick = {
-                            uiState = CatalogUiState.Loading
-                            // Re-trigger LaunchedEffect won't work, so inline retry
-                        }) {
+                        Button(onClick = { scope.launch { loadCatalog() } }) {
                             Text("Tentar novamente")
                         }
                     }
