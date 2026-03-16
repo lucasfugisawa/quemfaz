@@ -47,6 +47,18 @@ The example hint serves double duty: it communicates that natural language works
 - **iOS:** `SFSpeechRecognizer` API
 - Both accessed via Kotlin Multiplatform `expect`/`actual` declarations
 
+### Permissions
+
+- Microphone/speech recognition permissions are requested on first mic button tap
+- If permission is denied, show a brief message explaining why it's needed and fall back to text input
+- The mic button remains visible even after denial (user can grant permission later via settings)
+
+### Error Handling
+
+- If speech recognition is unavailable on the device, hide the mic button entirely
+- If recognition starts but fails or times out, show a brief error and leave the text field as-is
+- No blocking error dialogs — errors are non-intrusive since text input is always available
+
 ---
 
 ## 2. Voice Transcription Strategy
@@ -96,16 +108,28 @@ Top-to-bottom layout:
 
 - Every search that resolves to canonical services via LLM interpretation logs a search event
 - Search events are recorded during the existing search flow (no new logging endpoint)
-- Fields: `resolved_service_id`, `city_id`, `timestamp`
-- Aggregation: count by service per city, ordered by frequency, within a rolling time window (e.g., 30 days)
-- **Per-city with global fallback:** show city-level results when sufficient data exists (threshold: 10+ searches in the window), otherwise show platform-wide results
-- Endpoint: `GET /api/services/popular?cityId={id}` returns top N service names
+- Fields: `id` (TEXT), `resolved_service_id` (TEXT, FK to services), `city_name` (TEXT), `created_at` (TIMESTAMP)
+- Search events are logged after LLM interpretation resolves services. If no services are resolved, no event is logged.
+- Aggregation: count by service per city, ordered by frequency, within a rolling 30-day window
+- **Per-city with global fallback:** show city-level results when sufficient data exists (server-configured threshold, initially 10 searches in the window), otherwise show platform-wide results. The endpoint signals which mode was used so the UI can adjust the header (e.g., "Mais buscados na sua cidade" vs "Mais buscados no QuemFaz").
+- Endpoint: `GET /api/services/popular?cityName={name}` returns top 8 services
+- Response DTO (`PopularServicesResponse` in `shared/contract/`):
+  ```
+  data class PopularServiceDto(
+      val serviceId: String,
+      val displayName: String
+  )
+  data class PopularServicesResponse(
+      val services: List<PopularServiceDto>,
+      val isLocalResults: Boolean  // true = city-level, false = global fallback
+  )
+  ```
 
 ### Category Browsing Screen
 
 - New screen: `Screen.CategoryBrowsing`
 - Displays all service categories from the existing category model
-- Each category expands or navigates to show its services
+- Flat list grouped by category, each category as a section header with its services listed below
 - Tapping a service triggers a search for that service
 
 ---
@@ -190,8 +214,12 @@ Professionals must be 18+ but there is no age verification in the current flow.
 ### Data Model Changes
 
 - Add `date_of_birth` column to `users` table (nullable `DATE`)
-- Add `dateOfBirth` to relevant DTOs
-- Server validates 18+ before creating professional profile draft
+- Add `dateOfBirth` to `UserProfileResponse`
+- New endpoint to save birth date: `PUT /api/users/me/date-of-birth` with `UpdateDateOfBirthRequest(dateOfBirth: String)` (ISO date format)
+- Server validates 18+ both when saving birth date and before creating professional profile draft
+- Client validates 18+ locally before submitting (immediate feedback)
+- If the user already has a `date_of_birth` stored (e.g., from a previous onboarding attempt), skip the birth date step in the onboarding flow
+- New `OnboardingUiState.BirthDateRequired` state added before `Idle`
 
 ---
 
@@ -218,8 +246,9 @@ Professional profiles have separate `contactPhone` and `whatsAppPhone` fields th
 
 **DTO changes:**
 - Remove `whatsAppPhone` and `contactPhone` from `ProfessionalProfileResponse`
-- The profile view screen fetches the phone from the user's account data instead
-- Alternatively, the server populates a single `phone` field in the response from the user's account phone
+- Add a single `phone` field to `ProfessionalProfileResponse`, populated by the server from the user's account phone number. This is necessary because the profile view is used for viewing other users' profiles, not just your own.
+- Remove `contactPhone` and `whatsAppPhone` from `ConfirmProfessionalProfileRequest`
+- Update `EditProfessionalProfileViewModel.saveProfile()` to remove phone parameters
 
 ---
 
@@ -231,7 +260,7 @@ Professional profiles have separate `contactPhone` and `whatsAppPhone` fields th
 | `date_of_birth` | `users` | Add nullable `DATE` column |
 | `contact_phone` | `professional_profiles` | Drop column |
 | `whatsapp_phone` | `professional_profiles` | Drop column |
-| search events | new table `search_events` | `id`, `resolved_service_id`, `city_id`, `created_at` |
+| search events | new table `search_events` | `id`, `resolved_service_id`, `city_name`, `created_at` |
 
 ## Summary of Screen Changes
 
