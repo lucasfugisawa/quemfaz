@@ -63,6 +63,8 @@ class OnboardingViewModel(
     private val _catalog = MutableStateFlow<CatalogResponse?>(null)
     val catalog: StateFlow<CatalogResponse?> = _catalog.asStateFlow()
 
+    private var clarificationRound = 0
+
     init {
         viewModelScope.launch {
             try {
@@ -96,6 +98,7 @@ class OnboardingViewModel(
     }
 
     fun createDraft(inputText: String, inputMode: InputMode = InputMode.TEXT) {
+        clarificationRound = 0
         viewModelScope.launch {
             _uiState.value = OnboardingUiState.Loading
             try {
@@ -116,13 +119,19 @@ class OnboardingViewModel(
     }
 
     fun submitClarifications(originalDescription: String, answers: List<ClarificationAnswer>) {
+        clarificationRound++
         viewModelScope.launch {
             _uiState.value = OnboardingUiState.Loading
             try {
                 val response = apiClients.clarifyDraft(
-                    ClarifyDraftRequest(originalDescription, answers)
+                    ClarifyDraftRequest(
+                        originalDescription = originalDescription,
+                        clarificationAnswers = answers,
+                        clarificationRound = clarificationRound,
+                    )
                 )
-                if (response.llmUnavailable || response.followUpQuestions.isEmpty()) {
+                // Client-side cap: after 1 round, always proceed to ReviewServices
+                if (response.llmUnavailable || response.followUpQuestions.isEmpty() || clarificationRound >= 1) {
                     _uiState.value = OnboardingUiState.ReviewServices(response)
                 } else {
                     _uiState.value = OnboardingUiState.NeedsClarification(originalDescription, response)
