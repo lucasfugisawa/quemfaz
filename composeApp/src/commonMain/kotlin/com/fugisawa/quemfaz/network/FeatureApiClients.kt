@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.network
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
+import com.fugisawa.quemfaz.contract.auth.UpdateDateOfBirthRequest
 import com.fugisawa.quemfaz.contract.auth.StartOtpResponse
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
@@ -52,6 +53,12 @@ class FeatureApiClients(private val apiClient: ApiClient) {
 
     suspend fun submitName(request: CompleteUserProfileRequest): UserProfileResponse =
         apiClient.client.post("/auth/profile") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body()
+
+    suspend fun updateDateOfBirth(request: UpdateDateOfBirthRequest): Unit =
+        apiClient.client.put("/auth/me/date-of-birth") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()

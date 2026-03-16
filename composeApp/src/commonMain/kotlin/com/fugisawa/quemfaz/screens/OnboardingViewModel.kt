@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
+import com.fugisawa.quemfaz.contract.auth.UpdateDateOfBirthRequest
 import com.fugisawa.quemfaz.contract.profile.*
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 sealed class OnboardingUiState {
+    object BirthDateRequired : OnboardingUiState()
     object Idle : OnboardingUiState()
     object Loading : OnboardingUiState()
     data class NeedsClarification(
@@ -46,7 +48,12 @@ class OnboardingViewModel(
     private val catalogApiClient: CatalogApiClient,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<OnboardingUiState>(OnboardingUiState.Idle)
+    private val _uiState = MutableStateFlow<OnboardingUiState>(
+        if (sessionManager.currentUser.value?.dateOfBirth != null)
+            OnboardingUiState.Idle
+        else
+            OnboardingUiState.BirthDateRequired
+    )
     val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
 
     private val _selectedCity = MutableStateFlow<String?>(null)
@@ -73,12 +80,24 @@ class OnboardingViewModel(
         _selectedCity.value = city
     }
 
-    fun createDraft(inputText: String) {
+    fun submitDateOfBirth(dateOfBirth: String) {
+        viewModelScope.launch {
+            _uiState.value = OnboardingUiState.Loading
+            try {
+                apiClients.updateDateOfBirth(UpdateDateOfBirthRequest(dateOfBirth))
+                _uiState.value = OnboardingUiState.Idle
+            } catch (e: Exception) {
+                _uiState.value = OnboardingUiState.Error("Não foi possível salvar a data de nascimento.")
+            }
+        }
+    }
+
+    fun createDraft(inputText: String, inputMode: InputMode = InputMode.TEXT) {
         viewModelScope.launch {
             _uiState.value = OnboardingUiState.Loading
             try {
                 val response = apiClients.createDraft(
-                    CreateProfessionalProfileDraftRequest(inputText, InputMode.TEXT)
+                    CreateProfessionalProfileDraftRequest(inputText, inputMode)
                 )
                 if (response.llmUnavailable || response.followUpQuestions.isEmpty()) {
                     // LLM was unavailable OR no clarification needed — go straight to draft review.
@@ -117,6 +136,7 @@ class OnboardingViewModel(
 
     fun goBack() {
         _uiState.value = when (val current = _uiState.value) {
+            is OnboardingUiState.BirthDateRequired -> current
             is OnboardingUiState.NeedsClarification -> OnboardingUiState.Idle
             is OnboardingUiState.ReviewServices -> OnboardingUiState.Idle
             is OnboardingUiState.ReviewDescription -> OnboardingUiState.ReviewServices(current.draft)

@@ -81,7 +81,16 @@ object Strings {
         const val VIEW_MY_PROFILE = "Ver meu perfil"
         const val ERROR_TITLE = "Algo deu errado"
 
-        fun stepIndicator(current: Int) = "Passo $current de 5"
+        const val BIRTH_DATE_TITLE = "Data de nascimento"
+        const val BIRTH_DATE_SUBTITLE = "Para oferecer serviços, você precisa ter pelo menos 18 anos."
+        const val BIRTH_DATE_LABEL = "Data de nascimento"
+        const val BIRTH_DATE_PLACEHOLDER = "DD/MM/AAAA"
+        const val BIRTH_DATE_INVALID = "Data inválida"
+        const val BIRTH_DATE_UNDERAGE = "Você precisa ter pelo menos 18 anos para oferecer serviços."
+        const val BIRTH_DATE_FORMAT_HINT = "Use o formato DD/MM/AAAA"
+        const val DESCRIPTION_EXAMPLE = "Ex: \"Sou pintor residencial com 10 anos de experiência\""
+
+        fun stepIndicator(current: Int) = "Passo ${current + 1} de 6"
     }
 
     object Profile {
