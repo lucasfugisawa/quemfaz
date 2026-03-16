@@ -54,9 +54,6 @@ kotlin {
             // Multiplatform Settings
             implementation("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
 
-            // DateTime
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
-
             // Coil
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)

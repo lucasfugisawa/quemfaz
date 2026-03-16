@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
+import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
@@ -200,19 +201,9 @@ fun OnboardingScreens(
                                         if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
                                             dateError = Strings.Onboarding.BIRTH_DATE_INVALID
                                         } else {
-                                            // Client-side 18+ age check (server also validates authoritatively)
-                                            val today = kotlinx.datetime.Clock.System.now()
-                                                .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault())
-                                                .date
-                                            val birthDate = kotlinx.datetime.LocalDate(year, month, day)
-                                            val age = today.year - birthDate.year -
-                                                if (today.monthNumber < birthDate.monthNumber ||
-                                                    (today.monthNumber == birthDate.monthNumber && today.dayOfMonth < birthDate.dayOfMonth)) 1 else 0
-                                            if (age < 18) {
-                                                dateError = Strings.Onboarding.BIRTH_DATE_UNDERAGE
-                                            } else {
-                                                onSubmitDateOfBirth(isoDate)
-                                            }
+                                            // Server validates 18+ age requirement authoritatively
+                                            // and returns 422 UNDERAGE if the user is too young
+                                            onSubmitDateOfBirth(isoDate)
                                         }
                                     } catch (e: Exception) {
                                         dateError = Strings.Onboarding.BIRTH_DATE_INVALID
