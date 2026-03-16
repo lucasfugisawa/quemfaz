@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.UpdateDateOfBirthRequest
+import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
 import com.fugisawa.quemfaz.contract.profile.*
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
@@ -139,6 +140,7 @@ class OnboardingViewModel(
     fun goBack() {
         _uiState.value = when (val current = _uiState.value) {
             is OnboardingUiState.BirthDateRequired -> current
+            is OnboardingUiState.Idle -> OnboardingUiState.BirthDateRequired
             is OnboardingUiState.NeedsClarification -> OnboardingUiState.Idle
             is OnboardingUiState.ReviewServices -> OnboardingUiState.Idle
             is OnboardingUiState.ReviewDescription -> OnboardingUiState.ReviewServices(current.draft)
@@ -213,6 +215,7 @@ class OnboardingViewModel(
     }
 
     fun submitKnownName(
+        fullName: String?,
         knownName: String?,
         confirmedServiceIds: List<String>,
         confirmedDescription: String,
@@ -220,6 +223,10 @@ class OnboardingViewModel(
         viewModelScope.launch {
             _uiState.value = OnboardingUiState.Loading
             try {
+                if (!fullName.isNullOrBlank()) {
+                    val updatedUser = apiClients.submitName(CompleteUserProfileRequest(fullName.trim()))
+                    sessionManager.setCurrentUser(updatedUser)
+                }
                 val response = apiClients.confirmProfile(
                     ConfirmProfessionalProfileRequest(
                         description = confirmedDescription,

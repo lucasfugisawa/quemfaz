@@ -183,34 +183,45 @@ private fun EditProfileForm(
             Text(Strings.EditProfile.ADD_SERVICE)
         }
 
-        if (showServicePicker && catalog != null) {
-            val alreadySelected = editedServiceIds.toSet()
-            var pickerSelection by remember { mutableStateOf(emptySet<String>()) }
+        if (showServicePicker) {
+            if (catalog != null) {
+                val alreadySelected = editedServiceIds.toSet()
+                var pickerSelection by remember { mutableStateOf(emptySet<String>()) }
 
-            AlertDialog(
-                onDismissRequest = { showServicePicker = false },
-                title = { Text(Strings.EditProfile.ADD_SERVICES_DIALOG) },
-                text = {
-                    // Constrain height to avoid layout issues — ServiceCategoryPicker uses LazyColumn internally
-                    Box(modifier = Modifier.heightIn(max = 400.dp)) {
-                        ServiceCategoryPicker(
-                            categories = catalog.categories,
-                            services = catalog.services.filter { it.id !in alreadySelected },
-                            selectedServiceIds = pickerSelection,
-                            onSelectionChanged = { pickerSelection = it },
-                        )
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        pickerSelection.forEach { onAddService(it) }
-                        showServicePicker = false
-                    }) { Text(Strings.EditProfile.ADD) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showServicePicker = false }) { Text(Strings.Common.CANCEL) }
-                },
-            )
+                AlertDialog(
+                    onDismissRequest = { showServicePicker = false },
+                    title = { Text(Strings.EditProfile.ADD_SERVICES_DIALOG) },
+                    text = {
+                        // Constrain height to avoid layout issues — ServiceCategoryPicker uses LazyColumn internally
+                        Box(modifier = Modifier.heightIn(max = 400.dp)) {
+                            ServiceCategoryPicker(
+                                categories = catalog.categories,
+                                services = catalog.services.filter { it.id !in alreadySelected },
+                                selectedServiceIds = pickerSelection,
+                                onSelectionChanged = { pickerSelection = it },
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            pickerSelection.forEach { onAddService(it) }
+                            showServicePicker = false
+                        }) { Text(Strings.EditProfile.ADD) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showServicePicker = false }) { Text(Strings.Common.CANCEL) }
+                    },
+                )
+            } else {
+                AlertDialog(
+                    onDismissRequest = { showServicePicker = false },
+                    title = { Text(Strings.EditProfile.ADD_SERVICES_DIALOG) },
+                    text = { Text(Strings.EditProfile.CATALOG_UNAVAILABLE) },
+                    confirmButton = {
+                        TextButton(onClick = { showServicePicker = false }) { Text("OK") }
+                    },
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(Spacing.md))

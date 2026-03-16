@@ -6,11 +6,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -48,6 +53,22 @@ private fun OnboardingUiState.stepIndex() = when (this) {
     else -> -1
 }
 
+/** Converts epoch millis (UTC midnight) to (year, month, day) using civil_from_days algorithm. */
+private fun epochMillisToDateParts(millis: Long): Triple<Int, Int, Int> {
+    val totalDays = (millis / 86_400_000).toInt()
+    val z = totalDays + 719468
+    val era = (if (z >= 0) z else z - 146096) / 146097
+    val doe = z - era * 146097
+    val yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
+    val y = yoe + era * 400
+    val doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
+    val mp = (5 * doy + 2) / 153
+    val d = doy - (153 * mp + 2) / 5 + 1
+    val m = mp + (if (mp < 10) 3 else -9)
+    val year = y + (if (m <= 2) 1 else 0)
+    return Triple(year, m, d)
+}
+
 @Composable
 fun OnboardingScreens(
     uiState: OnboardingUiState,
@@ -60,7 +81,7 @@ fun OnboardingScreens(
     onProceedWithManualServices: (CreateProfessionalProfileDraftResponse, Set<String>) -> Unit,
     onProceedFromDescription: (CreateProfessionalProfileDraftResponse, List<String>, String) -> Unit,
     onPickPhoto: () -> Unit,
-    onSubmitKnownName: (knownName: String?, confirmedServiceIds: List<String>, confirmedDescription: String) -> Unit,
+    onSubmitKnownName: (fullName: String?, knownName: String?, confirmedServiceIds: List<String>, confirmedDescription: String) -> Unit,
     onSubmitClarifications: (String, List<ClarificationAnswer>) -> Unit,
     onSkipClarification: (CreateProfessionalProfileDraftResponse) -> Unit,
     onBack: () -> Unit,
@@ -94,6 +115,7 @@ fun OnboardingScreens(
                                     uiState !is OnboardingUiState.Error
 
             val showBack = uiState is OnboardingUiState.BirthDateRequired ||
+                           uiState is OnboardingUiState.Idle ||
                            uiState is OnboardingUiState.NeedsClarification ||
                            uiState is OnboardingUiState.ReviewServices ||
                            uiState is OnboardingUiState.ReviewDescription ||
@@ -147,10 +169,13 @@ fun OnboardingScreens(
                 label = "onboardingContent",
                 modifier = Modifier.fillMaxSize(),
             ) { state ->
+                @OptIn(ExperimentalMaterial3Api::class)
                 when (state) {
                 is OnboardingUiState.BirthDateRequired -> {
-                    var selectedDate by remember { mutableStateOf("") }
-                    var dateError by remember { mutableStateOf<String?>(null) }
+                    val datePickerState = rememberDatePickerState()
+                    var showDatePicker by remember { mutableStateOf(false) }
+                    var displayDate by remember { mutableStateOf("") }
+                    var isoDate by remember { mutableStateOf("") }
 
                     Column(modifier = Modifier.fillMaxSize()) {
                         Column(
@@ -168,57 +193,65 @@ fun OnboardingScreens(
 
                             Spacer(modifier = Modifier.height(Spacing.sectionGap))
 
-                            OutlinedTextField(
-                                value = selectedDate,
-                                onValueChange = {
-                                    selectedDate = it
-                                    dateError = null
-                                },
-                                label = { Text(Strings.Onboarding.BIRTH_DATE_LABEL) },
-                                placeholder = { Text(Strings.Onboarding.BIRTH_DATE_PLACEHOLDER) },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                isError = dateError != null,
-                                supportingText = dateError?.let { { Text(it) } },
-                                shape = MaterialTheme.shapes.medium
-                            )
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                OutlinedTextField(
+                                    value = displayDate,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text(Strings.Onboarding.BIRTH_DATE_LABEL) },
+                                    placeholder = { Text(Strings.Onboarding.BIRTH_DATE_PLACEHOLDER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
+                                    trailingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = Strings.Onboarding.SELECT_DATE) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                                // Invisible overlay to capture clicks and open date picker
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable(
+                                            indication = null,
+                                            interactionSource = remember { MutableInteractionSource() }
+                                        ) { showDatePicker = true }
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(Spacing.md))
 
                         Button(
                             onClick = {
-                                // Parse DD/MM/YYYY to ISO format YYYY-MM-DD
-                                val parts = selectedDate.trim().split("/")
-                                if (parts.size == 3) {
-                                    try {
-                                        val day = parts[0].toInt()
-                                        val month = parts[1].toInt()
-                                        val year = parts[2].toInt()
-                                        val isoDate = "${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
-
-                                        // Basic date validation
-                                        if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
-                                            dateError = Strings.Onboarding.BIRTH_DATE_INVALID
-                                        } else {
-                                            // Server validates 18+ age requirement authoritatively
-                                            // and returns 422 UNDERAGE if the user is too young
-                                            onSubmitDateOfBirth(isoDate)
-                                        }
-                                    } catch (e: Exception) {
-                                        dateError = Strings.Onboarding.BIRTH_DATE_INVALID
-                                    }
-                                } else {
-                                    dateError = Strings.Onboarding.BIRTH_DATE_FORMAT_HINT
-                                }
+                                // Server validates 18+ age requirement authoritatively
+                                onSubmitDateOfBirth(isoDate)
                             },
                             modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
-                            enabled = selectedDate.isNotBlank(),
+                            enabled = isoDate.isNotBlank(),
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Text(Strings.Common.CONTINUE, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(Spacing.md))
+                    }
+
+                    if (showDatePicker) {
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showDatePicker = false
+                                    datePickerState.selectedDateMillis?.let { millis ->
+                                        val (year, month, day) = epochMillisToDateParts(millis)
+                                        displayDate = "${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year.toString().padStart(4, '0')}"
+                                        isoDate = "${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
+                                    }
+                                }) { Text("OK") }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDatePicker = false }) { Text(Strings.Common.CANCEL) }
+                            },
+                        ) {
+                            DatePicker(state = datePickerState)
+                        }
                     }
                 }
                 is OnboardingUiState.Idle -> {
@@ -235,7 +268,7 @@ fun OnboardingScreens(
                                 value = inputText,
                                 onValueChange = { inputText = it },
                                 modifier = Modifier.fillMaxWidth().height(200.dp),
-                                placeholder = { Text(Strings.Onboarding.DESCRIPTION_PLACEHOLDER) },
+                                placeholder = { Text(Strings.Onboarding.DESCRIPTION_PLACEHOLDER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
                                 shape = MaterialTheme.shapes.medium
                             )
 
@@ -249,12 +282,14 @@ fun OnboardingScreens(
 
                             Spacer(modifier = Modifier.height(Spacing.md))
 
-                            VoiceInputButton(
-                                onTranscription = {
-                                    inputText = it
-                                    usedVoice = true
-                                },
-                            )
+                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                VoiceInputButton(
+                                    onTranscription = {
+                                        inputText = it
+                                        usedVoice = true
+                                    },
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(Spacing.md))
@@ -320,7 +355,7 @@ fun OnboardingScreens(
                                     value = answers[index],
                                     onValueChange = { answers[index] = it },
                                     modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text(Strings.Onboarding.YOUR_ANSWER) },
+                                    placeholder = { Text(Strings.Onboarding.YOUR_ANSWER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
                                     singleLine = true,
                                     shape = MaterialTheme.shapes.medium
                                 )
@@ -392,6 +427,8 @@ fun OnboardingScreens(
                         }
                     } else {
                         var cityDropdownExpanded by remember { mutableStateOf(false) }
+                        var additionalServiceIds by remember { mutableStateOf(emptySet<String>()) }
+                        var showAddServicePicker by remember { mutableStateOf(false) }
 
                         Column(modifier = Modifier.fillMaxSize()) {
                             Column(
@@ -420,6 +457,40 @@ fun OnboardingScreens(
                                                 )
                                             }
                                         }
+
+                                        // Show manually added services
+                                        if (additionalServiceIds.isNotEmpty() && catalog != null) {
+                                            Spacer(modifier = Modifier.height(Spacing.sm))
+                                            Text(Strings.Onboarding.ADDITIONAL_SERVICES, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                            @OptIn(ExperimentalLayoutApi::class)
+                                            FlowRow(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                                            ) {
+                                                additionalServiceIds.forEach { serviceId ->
+                                                    val displayName = catalog.services.find { it.id == serviceId }?.displayName ?: serviceId
+                                                    InputChip(
+                                                        selected = true,
+                                                        onClick = { additionalServiceIds = additionalServiceIds - serviceId },
+                                                        label = { Text(displayName) },
+                                                        trailingIcon = {
+                                                            Icon(Icons.Default.Close, contentDescription = Strings.EditProfile.REMOVE, modifier = Modifier.size(16.dp))
+                                                        },
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+
+                                // Add more services button
+                                if (catalog != null) {
+                                    OutlinedButton(onClick = { showAddServicePicker = true }) {
+                                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(Strings.Onboarding.ADD_MORE_SERVICES)
                                     }
                                 }
 
@@ -439,7 +510,7 @@ fun OnboardingScreens(
                                         onValueChange = {},
                                         readOnly = true,
                                         label = { Text(Strings.Onboarding.CITY_LABEL) },
-                                        placeholder = { Text(Strings.Onboarding.CITY_PLACEHOLDER) },
+                                        placeholder = { Text(Strings.Onboarding.CITY_PLACEHOLDER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
                                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityDropdownExpanded) },
                                         modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                                         shape = MaterialTheme.shapes.medium,
@@ -465,7 +536,8 @@ fun OnboardingScreens(
 
                             Button(
                                 onClick = {
-                                    onProceedFromServices(draft, draft.interpretedServices.map { it.serviceId })
+                                    val allServiceIds = draft.interpretedServices.map { it.serviceId } + additionalServiceIds.toList()
+                                    onProceedFromServices(draft, allServiceIds)
                                 },
                                 modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                                 shape = MaterialTheme.shapes.medium
@@ -473,6 +545,37 @@ fun OnboardingScreens(
                                 Text(Strings.Onboarding.LOOKS_GOOD, style = MaterialTheme.typography.titleMedium)
                             }
                             Spacer(modifier = Modifier.height(Spacing.md))
+                        }
+
+                        // Add service picker dialog
+                        if (showAddServicePicker && catalog != null) {
+                            val interpretedIds = draft.interpretedServices.map { it.serviceId }.toSet()
+                            val alreadySelected = interpretedIds + additionalServiceIds
+                            var pickerSelection by remember { mutableStateOf(emptySet<String>()) }
+
+                            AlertDialog(
+                                onDismissRequest = { showAddServicePicker = false },
+                                title = { Text(Strings.Onboarding.ADD_MORE_SERVICES) },
+                                text = {
+                                    Box(modifier = Modifier.heightIn(max = 400.dp)) {
+                                        ServiceCategoryPicker(
+                                            categories = catalog.categories,
+                                            services = catalog.services.filter { it.id !in alreadySelected },
+                                            selectedServiceIds = pickerSelection,
+                                            onSelectionChanged = { pickerSelection = it },
+                                        )
+                                    }
+                                },
+                                confirmButton = {
+                                    TextButton(onClick = {
+                                        additionalServiceIds = additionalServiceIds + pickerSelection
+                                        showAddServicePicker = false
+                                    }) { Text(Strings.EditProfile.ADD) }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showAddServicePicker = false }) { Text(Strings.Common.CANCEL) }
+                                },
+                            )
                         }
                     }
                 }
@@ -530,12 +633,32 @@ fun OnboardingScreens(
                     )
                 }
                 is OnboardingUiState.KnownName -> {
+                    val sessionManager: SessionManager = koinInject()
+                    val currentUser by sessionManager.currentUser.collectAsState()
+                    val needsFullName = currentUser?.fullName.isNullOrBlank()
+                    var fullNameInput by remember { mutableStateOf("") }
                     var knownNameInput by remember { mutableStateOf("") }
 
                     Column(
                         modifier = Modifier.fillMaxSize().padding(0.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
+                        // Full name field — only shown when user has no fullName set
+                        if (needsFullName) {
+                            Text(
+                                Strings.Onboarding.FULL_NAME_REQUIRED,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                            OutlinedTextField(
+                                value = fullNameInput,
+                                onValueChange = { fullNameInput = it },
+                                label = { Text(Strings.Onboarding.FULL_NAME_LABEL) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                            )
+                        }
+
                         Text(Strings.Auth.KNOWN_NAME_TITLE, style = MaterialTheme.typography.headlineMedium)
                         Text(
                             Strings.Auth.KNOWN_NAME_SUBTITLE,
@@ -546,23 +669,29 @@ fun OnboardingScreens(
                             value = knownNameInput,
                             onValueChange = { knownNameInput = it },
                             label = { Text(Strings.Auth.KNOWN_NAME_LABEL) },
-                            placeholder = { Text(Strings.Auth.KNOWN_NAME_PLACEHOLDER) },
+                            placeholder = { Text(Strings.Auth.KNOWN_NAME_PLACEHOLDER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                         )
 
                         Button(
-                            onClick = { onSubmitKnownName(knownNameInput.trim().ifBlank { null }, state.confirmedServiceIds, state.confirmedDescription) },
+                            onClick = {
+                                val fullName = if (needsFullName) fullNameInput.trim() else null
+                                onSubmitKnownName(fullName, knownNameInput.trim().ifBlank { null }, state.confirmedServiceIds, state.confirmedDescription)
+                            },
                             modifier = Modifier.fillMaxWidth(),
+                            enabled = !needsFullName || fullNameInput.isNotBlank(),
                         ) {
                             Text(Strings.Common.CONTINUE)
                         }
 
-                        TextButton(
-                            onClick = { onSubmitKnownName(null, state.confirmedServiceIds, state.confirmedDescription) },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(Strings.Auth.SKIP)
+                        if (!needsFullName) {
+                            TextButton(
+                                onClick = { onSubmitKnownName(null, null, state.confirmedServiceIds, state.confirmedDescription) },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(Strings.Auth.SKIP)
+                            }
                         }
                     }
                 }
@@ -615,19 +744,19 @@ fun OnboardingScreens(
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingBirthDatePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.BirthDateRequired, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.BirthDateRequired, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
@@ -638,7 +767,7 @@ private fun OnboardingReviewServicesPreview() {
             uiState = OnboardingUiState.ReviewServices(PreviewSamples.sampleDraftResponse),
             selectedCity = "Franca",
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -654,7 +783,7 @@ private fun OnboardingReviewDescriptionPreview() {
             ),
             selectedCity = "Franca",
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -667,7 +796,7 @@ private fun OnboardingPublishedPreview() {
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
             selectedCity = null,
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -680,7 +809,7 @@ private fun OnboardingErrorPreview() {
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
             selectedCity = null,
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }

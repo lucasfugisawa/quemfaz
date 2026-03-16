@@ -421,6 +421,7 @@ fun MainFlow(
                         // Onboarding-specific back: navigate within steps for non-Idle,
                         // pop back to previous screen for Idle/Loading.
                         val isOnboardingInProgress =
+                            uiState is OnboardingUiState.Idle ||
                             uiState is OnboardingUiState.NeedsClarification ||
                             uiState is OnboardingUiState.ReviewServices ||
                             uiState is OnboardingUiState.ReviewDescription ||
@@ -450,7 +451,7 @@ fun MainFlow(
                             onProceedWithManualServices = { draft, serviceIds -> viewModel.proceedWithManualServices(draft, serviceIds) },
                             onProceedFromDescription = { draft, serviceIds, description -> viewModel.proceedFromDescription(draft, serviceIds, description) },
                             onPickPhoto = { imagePicker.launch() },
-                            onSubmitKnownName = { knownName, serviceIds, description -> viewModel.submitKnownName(knownName, serviceIds, description) },
+                            onSubmitKnownName = { fullName, knownName, serviceIds, description -> viewModel.submitKnownName(fullName, knownName, serviceIds, description) },
                             onSubmitClarifications = { desc, answers -> viewModel.submitClarifications(desc, answers) },
                             onSkipClarification = { draft -> viewModel.skipClarification(draft) },
                             onBack = {

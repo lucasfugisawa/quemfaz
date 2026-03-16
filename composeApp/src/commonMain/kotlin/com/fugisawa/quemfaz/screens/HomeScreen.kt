@@ -97,7 +97,7 @@ fun HomeScreen(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Diga ou digite o que voc\u00EA precisa...") },
+                placeholder = { Text("Diga ou digite o que voc\u00EA precisa...", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
                 leadingIcon = { Text("\uD83D\uDD0D", modifier = Modifier.padding(start = 8.dp)) },
                 shape = MaterialTheme.shapes.large,
                 singleLine = true

@@ -89,6 +89,11 @@ object Strings {
         const val BIRTH_DATE_UNDERAGE = "Você precisa ter pelo menos 18 anos para oferecer serviços."
         const val BIRTH_DATE_FORMAT_HINT = "Use o formato DD/MM/AAAA"
         const val DESCRIPTION_EXAMPLE = "Ex: \"Sou pintor residencial com 10 anos de experiência\""
+        const val ADD_MORE_SERVICES = "Adicionar mais serviços"
+        const val FULL_NAME_REQUIRED = "O nome completo é obrigatório para profissionais."
+        const val FULL_NAME_LABEL = "Nome completo"
+        const val SELECT_DATE = "Selecionar"
+        const val ADDITIONAL_SERVICES = "Serviços adicionais:"
 
         fun stepIndicator(current: Int) = "Passo ${current + 1} de 6"
     }
@@ -128,6 +133,7 @@ object Strings {
         const val ADD_SERVICE = "Adicionar serviço"
         const val ADD_SERVICES_DIALOG = "Adicionar serviços"
         const val ADD = "Adicionar"
+        const val CATALOG_UNAVAILABLE = "Não foi possível carregar o catálogo. Tente novamente."
         const val DESCRIPTION = "Descrição"
         const val CITY = "Cidade"
         const val PHONE = "Telefone"
