@@ -14,5 +14,6 @@ interface ProfessionalInputInterpreter {
         originalDescription: String,
         clarificationAnswers: List<ClarificationAnswer>,
         inputMode: InputMode,
+        clarificationRound: Int = 1,
     ): CreateProfessionalProfileDraftResponse
 }

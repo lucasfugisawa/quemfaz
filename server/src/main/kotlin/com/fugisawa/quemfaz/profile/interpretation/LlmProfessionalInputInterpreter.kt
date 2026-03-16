@@ -130,17 +130,34 @@ class LlmProfessionalInputInterpreter(
         originalDescription: String,
         clarificationAnswers: List<ClarificationAnswer>,
         inputMode: InputMode,
+        clarificationRound: Int,
     ): CreateProfessionalProfileDraftResponse =
         try {
             runBlocking {
                 val answersText = clarificationAnswers.joinToString("\n") { "Q: ${it.question}\nA: ${it.answer}" }
                 val userMessage = "Original description:\n$originalDescription\n\nClarification answers:\n$answersText"
+                val systemPrompt = if (clarificationRound >= 1) {
+                    buildSystemPrompt() + "\n\n" + """
+                        IMPORTANT: This is a follow-up after clarification round $clarificationRound.
+                        Do NOT request further clarification. You MUST set needsClarification = false.
+                        Work with the information you have. Map what you can to the catalog and add
+                        the rest to unmatchedDescriptions as "safe".
+                    """.trimIndent()
+                } else {
+                    buildSystemPrompt()
+                }
                 val interpretation =
                     llmAgentService.executeStructured<OnboardingInterpretation>(
-                        systemPrompt = buildSystemPrompt(),
+                        systemPrompt = systemPrompt,
                         userMessage = userMessage,
                     )
-                mapToResponse(originalDescription, interpretation)
+                // Server-side enforcement: after round 1, force needsClarification=false
+                val finalInterpretation = if (clarificationRound >= 1) {
+                    interpretation.copy(needsClarification = false, clarificationQuestions = emptyList())
+                } else {
+                    interpretation
+                }
+                mapToResponse(originalDescription, finalInterpretation)
             }
         } catch (e: Exception) {
             logger.error(

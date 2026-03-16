@@ -46,6 +46,7 @@ class ClarifyProfessionalProfileDraftService(
             request.originalDescription,
             request.clarificationAnswers,
             request.inputMode,
+            request.clarificationRound,
         )
 }
 

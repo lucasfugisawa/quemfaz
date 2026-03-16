@@ -54,6 +54,7 @@ class MockProfessionalInputInterpreter(
         originalDescription: String,
         clarificationAnswers: List<ClarificationAnswer>,
         inputMode: InputMode,
+        clarificationRound: Int,
     ): CreateProfessionalProfileDraftResponse {
         val combinedText = originalDescription + " " + clarificationAnswers.joinToString(" ") { it.answer }
         return interpret(combinedText, inputMode)
