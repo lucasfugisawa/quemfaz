@@ -42,6 +42,7 @@ import com.fugisawa.quemfaz.ui.components.StatusChipRow
 import com.fugisawa.quemfaz.ui.preview.LightDarkPreview
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
@@ -58,7 +59,7 @@ fun SearchResultsScreen(
     onLoadMore: () -> Unit = {},
     onCategorySelected: (serviceId: String) -> Unit = {},
 ) {
-    AppScreen(title = "Results for \"$query\"", onNavigateBack = onNavigateBack) {
+    AppScreen(title = Strings.Search.resultsTitle(query), onNavigateBack = onNavigateBack) {
         when (uiState) {
             is SearchUiState.Loading -> {
                 LazyColumn(contentPadding = PaddingValues(Spacing.md)) {
@@ -82,7 +83,7 @@ fun SearchResultsScreen(
                         exit = shrinkVertically() + fadeOut(),
                     ) {
                         Text(
-                            text = "Showing results for: ${uiState.response.interpretedServices.joinToString(" · ") { it.displayName }}",
+                            text = Strings.Search.showingResults(uiState.response.interpretedServices.joinToString(" · ") { it.displayName }),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm)
@@ -104,15 +105,15 @@ fun SearchResultsScreen(
                                     modifier = Modifier.size(Spacing.emptyStateIconSize),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
-                                Text("No professionals found", style = MaterialTheme.typography.titleMedium)
+                                Text(Strings.Search.NO_RESULTS_TITLE, style = MaterialTheme.typography.titleMedium)
                                 Text(
-                                    "Try a different search term or city.",
+                                    Strings.Search.NO_RESULTS_SUBTITLE,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                             Text(
-                                text = "Ou navegue por categoria",
+                                text = Strings.Search.BROWSE_BY_CATEGORY,
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm),
                             )
@@ -150,7 +151,7 @@ fun SearchResultsScreen(
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Button(onClick = onLoadMore) {
-                                            Text("Load more")
+                                            Text(Strings.Search.LOAD_MORE)
                                         }
                                     }
                                 }
@@ -206,7 +207,7 @@ fun ProfessionalCard(
                     IconButton(onClick = onFavoriteToggle) {
                         Icon(
                             imageVector = if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = if (isFavorited) "Remove from favorites" else "Add to favorites",
+                            contentDescription = if (isFavorited) Strings.Search.REMOVE_FAVORITE else Strings.Search.ADD_FAVORITE,
                             tint = if (isFavorited) MaterialTheme.colorScheme.primary
                                    else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.graphicsLayer { scaleX = favScale; scaleY = favScale },

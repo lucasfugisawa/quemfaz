@@ -17,6 +17,7 @@ import com.fugisawa.quemfaz.ui.components.ErrorMessage
 import com.fugisawa.quemfaz.ui.components.FullScreenLoading
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
 import com.fugisawa.quemfaz.ui.theme.Spacing
 
@@ -28,7 +29,7 @@ fun FavoritesScreen(
     onFindProfessionals: (() -> Unit)? = null,
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(Spacing.md)) {
-        Text("Favorites", style = MaterialTheme.typography.headlineSmall)
+        Text(Strings.Favorites.TITLE, style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(Spacing.md))
 
         when (uiState) {
@@ -54,15 +55,15 @@ fun FavoritesScreen(
                             modifier = Modifier.size(Spacing.emptyStateIconSize),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Text("No favorites yet", style = MaterialTheme.typography.titleMedium)
+                        Text(Strings.Favorites.EMPTY_TITLE, style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Professionals you save will appear here.",
+                            Strings.Favorites.EMPTY_SUBTITLE,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         if (onFindProfessionals != null) {
                             Button(onClick = onFindProfessionals) {
-                                Text("Find professionals")
+                                Text(Strings.Favorites.FIND_PROFESSIONALS)
                             }
                         }
                     }

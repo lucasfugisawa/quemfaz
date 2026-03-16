@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.network.FeatureApiClients
+import com.fugisawa.quemfaz.ui.strings.Strings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +35,7 @@ class FavoritesViewModel(
                     _uiState.value = FavoritesUiState.Content(response.favorites)
                 }
             } catch (e: Exception) {
-                _uiState.value = FavoritesUiState.Error(e.message ?: "Failed to load favorites")
+                _uiState.value = FavoritesUiState.Error(e.message ?: Strings.Errors.FAILED_LOAD_FAVORITES)
             }
         }
     }
