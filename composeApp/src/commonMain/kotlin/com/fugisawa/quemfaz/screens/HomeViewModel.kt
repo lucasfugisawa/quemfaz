@@ -7,6 +7,7 @@ import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsResponse
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
+import com.fugisawa.quemfaz.contract.search.PopularServicesResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.network.FeatureApiClients
@@ -67,6 +68,11 @@ class HomeViewModel(
     private val _hasMore = MutableStateFlow(false)
     val hasMore: StateFlow<Boolean> = _hasMore.asStateFlow()
 
+    private val _popularServices = MutableStateFlow<PopularServicesResponse?>(null)
+    val popularServices: StateFlow<PopularServicesResponse?> = _popularServices.asStateFlow()
+
+    private var _inputMode: InputMode = InputMode.TEXT
+
     // Pagination state — managed internally, reset on each new search
     private var lastQuery: String = ""
     private var currentPage: Int = 0
@@ -84,6 +90,18 @@ class HomeViewModel(
 
     fun dismissOfferServicesCard() {
         sessionManager.dismissOfferServicesCard()
+    }
+
+    fun setInputMode(mode: InputMode) {
+        _inputMode = mode
+    }
+
+    fun loadPopularServices(cityName: String?) {
+        viewModelScope.launch {
+            try {
+                _popularServices.value = apiClients.getPopularServices(cityName)
+            } catch (_: Exception) { }
+        }
     }
 
     val supportedCities = listOf("Batatais", "Franca", "Ribeirão Preto")
@@ -154,7 +172,7 @@ class HomeViewModel(
                     SearchProfessionalsRequest(
                         query = lastQuery,
                         cityName = currentCity.value,
-                        inputMode = InputMode.TEXT,
+                        inputMode = _inputMode,
                         page = page,
                         pageSize = 20,
                     )

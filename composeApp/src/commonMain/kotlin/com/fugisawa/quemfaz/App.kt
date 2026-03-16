@@ -207,6 +207,11 @@ fun MainFlow(
     val hydrationFailed by authViewModel.hydrationFailed.collectAsState()
 
     val showEarnMoneyCard by homeViewModel.showEarnMoneyCard.collectAsState()
+    val popularServices by homeViewModel.popularServices.collectAsState()
+
+    LaunchedEffect(currentCity) {
+        homeViewModel.loadPopularServices(currentCity)
+    }
 
     var currentQuery by remember { mutableStateOf("") }
     var currentProfileId by remember { mutableStateOf("") }
@@ -293,6 +298,7 @@ fun MainFlow(
                             currentUser = currentUser,
                             currentCity = currentCity,
                             showEarnMoneyCard = showEarnMoneyCard,
+                            popularServices = popularServices,
                             onCityClick = { showCitySheet = true },
                             onProfileClick = { navigateToTab(Screen.MyProfile) },
                             onSearch = { query ->
@@ -301,7 +307,14 @@ fun MainFlow(
                                 navigateTo(Screen.SearchResults)
                             },
                             onOfferServices = { navigateTo(Screen.OnboardingStart) },
-                            onDismissOfferServices = { homeViewModel.dismissOfferServicesCard() }
+                            onDismissOfferServices = { homeViewModel.dismissOfferServicesCard() },
+                            onPopularServiceClick = { serviceName ->
+                                currentQuery = serviceName
+                                homeViewModel.search(serviceName)
+                                navigateTo(Screen.SearchResults)
+                            },
+                            onNavigateToCategoryBrowsing = { navigateTo(Screen.CategoryBrowsing) },
+                            onVoiceInput = { homeViewModel.setInputMode(com.fugisawa.quemfaz.contract.profile.InputMode.VOICE) },
                         )
                     }
                     is Screen.CitySelection -> {
@@ -444,6 +457,16 @@ fun MainFlow(
                                 navigateToTab(Screen.Home)
                                 navigateTo(Screen.ProfessionalProfile)
                             }
+                        )
+                    }
+                    is Screen.CategoryBrowsing -> {
+                        CategoryBrowsingScreen(
+                            onServiceClick = { serviceName ->
+                                currentQuery = serviceName
+                                homeViewModel.search(serviceName)
+                                navigateTo(Screen.SearchResults)
+                            },
+                            onBack = { navigateBack() }
                         )
                     }
                     is Screen.EditProfessionalProfile -> {

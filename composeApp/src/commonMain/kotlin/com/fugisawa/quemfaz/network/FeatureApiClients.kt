@@ -19,6 +19,7 @@ import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftReque
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.profile.SetKnownNameRequest
+import com.fugisawa.quemfaz.contract.search.PopularServicesResponse
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsResponse
 import io.ktor.client.call.body
@@ -93,6 +94,11 @@ class FeatureApiClients(private val apiClient: ApiClient) {
         apiClient.client.post("/search/professionals") {
             contentType(ContentType.Application.Json)
             setBody(request)
+        }.body()
+
+    suspend fun getPopularServices(cityName: String?): PopularServicesResponse =
+        apiClient.client.get("/search/services/popular") {
+            cityName?.let { url.parameters.append("cityName", it) }
         }.body()
 
     // Professional Profile

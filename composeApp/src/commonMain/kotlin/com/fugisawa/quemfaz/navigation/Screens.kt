@@ -23,5 +23,6 @@ sealed class Screen(val route: String) {
     object MyProfile : Screen("profile/my")
     object EditProfessionalProfile : Screen("profile/professional/edit")
     
+    object CategoryBrowsing : Screen("categories")
     object Blocked : Screen("blocked")
 }

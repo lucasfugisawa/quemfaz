@@ -5,6 +5,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,7 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.unit.sp
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
+import com.fugisawa.quemfaz.contract.search.PopularServicesResponse
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
+import com.fugisawa.quemfaz.ui.components.VoiceInputButton
 import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
@@ -28,11 +34,15 @@ fun HomeScreen(
     currentUser: UserProfileResponse?,
     currentCity: String?,
     showEarnMoneyCard: Boolean,
+    popularServices: PopularServicesResponse?,
     onCityClick: () -> Unit,
     onProfileClick: () -> Unit,
     onSearch: (String) -> Unit,
     onOfferServices: () -> Unit,
     onDismissOfferServices: () -> Unit,
+    onPopularServiceClick: (String) -> Unit,
+    onNavigateToCategoryBrowsing: () -> Unit,
+    onVoiceInput: (String) -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
 
@@ -44,7 +54,7 @@ fun HomeScreen(
                         modifier = Modifier.clickable { onCityClick() },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("📍", style = MaterialTheme.typography.titleLarge)
+                        Text("\uD83D\uDCCD", style = MaterialTheme.typography.titleLarge)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             currentCity ?: Strings.Home.SELECT_CITY,
@@ -71,6 +81,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -86,16 +97,30 @@ fun HomeScreen(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(Strings.Home.SEARCH_PLACEHOLDER) },
-                leadingIcon = { Text("🔍", modifier = Modifier.padding(start = 8.dp)) },
-                trailingIcon = {
-                    IconButton(onClick = { /* Voice placeholder */ }, enabled = false) {
-                        Text("🎤")
-                    }
-                },
+                placeholder = { Text("Diga ou digite o que voc\u00EA precisa...") },
+                leadingIcon = { Text("\uD83D\uDD0D", modifier = Modifier.padding(start = 8.dp)) },
                 shape = MaterialTheme.shapes.large,
                 singleLine = true
             )
+
+            Spacer(modifier = Modifier.height(Spacing.xs))
+
+            Text(
+                "Ex: \"Preciso de algu\u00E9m para pintar minha casa\"",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                VoiceInputButton(
+                    onTranscription = { transcription ->
+                        query = transcription
+                        onVoiceInput(transcription)
+                    }
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -121,8 +146,46 @@ fun HomeScreen(
                 Text(Strings.Home.SEARCH, style = MaterialTheme.typography.titleMedium)
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(Spacing.lg))
 
+            // Popular searches section
+            if (popularServices != null && popularServices.services.isNotEmpty()) {
+                Text(
+                    text = if (popularServices.isLocalResults) "Mais buscados na sua cidade"
+                           else "Mais buscados no QuemFaz",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(Spacing.sm))
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                ) {
+                    items(popularServices.services) { service ->
+                        SuggestionChip(
+                            onClick = {
+                                query = service.displayName
+                                onPopularServiceClick(service.displayName)
+                            },
+                            label = { Text(service.displayName) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(Spacing.md))
+            }
+
+            // Category browsing link
+            TextButton(
+                onClick = onNavigateToCategoryBrowsing,
+            ) {
+                Text("Ver todas as categorias")
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            // Earn money card
             if (showEarnMoneyCard) {
                 Box(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
@@ -145,7 +208,7 @@ fun HomeScreen(
                                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 )
                             }
-                            Text("🚀", style = MaterialTheme.typography.headlineLarge)
+                            Text("\uD83D\uDE80", style = MaterialTheme.typography.headlineLarge)
                         }
                     }
                     IconButton(
@@ -167,7 +230,7 @@ fun HomeScreen(
     }
 }
 
-// ── Previews ──
+// -- Previews --
 
 @LightDarkScreenPreview
 @Composable
@@ -175,13 +238,17 @@ private fun HomeScreenWithCityPreview() {
     AppTheme {
         HomeScreen(
             currentUser = PreviewSamples.sampleUser,
-            currentCity = "São Paulo",
+            currentCity = "S\u00E3o Paulo",
             showEarnMoneyCard = true,
+            popularServices = null,
             onCityClick = {},
             onProfileClick = {},
             onSearch = {},
             onOfferServices = {},
-            onDismissOfferServices = {}
+            onDismissOfferServices = {},
+            onPopularServiceClick = {},
+            onNavigateToCategoryBrowsing = {},
+            onVoiceInput = {},
         )
     }
 }
@@ -194,11 +261,15 @@ private fun HomeScreenNoCityPreview() {
             currentUser = PreviewSamples.sampleUser,
             currentCity = null,
             showEarnMoneyCard = true,
+            popularServices = null,
             onCityClick = {},
             onProfileClick = {},
             onSearch = {},
             onOfferServices = {},
-            onDismissOfferServices = {}
+            onDismissOfferServices = {},
+            onPopularServiceClick = {},
+            onNavigateToCategoryBrowsing = {},
+            onVoiceInput = {},
         )
     }
 }
@@ -209,13 +280,17 @@ private fun HomeScreenProfessionalPreview() {
     AppTheme {
         HomeScreen(
             currentUser = PreviewSamples.sampleUser,
-            currentCity = "São Paulo",
+            currentCity = "S\u00E3o Paulo",
             showEarnMoneyCard = false,
+            popularServices = null,
             onCityClick = {},
             onProfileClick = {},
             onSearch = {},
             onOfferServices = {},
-            onDismissOfferServices = {}
+            onDismissOfferServices = {},
+            onPopularServiceClick = {},
+            onNavigateToCategoryBrowsing = {},
+            onVoiceInput = {},
         )
     }
 }
