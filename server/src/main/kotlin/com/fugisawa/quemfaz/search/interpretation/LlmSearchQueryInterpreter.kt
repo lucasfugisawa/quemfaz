@@ -118,12 +118,18 @@ class LlmSearchQueryInterpreter(
             If the query mentions a service that does NOT exist in the catalog:
             - DO NOT force-map it to an unrelated service
             - Instead, add it to the "unmatchedDescriptions" array with the raw description
-            - Classify its safety: "safe", "unsafe", or "uncertain"
-            - For "unsafe" or "uncertain", provide a brief "safetyReason"
+            - Classify its safety: "safe" or "unsafe"
+            - For "unsafe", provide a brief "safetyReason"
 
-            A service is "unsafe" if it involves illegal activities, legally regulated services
-            the platform cannot verify, or anything that would expose the platform to legal
-            or reputational risk.
+            Safety classification:
+            - "safe": any legitimate economic activity, regardless of whether it requires licenses,
+              certifications, or professional registration. This platform is a marketplace — it does
+              not verify credentials.
+            - "unsafe": ONLY activities that are clearly illegal under Brazilian law. Examples:
+              drug trafficking, weapons sales, fencing stolen goods, sexual exploitation,
+              money laundering, fraud schemes.
+
+            When in doubt, classify as "safe".
 
             Supported services catalog:
             $catalog
