@@ -105,9 +105,9 @@ class OnboardingViewModel(
                 val response = apiClients.createDraft(
                     CreateProfessionalProfileDraftRequest(inputText, inputMode)
                 )
-                if (response.llmUnavailable || response.followUpQuestions.isEmpty()) {
-                    // LLM was unavailable OR no clarification needed — go straight to draft review.
-                    // If services are empty, the UI will show manual selection.
+                if (response.interpretedServices.isEmpty() && response.blockedDescriptions.isNotEmpty()) {
+                    _uiState.value = OnboardingUiState.Error(Strings.Errors.SERVICE_NOT_ALLOWED)
+                } else if (response.llmUnavailable || response.followUpQuestions.isEmpty()) {
                     _uiState.value = OnboardingUiState.ReviewServices(response)
                 } else {
                     _uiState.value = OnboardingUiState.NeedsClarification(inputText, response)
@@ -131,7 +131,9 @@ class OnboardingViewModel(
                     )
                 )
                 // Client-side cap: after 1 round, always proceed to ReviewServices
-                if (response.llmUnavailable || response.followUpQuestions.isEmpty() || clarificationRound >= 1) {
+                if (response.interpretedServices.isEmpty() && response.blockedDescriptions.isNotEmpty()) {
+                    _uiState.value = OnboardingUiState.Error(Strings.Errors.SERVICE_NOT_ALLOWED)
+                } else if (response.llmUnavailable || response.followUpQuestions.isEmpty() || clarificationRound >= 1) {
                     _uiState.value = OnboardingUiState.ReviewServices(response)
                 } else {
                     _uiState.value = OnboardingUiState.NeedsClarification(originalDescription, response)
