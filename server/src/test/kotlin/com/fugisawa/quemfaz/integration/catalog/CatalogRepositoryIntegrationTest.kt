@@ -73,7 +73,7 @@ class CatalogRepositoryIntegrationTest : BaseIntegrationTest() {
             rawDescription = "instalo câmeras de segurança",
             source = "onboarding",
             userId = null,
-            bestMatchServiceId = "repair-electrician",
+            bestMatchServiceId = "maintenance-electrician",
             bestMatchConfidence = "low",
             provisionalServiceId = provisionalId,
             cityName = "São Paulo",

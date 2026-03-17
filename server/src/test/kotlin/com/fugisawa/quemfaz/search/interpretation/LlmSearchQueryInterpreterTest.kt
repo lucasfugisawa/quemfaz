@@ -22,7 +22,7 @@ class LlmSearchQueryInterpreterTest {
         id = "paint-residential",
         displayName = "Pintura Residencial",
         description = "Pintura de residências",
-        categoryId = "CONSTRUCTION",
+        categoryId = "PAINTING",
         aliases = listOf("pintor", "pintura"),
         status = CatalogServiceStatus.ACTIVE,
     )

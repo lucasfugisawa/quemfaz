@@ -18,10 +18,10 @@ class LlmSearchQueryInterpreterFallbackTest {
     private val mockSignalCaptureService: SignalCaptureService = mock()
 
     private val electricianEntry = CatalogEntry(
-        id = "repair-electrician",
-        displayName = "Eletricista",
-        description = "Serviços elétricos",
-        categoryId = "REPAIR",
+        id = "maintenance-electrician",
+        displayName = "Elétrica Residencial",
+        description = "Instalação e manutenção elétrica",
+        categoryId = "MAINTENANCE",
         aliases = listOf("eletricista", "elétrico"),
         status = CatalogServiceStatus.ACTIVE,
     )
@@ -37,7 +37,7 @@ class LlmSearchQueryInterpreterFallbackTest {
         id = "paint-residential",
         displayName = "Pintura Residencial",
         description = "Pintura de residências",
-        categoryId = "CONSTRUCTION",
+        categoryId = "PAINTING",
         aliases = listOf("pintor", "pintura"),
         status = CatalogServiceStatus.ACTIVE,
     )
@@ -70,7 +70,7 @@ class LlmSearchQueryInterpreterFallbackTest {
         val result = interpreter.interpret("eletricista", "Batatais")
 
         assertTrue(result.serviceIds.isNotEmpty())
-        assertTrue(result.serviceIds.contains("repair-electrician"))
+        assertTrue(result.serviceIds.contains("maintenance-electrician"))
         assertEquals("Batatais", result.cityName)
     }
 
