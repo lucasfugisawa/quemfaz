@@ -8,9 +8,13 @@ import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.llm.LlmAgentService
 import com.fugisawa.quemfaz.llm.OnboardingInterpretation
+import com.fugisawa.quemfaz.llm.UnmatchedDescription
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.KSerializer
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import kotlin.test.assertEquals
@@ -29,9 +33,19 @@ class LlmProfessionalInputInterpreterTest {
         status = CatalogServiceStatus.ACTIVE,
     )
 
+    private val provisionedBakeryEntry = CatalogEntry(
+        id = "bakery-services",
+        displayName = "Padaria",
+        description = "Serviços de padaria",
+        categoryId = "FOOD",
+        aliases = listOf("padeiro"),
+        status = CatalogServiceStatus.PENDING_REVIEW,
+    )
+
     init {
         whenever(mockCatalogService.getActiveServices()).thenReturn(listOf(paintEntry))
         whenever(mockCatalogService.findById("paint-residential")).thenReturn(paintEntry)
+        whenever(mockCatalogService.findById("bakery-services")).thenReturn(provisionedBakeryEntry)
         whenever(mockCatalogService.search(any())).thenReturn(emptyList())
     }
 
@@ -136,5 +150,55 @@ class LlmProfessionalInputInterpreterTest {
 
         assertTrue(response.llmUnavailable)
         assertTrue(response.followUpQuestions.isEmpty())
+    }
+
+    @Test
+    fun `should include provisioned services for safe unmatched descriptions`() {
+        runBlocking {
+            whenever(
+                mockSignalCaptureService.captureSignal(
+                    eq("Sou padeiro"), eq("onboarding"), anyOrNull(), anyOrNull(),
+                    eq("safe"), anyOrNull(), eq(true),
+                )
+            ).thenReturn("bakery-services")
+        }
+
+        val service = createFakeService(
+            OnboardingInterpretation(
+                serviceIds = listOf("paint-residential"),
+                needsClarification = false,
+                unmatchedDescriptions = listOf(
+                    UnmatchedDescription("Sou padeiro", "safe"),
+                ),
+            ),
+        )
+        val interpreter = LlmProfessionalInputInterpreter(service, mockCatalogService, mockSignalCaptureService)
+
+        val response = interpreter.interpret("Faço pintura e sou padeiro", InputMode.TEXT)
+
+        assertTrue(response.interpretedServices.any { it.serviceId == "paint-residential" })
+        assertTrue(response.interpretedServices.any { it.serviceId == "bakery-services" })
+        val bakery = response.interpretedServices.first { it.serviceId == "bakery-services" }
+        assertEquals("pending_review", bakery.status)
+    }
+
+    @Test
+    fun `should not provision unsafe unmatched descriptions`() {
+        val service = createFakeService(
+            OnboardingInterpretation(
+                serviceIds = listOf("paint-residential"),
+                needsClarification = false,
+                unmatchedDescriptions = listOf(
+                    UnmatchedDescription("Tráfico de drogas", "unsafe", "Atividade ilegal"),
+                ),
+            ),
+        )
+        val interpreter = LlmProfessionalInputInterpreter(service, mockCatalogService, mockSignalCaptureService)
+
+        val response = interpreter.interpret("Faço pintura e tráfico", InputMode.TEXT)
+
+        assertTrue(response.interpretedServices.any { it.serviceId == "paint-residential" })
+        assertTrue(response.interpretedServices.none { it.status == "pending_review" })
+        assertTrue(response.blockedDescriptions.contains("Tráfico de drogas"))
     }
 }

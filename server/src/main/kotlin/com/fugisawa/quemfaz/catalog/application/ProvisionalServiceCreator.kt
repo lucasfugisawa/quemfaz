@@ -31,8 +31,9 @@ class ProvisionalServiceCreator(
         cityName: String?,
         safetyClassification: String?,
         safetyReason: String?,
+        forceProvision: Boolean = false,
     ): String? {
-        if (!catalogService.isAutoProvisioningEnabled()) return null
+        if (!forceProvision && !catalogService.isAutoProvisioningEnabled()) return null
         if (safetyClassification == "unsafe") return null
 
         return try {

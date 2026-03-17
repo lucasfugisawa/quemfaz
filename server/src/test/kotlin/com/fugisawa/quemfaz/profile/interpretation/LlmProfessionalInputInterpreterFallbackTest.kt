@@ -6,10 +6,14 @@ import com.fugisawa.quemfaz.catalog.application.SignalCaptureService
 import com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.llm.LlmAgentService
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.KSerializer
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class LlmProfessionalInputInterpreterFallbackTest {
@@ -92,5 +96,44 @@ class LlmProfessionalInputInterpreterFallbackTest {
         assertTrue(response.llmUnavailable)
         assertTrue(response.interpretedServices.isNotEmpty())
         assertTrue(response.interpretedServices.any { it.serviceId == "paint-residential" || it.serviceId == "paint-commercial" })
+    }
+
+    @Test
+    fun `fallback provisions service when no local matches found`() {
+        val provisionedEntry = CatalogEntry(
+            id = "camera-installation",
+            displayName = "Instalação de Câmeras",
+            description = "Instalação de câmeras de segurança",
+            categoryId = "SECURITY",
+            aliases = listOf("câmera", "cftv"),
+            status = CatalogServiceStatus.PENDING_REVIEW,
+        )
+
+        val mockSignal: SignalCaptureService = mock()
+        val mockCatalog: CatalogService = mock()
+        whenever(mockCatalog.getActiveServices()).thenReturn(emptyList())
+        whenever(mockCatalog.search("Instalo câmeras de segurança")).thenReturn(emptyList())
+        whenever(mockCatalog.findById("camera-installation")).thenReturn(provisionedEntry)
+        runBlocking {
+            whenever(
+                mockSignal.captureSignal(
+                    eq("Instalo câmeras de segurança"), eq("onboarding"), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), eq(true),
+                )
+            ).thenReturn("camera-installation")
+        }
+
+        val fallbackInterpreter = LlmProfessionalInputInterpreter(
+            FailingLlmAgentService(),
+            mockCatalog,
+            mockSignal,
+        )
+
+        val response = fallbackInterpreter.interpret("Instalo câmeras de segurança", InputMode.TEXT)
+
+        assertTrue(response.llmUnavailable)
+        assertTrue(response.interpretedServices.isNotEmpty())
+        assertEquals("camera-installation", response.interpretedServices.first().serviceId)
+        assertEquals("pending_review", response.interpretedServices.first().status)
+        assertTrue(response.missingFields.isEmpty())
     }
 }

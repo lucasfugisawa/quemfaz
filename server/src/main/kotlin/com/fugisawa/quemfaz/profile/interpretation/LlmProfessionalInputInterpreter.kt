@@ -63,10 +63,36 @@ class LlmProfessionalInputInterpreter(
             interpretedServices
         }
 
+        // Process unmatched descriptions — capture signals, provision safe services, collect blocked
+        val blockedDescriptions = mutableListOf<String>()
+        val provisionedServices = mutableListOf<InterpretedServiceDto>()
+        interpretation.unmatchedDescriptions.forEach { unmatched ->
+            val provisionalId = signalCaptureService.captureSignal(
+                unmatched.rawDescription, "onboarding", null, null,
+                unmatched.safetyClassification, unmatched.safetyReason,
+                forceProvision = true,
+            )
+            if (unmatched.safetyClassification == "unsafe") {
+                blockedDescriptions.add(unmatched.rawDescription)
+            } else if (provisionalId != null) {
+                val entry = catalogService.findById(provisionalId)
+                if (entry != null) {
+                    provisionedServices.add(
+                        InterpretedServiceDto(
+                            entry.id, entry.displayName, ServiceMatchLevel.PRIMARY.name,
+                            status = "pending_review",
+                        )
+                    )
+                }
+            }
+        }
+
+        val allServices = (finalServices + provisionedServices).distinctBy { it.serviceId }
+
         val missingFields = mutableListOf<String>()
         val followUpQuestions = mutableListOf<String>()
 
-        if (finalServices.isEmpty() && !interpretation.needsClarification) {
+        if (allServices.isEmpty() && !interpretation.needsClarification) {
             missingFields.add("services")
         }
 
@@ -74,28 +100,16 @@ class LlmProfessionalInputInterpreter(
             followUpQuestions.addAll(interpretation.clarificationQuestions.take(2))
         }
 
-        // Process unmatched descriptions — capture signals, collect blocked
-        val blockedDescriptions = mutableListOf<String>()
-        interpretation.unmatchedDescriptions.forEach { unmatched ->
-            signalCaptureService.captureSignal(
-                unmatched.rawDescription, "onboarding", null, null,
-                unmatched.safetyClassification, unmatched.safetyReason,
-            )
-            if (unmatched.safetyClassification == "unsafe") {
-                blockedDescriptions.add(unmatched.rawDescription)
-            }
-        }
-
         return CreateProfessionalProfileDraftResponse(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
             editedDescription = interpretation.editedDescription.ifBlank {
                 inputText.replaceFirstChar { it.uppercase() }
             },
-            interpretedServices = finalServices,
+            interpretedServices = allServices,
             cityName = null,
             missingFields = missingFields,
             followUpQuestions = followUpQuestions,
-            freeTextAliases = finalServices.map { it.displayName },
+            freeTextAliases = allServices.map { it.displayName },
             llmUnavailable = false,
             blockedDescriptions = blockedDescriptions,
         )
@@ -107,21 +121,35 @@ class LlmProfessionalInputInterpreter(
             InterpretedServiceDto(entry.id, entry.displayName, ServiceMatchLevel.PRIMARY.name)
         }
 
-        // Capture signal if no matches found
-        if (interpretedServices.isEmpty()) {
-            runBlocking {
-                signalCaptureService.captureSignal(inputText, "onboarding", null, null, null, null)
+        // Capture signal and try provisioning if no matches found
+        val allServices = if (interpretedServices.isEmpty()) {
+            val provisionalId = runBlocking {
+                signalCaptureService.captureSignal(
+                    inputText, "onboarding", null, null, null, null,
+                    forceProvision = true,
+                )
             }
-        }
+            if (provisionalId != null) {
+                val entry = catalogService.findById(provisionalId)
+                if (entry != null) {
+                    listOf(
+                        InterpretedServiceDto(
+                            entry.id, entry.displayName, ServiceMatchLevel.PRIMARY.name,
+                            status = "pending_review",
+                        )
+                    )
+                } else interpretedServices
+            } else interpretedServices
+        } else interpretedServices
 
         return CreateProfessionalProfileDraftResponse(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
             editedDescription = inputText.replaceFirstChar { it.uppercase() },
-            interpretedServices = interpretedServices,
+            interpretedServices = allServices,
             cityName = null,
-            missingFields = if (interpretedServices.isEmpty()) listOf("services") else emptyList(),
+            missingFields = if (allServices.isEmpty()) listOf("services") else emptyList(),
             followUpQuestions = emptyList(),
-            freeTextAliases = interpretedServices.map { it.displayName },
+            freeTextAliases = allServices.map { it.displayName },
             llmUnavailable = true,
         )
     }

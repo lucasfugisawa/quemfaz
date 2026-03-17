@@ -253,7 +253,11 @@ private fun mapToResponse(
         cityName = profile.cityName ?: "",
         services = profile.services.map { svc ->
             val canonical = catalogService.findById(svc.serviceId)
-            InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
+            val status = when (canonical?.status) {
+                com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus.PENDING_REVIEW -> "pending_review"
+                else -> "active"
+            }
+            InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name, status = status)
         },
         profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
         activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
