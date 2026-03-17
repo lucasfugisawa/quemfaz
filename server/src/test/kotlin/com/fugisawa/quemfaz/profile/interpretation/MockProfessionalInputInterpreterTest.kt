@@ -20,7 +20,7 @@ class MockProfessionalInputInterpreterTest {
                     id = "paint-residential",
                     displayName = "Pintura Residencial",
                     description = "Pintura de residências",
-                    categoryId = "CONSTRUCTION",
+                    categoryId = "PAINTING",
                     aliases = listOf("pintura residencial", "pintor"),
                     status = CatalogServiceStatus.ACTIVE,
                 ),

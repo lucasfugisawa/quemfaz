@@ -24,10 +24,10 @@ class MockSearchQueryInterpreterTest {
                     status = CatalogServiceStatus.ACTIVE,
                 ),
                 CatalogEntry(
-                    id = "repair-electrician",
-                    displayName = "Eletricista",
-                    description = "Serviços elétricos",
-                    categoryId = "REPAIR",
+                    id = "maintenance-electrician",
+                    displayName = "Elétrica Residencial",
+                    description = "Instalação e manutenção elétrica",
+                    categoryId = "MAINTENANCE",
                     aliases = listOf("eletricista", "elétrico"),
                     status = CatalogServiceStatus.ACTIVE,
                 ),
@@ -66,7 +66,7 @@ class MockSearchQueryInterpreterTest {
     fun `should interpret electrician and city`() {
         val result = interpreter.interpret("Eletricista em Franca", "Batatais")
 
-        assertTrue(result.serviceIds.contains("repair-electrician"))
+        assertTrue(result.serviceIds.contains("maintenance-electrician"))
         assertEquals("Batatais", result.cityName)
     }
 

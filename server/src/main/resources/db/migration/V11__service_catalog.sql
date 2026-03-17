@@ -55,40 +55,96 @@ CREATE TABLE system_configuration (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Seed categories (7 — excluding OTHER)
+-- Seed categories (11)
 INSERT INTO service_categories (id, display_name, sort_order) VALUES
     ('CLEANING', 'Limpeza', 1),
-    ('REPAIRS', 'Reparos', 2),
+    ('MAINTENANCE', 'Manutenção', 2),
     ('PAINTING', 'Pintura', 3),
     ('GARDEN', 'Jardim', 4),
     ('EVENTS', 'Eventos', 5),
     ('BEAUTY', 'Beleza', 6),
-    ('MOVING_AND_ASSEMBLY', 'Mudanças e Montagem', 7);
+    ('MOVING_AND_ASSEMBLY', 'Mudanças e Montagem', 7),
+    ('CAREGIVING', 'Cuidados', 8),
+    ('LESSONS', 'Aulas', 9),
+    ('AUTOMOTIVE', 'Automotivo', 10);
 
--- Seed services (22 — excluding other-general)
+-- Seed services (72)
 INSERT INTO canonical_services (id, display_name, description, category_id, aliases, status, created_by) VALUES
+    -- CLEANING (8)
     ('clean-house', 'Limpeza Residencial', 'Limpeza de casas e apartamentos', 'CLEANING', '["diarista", "faxina", "limpeza de casa"]', 'active', 'migration'),
     ('clean-post-construction', 'Limpeza Pós-Obra', 'Limpeza pesada após construções ou reformas', 'CLEANING', '["pós obra", "limpeza pesada"]', 'active', 'migration'),
     ('clean-sofa', 'Limpeza de Sofá', 'Higienização de estofados, sofás e poltronas', 'CLEANING', '["lavagem de sofá", "impermeabilização", "estofados"]', 'active', 'migration'),
     ('clean-land', 'Limpeza de Terreno', 'Retirada de entulho e mato de terrenos', 'CLEANING', '["roçagem de terreno", "limpar lote"]', 'active', 'migration'),
-    ('repair-electrician', 'Eletricista Residencial', 'Instalações e reparos elétricos', 'REPAIRS', '["eletricista", "troca de fiação", "curto circuito"]', 'active', 'migration'),
-    ('repair-shower', 'Troca de Chuveiro', 'Instalação ou troca de chuveiros elétricos', 'REPAIRS', '["instalar chuveiro", "chuveiro queimado"]', 'active', 'migration'),
-    ('repair-plumber', 'Encanador / Hidráulica', 'Reparos de vazamentos e tubulações', 'REPAIRS', '["encanador", "vazamento", "desentupimento"]', 'active', 'migration'),
-    ('repair-handyman', 'Marido de Aluguel', 'Pequenos reparos diversos em residências', 'REPAIRS', '["pequenos consertos", "pendurar quadros", "reparos gerais"]', 'active', 'migration'),
-    ('repair-furniture-assembly', 'Montagem de Móveis', 'Montagem e desmontagem de móveis em geral', 'REPAIRS', '["montador de móveis", "armário", "guarda-roupa"]', 'active', 'migration'),
-    ('paint-residential', 'Pintura Residencial', 'Pintura de paredes, tetos e fachadas residenciais', 'PAINTING', '["pintor", "pintura de casa", "envernizamento"]', 'active', 'migration'),
-    ('paint-commercial', 'Pintura Comercial', 'Serviços de pintura para lojas e escritórios', 'PAINTING', '["pintura de loja", "pintura de galpão"]', 'active', 'migration'),
-    ('garden-maintenance', 'Jardinagem', 'Manutenção de jardins e vasos', 'GARDEN', '["jardineiro", "cuidar de plantas"]', 'active', 'migration'),
-    ('garden-pruning', 'Poda de Árvores', 'Corte e manutenção de árvores e arbustos', 'GARDEN', '["podar árvore", "corte de galhos"]', 'active', 'migration'),
-    ('garden-mowing', 'Roçagem / Corte de Grama', 'Corte de grama e manutenção de gramados', 'GARDEN', '["cortar grama", "roçador"]', 'active', 'migration'),
-    ('event-waiter', 'Garçom para Eventos', 'Serviço de garçom para festas e recepções', 'EVENTS', '["garçom", "atendimento de mesas"]', 'active', 'migration'),
-    ('event-bartender', 'Bartender / Drinks', 'Preparo de drinks e coquetéis para eventos', 'EVENTS', '["barman", "coquetelaria"]', 'active', 'migration'),
-    ('event-kitchen-assistant', 'Ajudante de Cozinha', 'Auxílio no preparo de alimentos em eventos', 'EVENTS', '["auxiliar de cozinha", "copa"]', 'active', 'migration'),
-    ('beauty-manicure', 'Manicure e Pedicure', 'Cuidados com as unhas das mãos e pés', 'BEAUTY', '["unhas", "esmaltação", "manicure"]', 'active', 'migration'),
-    ('beauty-hairdresser', 'Cabeleireiro(a)', 'Corte, coloração e tratamentos capilares', 'BEAUTY', '["corte de cabelo", "escova", "luzes"]', 'active', 'migration'),
-    ('beauty-makeup', 'Maquiador(a)', 'Maquiagem profissional para eventos e fotos', 'BEAUTY', '["maquiagem", "make"]', 'active', 'migration'),
-    ('logistic-moving-help', 'Ajudante de Mudança', 'Auxílio no carregamento e transporte de mudanças', 'MOVING_AND_ASSEMBLY', '["carreto", "ajuda com mudança"]', 'active', 'migration'),
-    ('logistic-freight', 'Pequenos Fretes / Carretos', 'Transporte de cargas leves e móveis', 'MOVING_AND_ASSEMBLY', '["carreto", "fretinho", "entrega"]', 'active', 'migration');
+    ('clean-window', 'Limpeza de Vidros', 'Limpeza de janelas, vitrines e fachadas', 'CLEANING', '["limpar vidro", "limpeza de janela"]', 'active', 'migration'),
+    ('clean-water-tank', 'Limpeza de Caixa d''Água', 'Higienização de caixas d''água', 'CLEANING', '["limpar caixa d''água", "higienização reservatório"]', 'active', 'migration'),
+    ('clean-pool', 'Limpeza de Piscina', 'Limpeza e manutenção de piscinas', 'CLEANING', '["limpeza piscina", "tratamento piscina"]', 'active', 'migration'),
+    ('clean-carpet', 'Limpeza de Carpete', 'Higienização de carpetes e tapetes', 'CLEANING', '["lavagem de tapete", "limpar carpete"]', 'active', 'migration'),
+    -- MAINTENANCE (18)
+    ('maintenance-electrician', 'Elétrica Residencial', 'Instalação e manutenção elétrica', 'MAINTENANCE', '["eletricista", "tomada não funciona", "queda de energia"]', 'active', 'migration'),
+    ('maintenance-shower', 'Chuveiro', 'Instalação e manutenção de chuveiros', 'MAINTENANCE', '["trocar chuveiro", "chuveiro queimado"]', 'active', 'migration'),
+    ('maintenance-plumber', 'Hidráulica / Encanador', 'Instalação e manutenção hidráulica', 'MAINTENANCE', '["encanador", "vazamento", "desentupimento"]', 'active', 'migration'),
+    ('maintenance-handyman', 'Manutenção Geral', 'Pequenos serviços e ajustes residenciais', 'MAINTENANCE', '["marido de aluguel", "pequenos serviços"]', 'active', 'migration'),
+    ('maintenance-furniture', 'Montagem de Móveis', 'Montagem e desmontagem de móveis', 'MAINTENANCE', '["montador móveis", "armário"]', 'active', 'migration'),
+    ('maintenance-aircon', 'Ar Condicionado', 'Instalação e manutenção de ar-condicionado', 'MAINTENANCE', '["instalar ar", "limpeza split"]', 'active', 'migration'),
+    ('maintenance-appliance', 'Eletrodomésticos', 'Manutenção de eletrodomésticos', 'MAINTENANCE', '["geladeira", "máquina de lavar"]', 'active', 'migration'),
+    ('maintenance-locksmith', 'Chaveiro', 'Manutenção de fechaduras e acesso', 'MAINTENANCE', '["abrir porta", "trocar fechadura"]', 'active', 'migration'),
+    ('maintenance-glass', 'Vidros', 'Instalação e manutenção de vidros', 'MAINTENANCE', '["vidro quebrado", "box banheiro"]', 'active', 'migration'),
+    ('maintenance-roof', 'Telhado / Cobertura', 'Manutenção de telhados', 'MAINTENANCE', '["goteira", "telha"]', 'active', 'migration'),
+    ('maintenance-drain', 'Desentupimento', 'Limpeza e manutenção de tubulações', 'MAINTENANCE', '["cano entupido", "vaso entupido"]', 'active', 'migration'),
+    ('maintenance-computer', 'Computador', 'Manutenção de computadores', 'MAINTENANCE', '["formatar pc", "computador lento"]', 'active', 'migration'),
+    ('maintenance-wifi', 'Wi-Fi / Internet', 'Instalação e manutenção de redes', 'MAINTENANCE', '["configurar wifi", "internet lenta"]', 'active', 'migration'),
+    ('maintenance-tv', 'TV / Televisão', 'Instalação e manutenção de TVs', 'MAINTENANCE', '["instalar tv", "tv não liga"]', 'active', 'migration'),
+    ('maintenance-security', 'Câmeras de Segurança', 'Instalação e manutenção de sistemas de segurança', 'MAINTENANCE', '["cftv", "câmera segurança"]', 'active', 'migration'),
+    ('maintenance-mobile', 'Celular / Smartphone', 'Manutenção de celulares', 'MAINTENANCE', '["trocar tela", "celular quebrado"]', 'active', 'migration'),
+    ('maintenance-electronics', 'Eletrônicos em Geral', 'Manutenção de eletrônicos domésticos', 'MAINTENANCE', '["som não funciona", "aparelho eletrônico"]', 'active', 'migration'),
+    -- PAINTING (5)
+    ('paint-residential', 'Pintura Residencial', 'Pintura de casas e apartamentos', 'PAINTING', '["pintor", "pintura casa"]', 'active', 'migration'),
+    ('paint-commercial', 'Pintura Comercial', 'Pintura de lojas e escritórios', 'PAINTING', '["pintura loja"]', 'active', 'migration'),
+    ('paint-industrial', 'Pintura Industrial', 'Pintura de estruturas industriais', 'PAINTING', '["estrutura metálica"]', 'active', 'migration'),
+    ('paint-automotive', 'Pintura Automotiva', 'Pintura e acabamento de veículos', 'PAINTING', '["funilaria", "pintura carro"]', 'active', 'migration'),
+    ('paint-decorative', 'Pintura Decorativa', 'Acabamentos e texturas especiais', 'PAINTING', '["grafiato", "textura"]', 'active', 'migration'),
+    -- GARDEN (5)
+    ('garden-maintenance', 'Jardinagem', 'Manutenção de jardins', 'GARDEN', '["jardineiro"]', 'active', 'migration'),
+    ('garden-pruning', 'Poda de Árvores', 'Poda e cuidado de árvores', 'GARDEN', '["podar árvore"]', 'active', 'migration'),
+    ('garden-mowing', 'Corte de Grama', 'Corte de grama', 'GARDEN', '["cortar grama"]', 'active', 'migration'),
+    ('garden-design', 'Paisagismo', 'Projeto e design de jardins', 'GARDEN', '["paisagista"]', 'active', 'migration'),
+    ('garden-irrigation', 'Sistema de Irrigação', 'Instalação de irrigação', 'GARDEN', '["aspersor"]', 'active', 'migration'),
+    -- EVENTS (7)
+    ('event-waiter', 'Garçom para Eventos', 'Atendimento em eventos', 'EVENTS', '["garçom"]', 'active', 'migration'),
+    ('event-bartender', 'Bartender / Drinks', 'Preparo de bebidas', 'EVENTS', '["barman"]', 'active', 'migration'),
+    ('event-kitchen-assistant', 'Ajudante de Cozinha', 'Auxílio em eventos', 'EVENTS', '["auxiliar cozinha"]', 'active', 'migration'),
+    ('event-security', 'Segurança para Eventos', 'Segurança e controle de acesso', 'EVENTS', '["segurança festa"]', 'active', 'migration'),
+    ('event-photographer', 'Fotógrafo', 'Cobertura fotográfica', 'EVENTS', '["fotógrafo"]', 'active', 'migration'),
+    ('event-dj', 'DJ', 'Som e música para eventos', 'EVENTS', '["dj"]', 'active', 'migration'),
+    ('event-decorator', 'Decoração de Eventos', 'Decoração de ambientes', 'EVENTS', '["decorador"]', 'active', 'migration'),
+    -- BEAUTY (7)
+    ('beauty-manicure', 'Manicure e Pedicure', 'Cuidados com unhas', 'BEAUTY', '["unhas"]', 'active', 'migration'),
+    ('beauty-manicure-only', 'Manicure', 'Cuidados com mãos', 'BEAUTY', '["manicure"]', 'active', 'migration'),
+    ('beauty-pedicure-only', 'Pedicure', 'Cuidados com pés', 'BEAUTY', '["pedicure"]', 'active', 'migration'),
+    ('beauty-hairdresser', 'Cabeleireiro(a)', 'Corte e tratamento capilar', 'BEAUTY', '["corte cabelo"]', 'active', 'migration'),
+    ('beauty-makeup', 'Maquiador(a)', 'Maquiagem profissional', 'BEAUTY', '["maquiagem"]', 'active', 'migration'),
+    ('beauty-eyebrow', 'Design de Sobrancelhas', 'Modelagem de sobrancelhas', 'BEAUTY', '["sobrancelha"]', 'active', 'migration'),
+    ('beauty-massage', 'Massagem', 'Massagens relaxantes', 'BEAUTY', '["massagem"]', 'active', 'migration'),
+    -- MOVING_AND_ASSEMBLY (5)
+    ('logistic-moving-help', 'Ajudante de Mudança', 'Auxílio em mudanças', 'MOVING_AND_ASSEMBLY', '["ajuda mudança"]', 'active', 'migration'),
+    ('logistic-freight', 'Fretes / Carretos', 'Transporte de cargas', 'MOVING_AND_ASSEMBLY', '["carreto"]', 'active', 'migration'),
+    ('logistic-moto-delivery', 'Entrega por Moto', 'Entrega rápida', 'MOVING_AND_ASSEMBLY', '["motoboy"]', 'active', 'migration'),
+    ('logistic-small-delivery', 'Pequenas Entregas', 'Entrega local', 'MOVING_AND_ASSEMBLY', '["entrega encomenda"]', 'active', 'migration'),
+    ('logistic-heavy-moving', 'Mudança Completa', 'Serviço completo de mudança', 'MOVING_AND_ASSEMBLY', '["mudança completa"]', 'active', 'migration'),
+    -- CAREGIVING (4)
+    ('care-babysitter', 'Babá', 'Cuidado de crianças', 'CAREGIVING', '["babysitter"]', 'active', 'migration'),
+    ('care-elder', 'Cuidador de Idosos', 'Cuidado de idosos', 'CAREGIVING', '["cuidador idoso"]', 'active', 'migration'),
+    ('care-pet-sitter', 'Cuidador de Pets', 'Cuidado de animais', 'CAREGIVING', '["pet sitter"]', 'active', 'migration'),
+    ('care-dog-walker', 'Passeador de Cachorro', 'Passeio com cães', 'CAREGIVING', '["dog walker"]', 'active', 'migration'),
+    -- LESSONS (4)
+    ('lesson-private-tutor', 'Aulas Particulares', 'Reforço escolar', 'LESSONS', '["professor particular"]', 'active', 'migration'),
+    ('lesson-music', 'Aula de Música', 'Aulas de instrumentos', 'LESSONS', '["aula violão"]', 'active', 'migration'),
+    ('lesson-fitness', 'Personal Trainer', 'Treino físico', 'LESSONS', '["personal trainer"]', 'active', 'migration'),
+    ('lesson-sports', 'Instrutor de Esportes', 'Aulas de esportes (tênis, beach tênis, vôlei, etc.)', 'LESSONS', '["aula tênis", "beach tennis", "aula vôlei"]', 'active', 'migration'),
+    -- AUTOMOTIVE (3)
+    ('auto-mechanic', 'Mecânico', 'Manutenção automotiva', 'AUTOMOTIVE', '["mecânico"]', 'active', 'migration'),
+    ('auto-electric', 'Elétrica Automotiva', 'Manutenção elétrica automotiva', 'AUTOMOTIVE', '["bateria carro"]', 'active', 'migration'),
+    ('auto-car-wash', 'Lavagem de Carro', 'Limpeza automotiva', 'AUTOMOTIVE', '["lava jato"]', 'active', 'migration');
 
 -- Default configuration: auto-provisioning disabled
 INSERT INTO system_configuration (key, value) VALUES
