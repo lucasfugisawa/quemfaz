@@ -428,7 +428,9 @@ fun OnboardingScreens(
                     } else {
                         var cityDropdownExpanded by remember { mutableStateOf(false) }
                         var additionalServiceIds by remember { mutableStateOf(emptySet<String>()) }
+                        var removedInterpretedIds by remember { mutableStateOf(emptySet<String>()) }
                         var showAddServicePicker by remember { mutableStateOf(false) }
+                        val visibleInterpretedServices = draft.interpretedServices.filter { it.serviceId !in removedInterpretedIds }
 
                         Column(modifier = Modifier.fillMaxSize()) {
                             Column(
@@ -450,10 +452,14 @@ fun OnboardingScreens(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                                         ) {
-                                            draft.interpretedServices.forEach { service ->
-                                                SuggestionChip(
-                                                    onClick = {},
-                                                    label = { Text(service.displayName) }
+                                            visibleInterpretedServices.forEach { service ->
+                                                InputChip(
+                                                    selected = true,
+                                                    onClick = { removedInterpretedIds = removedInterpretedIds + service.serviceId },
+                                                    label = { Text(service.displayName) },
+                                                    trailingIcon = {
+                                                        Icon(Icons.Default.Close, contentDescription = Strings.EditProfile.REMOVE, modifier = Modifier.size(16.dp))
+                                                    },
                                                 )
                                             }
                                         }
@@ -536,10 +542,11 @@ fun OnboardingScreens(
 
                             Button(
                                 onClick = {
-                                    val allServiceIds = draft.interpretedServices.map { it.serviceId } + additionalServiceIds.toList()
+                                    val allServiceIds = visibleInterpretedServices.map { it.serviceId } + additionalServiceIds.toList()
                                     onProceedFromServices(draft, allServiceIds)
                                 },
                                 modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
+                                enabled = visibleInterpretedServices.isNotEmpty() || additionalServiceIds.isNotEmpty(),
                                 shape = MaterialTheme.shapes.medium
                             ) {
                                 Text(Strings.Onboarding.LOOKS_GOOD, style = MaterialTheme.typography.titleMedium)
@@ -549,7 +556,7 @@ fun OnboardingScreens(
 
                         // Add service picker dialog
                         if (showAddServicePicker && catalog != null) {
-                            val interpretedIds = draft.interpretedServices.map { it.serviceId }.toSet()
+                            val interpretedIds = visibleInterpretedServices.map { it.serviceId }.toSet()
                             val alreadySelected = interpretedIds + additionalServiceIds
                             var pickerSelection by remember { mutableStateOf(emptySet<String>()) }
 
