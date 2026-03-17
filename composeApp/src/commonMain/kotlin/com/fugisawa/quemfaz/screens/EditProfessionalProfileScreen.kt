@@ -147,7 +147,9 @@ private fun EditProfileForm(
             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             editedServiceIds.forEach { serviceId ->
-                val displayName = catalog?.services?.find { it.id == serviceId }?.displayName ?: serviceId
+                val displayName = catalog?.services?.find { it.id == serviceId }?.displayName
+                    ?: profile.services.find { it.serviceId == serviceId }?.displayName
+                    ?: serviceId
                 InputChip(
                     selected = true,
                     onClick = { onRemoveService(serviceId) },

@@ -15,7 +15,7 @@ import com.fugisawa.quemfaz.ui.theme.Spacing
 @Composable
 fun StatusChipRow(
     activeRecently: Boolean,
-    profileComplete: Boolean,
+    profileComplete: Boolean?,
     daysSinceActive: Int? = null,
 ) {
     val activityText = when {
@@ -28,7 +28,8 @@ fun StatusChipRow(
         else -> null
     }
     val showActivity = activityText != null
-    if (!showActivity && !profileComplete) return
+    val showIncompleteChip = profileComplete == false  // null = don't show, true = complete, false = incomplete CTA
+    if (!showActivity && !showIncompleteChip) return
     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         if (activityText != null) {
             SuggestionChip(
@@ -36,7 +37,7 @@ fun StatusChipRow(
                 label = { Text(activityText, style = MaterialTheme.typography.labelSmall) }
             )
         }
-        if (profileComplete) {
+        if (showIncompleteChip) {
             SuggestionChip(
                 onClick = {},
                 label = { Text(Strings.StatusChip.COMPLETE_PROFILE, style = MaterialTheme.typography.labelSmall) }

@@ -219,11 +219,11 @@ fun ProfessionalCard(
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 ServiceChipList(services = profile.services, maxItems = 3)
             }
-            if (profile.activeRecently || profile.profileComplete || profile.daysSinceActive != null) {
+            if (profile.activeRecently || profile.daysSinceActive != null) {
                 Spacer(modifier = Modifier.height(Spacing.xs))
                 StatusChipRow(
                     activeRecently = profile.activeRecently,
-                    profileComplete = profile.profileComplete,
+                    profileComplete = null,
                     daysSinceActive = profile.daysSinceActive,
                 )
             }

@@ -134,10 +134,10 @@ fun ProfessionalProfileScreen(
 
                     StatusChipRow(
                         activeRecently = profile.activeRecently,
-                        profileComplete = profile.profileComplete,
+                        profileComplete = if (isOwnProfile) profile.profileComplete else null,
                         daysSinceActive = profile.daysSinceActive,
                     )
-                    if (profile.activeRecently || profile.profileComplete) {
+                    if (profile.activeRecently || (isOwnProfile && !profile.profileComplete)) {
                         Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
                     }
 
@@ -161,12 +161,16 @@ fun ProfessionalProfileScreen(
                             Text(Strings.Profile.DISABLE_PROFILE, color = MaterialTheme.colorScheme.error)
                         }
                     } else {
-                        TextButton(
-                            onClick = { showReportDialog = true },
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        ) {
-                            Text(Strings.Profile.REPORT_PROFILE, color = MaterialTheme.colorScheme.error)
-                        }
+                        Spacer(modifier = Modifier.height(Spacing.lg))
+                        Text(
+                            text = Strings.Profile.REPORT_PROFILE,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .clickable { showReportDialog = true }
+                                .padding(vertical = Spacing.sm)
+                        )
                     }
                 }
 
@@ -242,6 +246,9 @@ fun ProfileHeader(
         Spacer(modifier = Modifier.width(Spacing.md))
         Column(modifier = Modifier.weight(1f)) {
             Text(profile.knownName ?: profile.fullName, style = MaterialTheme.typography.headlineSmall)
+            if (profile.knownName != null && profile.fullName.isNotBlank()) {
+                Text(profile.fullName, style = MaterialTheme.typography.bodyMedium)
+            }
             Text(profile.cityName, style = MaterialTheme.typography.bodyMedium)
         }
         if (showFavorite) {
