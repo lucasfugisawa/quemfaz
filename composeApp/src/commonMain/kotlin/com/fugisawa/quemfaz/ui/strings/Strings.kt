@@ -209,5 +209,6 @@ object Strings {
         const val FAILED_SAVE_DATE_OF_BIRTH = "Não foi possível salvar a data de nascimento"
         const val SEARCH_FAILED = "A busca falhou"
         const val SERVICE_NOT_ALLOWED = "O serviço descrito não é permitido na plataforma. Por favor, descreva um serviço diferente."
+        const val CHANGE_DESCRIPTION = "Alterar descrição"
     }
 }

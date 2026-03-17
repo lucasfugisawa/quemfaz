@@ -724,11 +724,17 @@ fun OnboardingScreens(
                     ) {
                         Text("❌", style = MaterialTheme.typography.displayLarge)
                         Text(Strings.Onboarding.ERROR_TITLE, style = MaterialTheme.typography.headlineSmall)
-                        Text(state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+                        Text(state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        Button(onClick = { onCreateDraft(inputText, InputMode.TEXT) }) {
+                        Button(onClick = onBack) {
+                            Text(Strings.Errors.CHANGE_DESCRIPTION)
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedButton(onClick = { onCreateDraft(inputText, InputMode.TEXT) }) {
                             Text(Strings.Common.RETRY)
                         }
                     }

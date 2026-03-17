@@ -163,6 +163,7 @@ class OnboardingViewModel(
                 if (hasPhoto) OnboardingUiState.ReviewDescription(current.draft, current.confirmedServiceIds)
                 else OnboardingUiState.PhotoRequired(current.draft, current.confirmedServiceIds, current.confirmedDescription)
             }
+            is OnboardingUiState.Error -> OnboardingUiState.Idle
             else -> current
         }
     }
