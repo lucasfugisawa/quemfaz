@@ -3,6 +3,8 @@ package com.fugisawa.quemfaz.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,10 +36,17 @@ fun MyProfileScreen(
     if (currentUser == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (hydrationFailed) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                ) {
                     Text(Strings.MyProfile.ERROR_LOADING, color = MaterialTheme.colorScheme.error)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = onRetry) { Text(Strings.Common.RETRY) }
+                    Button(
+                        onClick = onRetry,
+                        shape = MaterialTheme.shapes.medium,
+                    ) {
+                        Text(Strings.Common.RETRY)
+                    }
                 }
             } else {
                 CircularProgressIndicator()
@@ -53,28 +62,39 @@ fun MyProfileScreen(
         onSavePhoto(data, mimeType)
     }
 
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.md)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = Spacing.screenEdge, vertical = Spacing.md),
+    ) {
+        // Profile header
         Row(verticalAlignment = Alignment.CenterVertically) {
             ProfileAvatar(
                 name = fullName.trim().ifBlank { null },
                 photoUrl = currentUser.photoUrl,
-                size = 64.dp
+                size = Spacing.profileAvatarLarge,
             )
             Spacer(modifier = Modifier.width(Spacing.md))
             Column {
-                Text(Strings.MyProfile.TITLE, style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    Strings.MyProfile.TITLE,
+                    style = MaterialTheme.typography.headlineMedium,
+                )
                 Text(
                     currentUser.phoneNumber,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
 
+        // Add photo prompt
         if (currentUser.photoUrl == null) {
             Spacer(modifier = Modifier.height(Spacing.md))
             Card(
                 modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -90,7 +110,11 @@ fun MyProfileScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    TextButton(onClick = { imagePicker.launch() }) {
+                    Spacer(modifier = Modifier.height(Spacing.sm))
+                    Button(
+                        onClick = { imagePicker.launch() },
+                        shape = MaterialTheme.shapes.medium,
+                    ) {
                         Text(Strings.MyProfile.ADD_PHOTO_BUTTON)
                     }
                 }
@@ -99,13 +123,14 @@ fun MyProfileScreen(
 
         Spacer(modifier = Modifier.height(Spacing.lg))
 
+        // Name editing section
         OutlinedTextField(
             value = fullName,
             onValueChange = { fullName = it },
             label = { Text(Strings.MyProfile.FULL_NAME) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
         )
 
         Spacer(modifier = Modifier.height(Spacing.md))
@@ -114,21 +139,21 @@ fun MyProfileScreen(
             onClick = { onSaveName(fullName) },
             enabled = fullName.trim().split("\\s+".toRegex()).size >= 2 && !isSaving,
             modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
         ) {
             if (isSaving) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
             } else {
-                Text(Strings.MyProfile.SAVE_NAME)
+                Text(Strings.MyProfile.SAVE_NAME, style = MaterialTheme.typography.titleMedium)
             }
         }
 
-        Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
+        Spacer(modifier = Modifier.height(Spacing.sm))
 
         OutlinedButton(
             onClick = { imagePicker.launch() },
             modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
         ) {
             Text(Strings.MyProfile.CHANGE_PHOTO)
         }
@@ -139,24 +164,50 @@ fun MyProfileScreen(
         }
 
         Spacer(modifier = Modifier.height(Spacing.sectionGap))
-        HorizontalDivider()
 
-        TextButton(onClick = onNavigateToFavorites, modifier = Modifier.fillMaxWidth()) {
-            Text(Strings.MyProfile.MY_FAVORITES)
-        }
+        // Navigation section
+        HorizontalDivider(thickness = Spacing.divider)
 
-        TextButton(onClick = onChangeCity, modifier = Modifier.fillMaxWidth()) {
-            Text(Strings.MyProfile.CHANGE_CITY)
-        }
-
-        TextButton(onClick = onManageProfessionalProfile, modifier = Modifier.fillMaxWidth()) {
-            Text(Strings.MyProfile.PROFESSIONAL_PROFILE)
-        }
+        MyProfileMenuItem(label = Strings.MyProfile.MY_FAVORITES, onClick = onNavigateToFavorites)
+        HorizontalDivider(thickness = Spacing.divider)
+        MyProfileMenuItem(label = Strings.MyProfile.CHANGE_CITY, onClick = onChangeCity)
+        HorizontalDivider(thickness = Spacing.divider)
+        MyProfileMenuItem(label = Strings.MyProfile.PROFESSIONAL_PROFILE, onClick = onManageProfessionalProfile)
+        HorizontalDivider(thickness = Spacing.divider)
 
         Spacer(modifier = Modifier.height(Spacing.sectionGap))
 
-        TextButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
+        TextButton(
+            onClick = onLogout,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Text(Strings.MyProfile.LOGOUT, color = MaterialTheme.colorScheme.error)
+        }
+    }
+}
+
+@Composable
+private fun MyProfileMenuItem(
+    label: String,
+    onClick: () -> Unit,
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.small,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(label, style = MaterialTheme.typography.bodyLarge)
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

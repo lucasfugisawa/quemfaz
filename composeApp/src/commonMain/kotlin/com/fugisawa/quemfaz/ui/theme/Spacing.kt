@@ -19,4 +19,8 @@ object Spacing {
     val portfolioPhotoSize = 96.dp
     val emptyStateIconSize = 80.dp
     val stickyBarBottomPadding = 88.dp
+    val compactVoiceButtonSize = 40.dp
+    val homeAvatarSize = 40.dp
+    val profileAvatarLarge = 96.dp
+    val contactButtonHeight = 48.dp
 }

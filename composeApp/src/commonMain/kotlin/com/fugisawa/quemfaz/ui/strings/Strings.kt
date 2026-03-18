@@ -27,6 +27,14 @@ object Strings {
         const val ADDED_FAVORITE = "Adicionado aos favoritos"
         const val REMOVED_FAVORITE = "Removido dos favoritos"
         const val FAVORITE_ERROR = "Não foi possível atualizar favoritos. Tente novamente."
+        const val GREETING = "Oi! 👋"
+        const val WHAT_LOOKING_FOR = "O que você está procurando?"
+        const val SEARCH_HINT = "Conte o que você precisa..."
+        const val SPEAK_OR_TYPE = "Fale ou digite naturalmente"
+        const val EXAMPLE_HEADER = "Você pode falar assim:"
+        const val EXAMPLE_1 = "\"Preciso de alguém para consertar minha pia\""
+        const val EXAMPLE_2 = "\"Quem faz limpeza pesada aqui?\""
+        const val RECENT_SEARCHES = "Suas últimas buscas:"
     }
 
     object Auth {
@@ -95,7 +103,18 @@ object Strings {
         const val SELECT_DATE = "Selecionar"
         const val ADDITIONAL_SERVICES = "Serviços adicionais:"
 
-        fun stepIndicator(current: Int) = "Passo ${current + 1} de 6"
+        const val STEP_1_MESSAGE = "Vamos começar! 🚀\nMe conte: o que você faz?"
+        const val SPEAK_WHAT_I_DO = "Falar o que faço"
+        const val SPEAK_NATURALLY_HINT = "Fale naturalmente como você se apresentaria para um vizinho"
+        const val STEP_2_MESSAGE = "Entendi! ✨\nBaseado no que você disse, você oferece:"
+        const val THATS_CORRECT = "Está correto!"
+        const val LET_ME_EXPLAIN = "Deixe-me explicar melhor"
+        const val ADD_SERVICE = "Adicionar"
+        const val STEP_3_MESSAGE = "Seu perfil ficará assim:"
+        const val PUBLISH_PROFILE = "Publicar perfil"
+        const val EDIT_DESCRIPTION = "Editar descrição"
+
+        fun stepIndicator(current: Int) = "Passo ${current + 1} de 3"
     }
 
     object Profile {
@@ -118,6 +137,8 @@ object Strings {
         const val REPORT_OTHER = "Outro"
         const val REPORT_BUTTON = "Denunciar"
         const val FALLBACK_TITLE = "Profissional"
+        const val ABOUT = "Sobre"
+        const val OFFERED_SERVICES = "Serviços oferecidos"
 
         fun portfolioPhotoDescription(index: Int, total: Int) = "Foto do portfólio $index de $total"
     }
@@ -178,6 +199,11 @@ object Strings {
         const val TITLE = "Conta bloqueada"
         const val MESSAGE = "Sua conta foi bloqueada temporariamente. Se você acredita que isso foi um engano, entre em contato com nosso suporte."
         const val CONTACT_SUPPORT = "Falar com o suporte"
+    }
+
+    object Categories {
+        const val TITLE = "Categorias"
+        const val ERROR_LOADING = "Erro ao carregar categorias"
     }
 
     object CitySelection {

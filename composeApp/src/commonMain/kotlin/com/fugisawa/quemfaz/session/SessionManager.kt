@@ -33,7 +33,7 @@ class SessionManager(
     private val _currentCity = MutableStateFlow<String?>(settings.getStringOrNull("current_city"))
     val currentCity: StateFlow<String?> = _currentCity.asStateFlow()
 
-    private val _offerServicesCardDismissed = MutableStateFlow(settings.getBoolean("offer_services_dismissed", false))
+    private val _offerServicesCardDismissed = MutableStateFlow(false)
     val offerServicesCardDismissed: StateFlow<Boolean> = _offerServicesCardDismissed.asStateFlow()
 
     init {
@@ -49,6 +49,9 @@ class SessionManager(
         sessionStorage.saveToken(token)
         sessionStorage.saveRefreshToken(refreshToken)
         _currentUser.value = user
+        if (user != null) {
+            _offerServicesCardDismissed.value = settings.getBoolean("offer_services_dismissed.${user.id}", false)
+        }
         _authState.value = AuthState.Authenticated
     }
 
@@ -59,6 +62,7 @@ class SessionManager(
 
     fun setCurrentUser(user: UserProfileResponse) {
         _currentUser.value = user
+        _offerServicesCardDismissed.value = settings.getBoolean("offer_services_dismissed.${user.id}", false)
     }
 
     fun setBlocked() {
@@ -66,6 +70,7 @@ class SessionManager(
         // On next cold start the user goes through OTP again and will be blocked again.
         sessionStorage.clear()
         _currentUser.value = null
+        _offerServicesCardDismissed.value = false
         _authState.value = AuthState.Blocked
     }
 
@@ -78,6 +83,7 @@ class SessionManager(
         }
         sessionStorage.clear()
         _currentUser.value = null
+        _offerServicesCardDismissed.value = false
         // City is intentionally preserved — it is a device-level preference, not user-specific.
         _authState.value = AuthState.Unauthenticated
     }
@@ -88,7 +94,8 @@ class SessionManager(
     }
 
     fun dismissOfferServicesCard() {
-        settings["offer_services_dismissed"] = true
+        val userId = _currentUser.value?.id ?: return
+        settings["offer_services_dismissed.$userId"] = true
         _offerServicesCardDismissed.value = true
     }
 }

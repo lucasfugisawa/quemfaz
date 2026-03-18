@@ -28,8 +28,15 @@ fun FavoritesScreen(
     onRetry: () -> Unit,
     onFindProfessionals: (() -> Unit)? = null,
 ) {
-    Column(modifier = Modifier.fillMaxSize().padding(Spacing.md)) {
-        Text(Strings.Favorites.TITLE, style = MaterialTheme.typography.headlineSmall)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = Spacing.screenEdge, vertical = Spacing.md),
+    ) {
+        Text(
+            Strings.Favorites.TITLE,
+            style = MaterialTheme.typography.headlineMedium,
+        )
         Spacer(modifier = Modifier.height(Spacing.md))
 
         when (uiState) {
@@ -55,14 +62,21 @@ fun FavoritesScreen(
                             modifier = Modifier.size(Spacing.emptyStateIconSize),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Text(Strings.Favorites.EMPTY_TITLE, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            Strings.Favorites.EMPTY_TITLE,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
                         Text(
                             Strings.Favorites.EMPTY_SUBTITLE,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         if (onFindProfessionals != null) {
-                            Button(onClick = onFindProfessionals) {
+                            Spacer(modifier = Modifier.height(Spacing.sm))
+                            Button(
+                                onClick = onFindProfessionals,
+                                shape = MaterialTheme.shapes.medium,
+                            ) {
                                 Text(Strings.Favorites.FIND_PROFESSIONALS)
                             }
                         }
@@ -70,10 +84,11 @@ fun FavoritesScreen(
                 }
             }
             is FavoritesUiState.Content -> {
-                LazyColumn {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                ) {
                     items(uiState.favorites) { profile ->
                         ProfessionalCard(profile, onClick = { onProfileClick(profile.id) })
-                        Spacer(modifier = Modifier.height(Spacing.sm))
                     }
                 }
             }

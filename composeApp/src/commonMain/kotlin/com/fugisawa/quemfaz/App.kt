@@ -208,6 +208,7 @@ fun MainFlow(
 
     val showEarnMoneyCard by homeViewModel.showEarnMoneyCard.collectAsState()
     val popularServices by homeViewModel.popularServices.collectAsState()
+    val searchHistory by homeViewModel.searchHistory.collectAsState()
 
     LaunchedEffect(currentCity) {
         homeViewModel.loadPopularServices(currentCity)
@@ -299,6 +300,7 @@ fun MainFlow(
                             currentCity = currentCity,
                             showEarnMoneyCard = showEarnMoneyCard,
                             popularServices = popularServices,
+                            searchHistory = searchHistory,
                             onCityClick = { showCitySheet = true },
                             onProfileClick = { navigateToTab(Screen.MyProfile) },
                             onSearch = { query ->
@@ -418,15 +420,12 @@ fun MainFlow(
                         val selectedCity by viewModel.selectedCity.collectAsState()
                         val onboardingCatalog by viewModel.catalog.collectAsState()
 
-                        // Onboarding-specific back: navigate within steps for non-Idle,
-                        // pop back to previous screen for Idle/Loading.
                         val isOnboardingInProgress =
-                            uiState is OnboardingUiState.Idle ||
+                            uiState is OnboardingUiState.NaturalPresentation ||
                             uiState is OnboardingUiState.NeedsClarification ||
-                            uiState is OnboardingUiState.ReviewServices ||
-                            uiState is OnboardingUiState.ReviewDescription ||
+                            uiState is OnboardingUiState.SmartConfirmation ||
                             uiState is OnboardingUiState.PhotoRequired ||
-                            uiState is OnboardingUiState.KnownName
+                            uiState is OnboardingUiState.ProfilePreview
                         PlatformBackHandler(enabled = isOnboardingInProgress) {
                             viewModel.goBack()
                         }
@@ -447,11 +446,10 @@ fun MainFlow(
                             onSubmitDateOfBirth = { viewModel.submitDateOfBirth(it) },
                             onCreateDraft = { text, mode -> viewModel.createDraft(text, mode) },
                             onSelectCity = { viewModel.selectCity(it) },
-                            onProceedFromServices = { draft, serviceIds -> viewModel.proceedFromServices(draft, serviceIds) },
+                            onConfirmFromSmartConfirmation = { draft, serviceIds, description -> viewModel.confirmFromSmartConfirmation(draft, serviceIds, description) },
                             onProceedWithManualServices = { draft, serviceIds -> viewModel.proceedWithManualServices(draft, serviceIds) },
-                            onProceedFromDescription = { draft, serviceIds, description -> viewModel.proceedFromDescription(draft, serviceIds, description) },
                             onPickPhoto = { imagePicker.launch() },
-                            onSubmitKnownName = { fullName, knownName, serviceIds, description -> viewModel.submitKnownName(fullName, knownName, serviceIds, description) },
+                            onPublishProfile = { fullName, knownName, serviceIds, description -> viewModel.publishProfile(fullName, knownName, serviceIds, description) },
                             onSubmitClarifications = { desc, answers -> viewModel.submitClarifications(desc, answers) },
                             onSkipClarification = { draft -> viewModel.skipClarification(draft) },
                             onBack = {

@@ -71,6 +71,9 @@ class HomeViewModel(
     private val _popularServices = MutableStateFlow<PopularServicesResponse?>(null)
     val popularServices: StateFlow<PopularServicesResponse?> = _popularServices.asStateFlow()
 
+    private val _searchHistory = MutableStateFlow<List<String>>(emptyList())
+    val searchHistory: StateFlow<List<String>> = _searchHistory.asStateFlow()
+
     private var _inputMode: InputMode = InputMode.TEXT
 
     // Pagination state — managed internally, reset on each new search
@@ -153,6 +156,13 @@ class HomeViewModel(
         currentPage = 0
         isLoadingMore = false
         _accumulatedResults.value = emptyList()
+
+        // Track search history (deduplicated, capped at 5)
+        val current = _searchHistory.value.toMutableList()
+        current.remove(query)
+        current.add(0, query)
+        _searchHistory.value = current.take(5)
+
         executeSearch(page = 0)
     }
 

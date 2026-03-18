@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -26,13 +27,15 @@ import com.fugisawa.quemfaz.ui.components.AppScreen
 import com.fugisawa.quemfaz.ui.components.ErrorMessage
 import com.fugisawa.quemfaz.ui.components.FullScreenLoading
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
-import com.fugisawa.quemfaz.ui.components.ServiceChipList
+import com.fugisawa.quemfaz.ui.components.ServiceListItem
 import com.fugisawa.quemfaz.ui.components.StatusChipRow
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.AppTheme
+import com.fugisawa.quemfaz.ui.theme.CallBlue
 import com.fugisawa.quemfaz.ui.theme.Spacing
+import com.fugisawa.quemfaz.ui.theme.WhatsAppGreen
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -97,22 +100,54 @@ fun ProfessionalProfileScreen(
             is ProfileUiState.Content -> {
                 val profile = uiState.profile
 
-                // Scrollable content — bottom padding prevents content from hiding behind sticky bar
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(start = Spacing.md, end = Spacing.md, top = Spacing.md, bottom = Spacing.stickyBarBottomPadding)
+                        .padding(horizontal = Spacing.md, vertical = Spacing.md)
                 ) {
+                    // Profile header with larger avatar
                     ProfileHeader(
                         profile = profile,
                         isFavorite = uiState.isFavorite,
                         onFavoriteToggle = onFavoriteToggle,
                         showFavorite = !isOwnProfile,
                     )
-                    Spacer(modifier = Modifier.height(Spacing.sm))
+                    Spacer(modifier = Modifier.height(Spacing.md))
 
-                    // Portfolio photos strip — only shown when photos are available
+                    // Contact buttons — immediately after header for non-own profiles
+                    if (!isOwnProfile) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                        ) {
+                            Button(
+                                onClick = { onContactClick(ContactChannelDto.WHATSAPP) },
+                                modifier = Modifier.weight(1f).height(Spacing.contactButtonHeight),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = WhatsAppGreen,
+                                    contentColor = Color.White,
+                                ),
+                                shape = MaterialTheme.shapes.medium,
+                            ) {
+                                Text(Strings.Profile.WHATSAPP)
+                            }
+                            Button(
+                                onClick = { onContactClick(ContactChannelDto.PHONE_CALL) },
+                                modifier = Modifier.weight(1f).height(Spacing.contactButtonHeight),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = CallBlue,
+                                    contentColor = Color.White,
+                                ),
+                                shape = MaterialTheme.shapes.medium,
+                            ) {
+                                Text(Strings.Profile.CALL)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                    }
+
+                    // Portfolio photos strip
                     if (profile.portfolioPhotoUrls.isNotEmpty()) {
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
@@ -141,19 +176,35 @@ fun ProfessionalProfileScreen(
                         Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
                     }
 
+                    // "Sobre" section
                     if (profile.description.isNotBlank()) {
+                        Text(Strings.Profile.ABOUT, style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                         Text(profile.description, style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.height(Spacing.md))
                     }
 
+                    // "Serviços oferecidos" section
                     if (profile.services.isNotEmpty()) {
-                        Text(Strings.Profile.SERVICES, style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.height(Spacing.sm))
-                        ServiceChipList(services = profile.services)
+                        Text(Strings.Profile.OFFERED_SERVICES, style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Column {
+                            profile.services.forEach { service ->
+                                ServiceListItem(serviceName = service.displayName)
+                            }
+                        }
                         Spacer(modifier = Modifier.height(Spacing.lg))
                     }
 
+                    // Own profile: inline edit button
                     if (isOwnProfile) {
+                        Button(
+                            onClick = onEditProfile,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(Strings.Profile.EDIT_PROFILE)
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                         TextButton(
                             onClick = { showDisableDialog = true },
                             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -171,46 +222,6 @@ fun ProfessionalProfileScreen(
                                 .clickable { showReportDialog = true }
                                 .padding(vertical = Spacing.sm)
                         )
-                    }
-                }
-
-                // Sticky bottom bar
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                    shadowElevation = 8.dp,
-                    tonalElevation = 2.dp
-                ) {
-                    if (isOwnProfile) {
-                        Button(
-                            onClick = onEditProfile,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = Spacing.md, vertical = Spacing.sm)
-                        ) {
-                            Text(Strings.Profile.EDIT_PROFILE)
-                        }
-                    } else {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                        ) {
-                            Button(
-                                onClick = { onContactClick(ContactChannelDto.WHATSAPP) },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(Strings.Profile.WHATSAPP)
-                            }
-                            Button(
-                                onClick = { onContactClick(ContactChannelDto.PHONE_CALL) },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(Strings.Profile.CALL)
-                            }
-                        }
                     }
                 }
             }
@@ -240,16 +251,23 @@ fun ProfileHeader(
         ProfileAvatar(
             name = profile.knownName ?: profile.fullName,
             photoUrl = profile.photoUrl,
-            size = 80.dp,
+            size = Spacing.profileAvatarLarge,
             textStyle = MaterialTheme.typography.headlineLarge
         )
         Spacer(modifier = Modifier.width(Spacing.md))
         Column(modifier = Modifier.weight(1f)) {
-            Text(profile.knownName ?: profile.fullName, style = MaterialTheme.typography.headlineSmall)
-            if (profile.knownName != null && profile.fullName.isNotBlank()) {
-                Text(profile.fullName, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                profile.knownName ?: profile.fullName,
+                style = MaterialTheme.typography.headlineMedium,
+            )
+            val subtitle = buildString {
+                if (profile.knownName != null && profile.fullName.isNotBlank()) {
+                    append(profile.fullName)
+                    append(" • ")
+                }
+                append(profile.cityName)
             }
-            Text(profile.cityName, style = MaterialTheme.typography.bodyMedium)
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium)
         }
         if (showFavorite) {
             IconButton(onClick = onFavoriteToggle) {

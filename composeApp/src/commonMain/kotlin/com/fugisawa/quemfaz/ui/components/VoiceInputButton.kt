@@ -1,5 +1,10 @@
 package com.fugisawa.quemfaz.ui.components
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -20,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fugisawa.quemfaz.platform.SpeechRecognizerState
@@ -30,7 +36,8 @@ import com.fugisawa.quemfaz.ui.theme.Spacing
 @Composable
 fun VoiceInputButton(
     onTranscription: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     val isAvailable = isSpeechRecognizerAvailable()
     if (!isAvailable) return
@@ -44,23 +51,31 @@ fun VoiceInputButton(
         onStateChange = { newState -> state = newState }
     )
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-    ) {
+    // Pulse animation when listening
+    val pulseScale = if (state == SpeechRecognizerState.LISTENING) {
+        val infiniteTransition = rememberInfiniteTransition(label = "voicePulse")
+        val scale by infiniteTransition.animateFloat(
+            initialValue = 1.0f,
+            targetValue = 1.08f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(600),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "pulseScale",
+        )
+        scale
+    } else {
+        1.0f
+    }
+
+    if (compact) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(72.dp)
+            modifier = modifier
+                .size(Spacing.compactVoiceButtonSize)
+                .graphicsLayer { scaleX = pulseScale; scaleY = pulseScale }
                 .clip(CircleShape)
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.tertiary
-                        )
-                    )
-                )
+                .background(MaterialTheme.colorScheme.primary)
                 .clickable {
                     errorMessage = null
                     if (state == SpeechRecognizerState.LISTENING) {
@@ -72,28 +87,62 @@ fun VoiceInputButton(
         ) {
             Text(
                 text = if (state == SpeechRecognizerState.LISTENING) "\u23F9" else "\uD83C\uDFA4",
-                fontSize = 28.sp
+                fontSize = 18.sp,
             )
         }
+    } else {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = modifier
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(72.dp)
+                    .graphicsLayer { scaleX = pulseScale; scaleY = pulseScale }
+                    .clip(CircleShape)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.tertiary
+                            )
+                        )
+                    )
+                    .clickable {
+                        errorMessage = null
+                        if (state == SpeechRecognizerState.LISTENING) {
+                            recognizer.stopListening()
+                        } else {
+                            recognizer.startListening()
+                        }
+                    }
+            ) {
+                Text(
+                    text = if (state == SpeechRecognizerState.LISTENING) "\u23F9" else "\uD83C\uDFA4",
+                    fontSize = 28.sp
+                )
+            }
 
-        Spacer(modifier = Modifier.height(Spacing.sm))
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
-        Text(
-            text = when (state) {
-                SpeechRecognizerState.LISTENING -> "Ouvindo..."
-                else -> "Toque para falar"
-            },
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        errorMessage?.let { msg ->
             Text(
-                text = msg,
+                text = when (state) {
+                    SpeechRecognizerState.LISTENING -> "Ouvindo..."
+                    else -> "Falar"
+                },
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(top = Spacing.xs)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            errorMessage?.let { msg ->
+                Text(
+                    text = msg,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = Spacing.xs)
+                )
+            }
         }
     }
 }

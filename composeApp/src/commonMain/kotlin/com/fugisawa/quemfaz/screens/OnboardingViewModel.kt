@@ -18,23 +18,23 @@ import kotlinx.coroutines.launch
 
 sealed class OnboardingUiState {
     object BirthDateRequired : OnboardingUiState()
-    object Idle : OnboardingUiState()
+    object NaturalPresentation : OnboardingUiState()
     object Loading : OnboardingUiState()
     data class NeedsClarification(
         val originalDescription: String,
         val draft: CreateProfessionalProfileDraftResponse,
     ) : OnboardingUiState()
-    data class ReviewServices(val draft: CreateProfessionalProfileDraftResponse) : OnboardingUiState()
-    data class ReviewDescription(
+    data class SmartConfirmation(
         val draft: CreateProfessionalProfileDraftResponse,
         val confirmedServiceIds: List<String>,
+        val confirmedDescription: String,
     ) : OnboardingUiState()
     data class PhotoRequired(
         val draft: CreateProfessionalProfileDraftResponse,
         val confirmedServiceIds: List<String>,
         val confirmedDescription: String,
     ) : OnboardingUiState()
-    data class KnownName(
+    data class ProfilePreview(
         val draft: CreateProfessionalProfileDraftResponse,
         val confirmedServiceIds: List<String>,
         val confirmedDescription: String,
@@ -51,7 +51,7 @@ class OnboardingViewModel(
 
     private val _uiState = MutableStateFlow<OnboardingUiState>(
         if (sessionManager.currentUser.value?.dateOfBirth != null)
-            OnboardingUiState.Idle
+            OnboardingUiState.NaturalPresentation
         else
             OnboardingUiState.BirthDateRequired
     )
@@ -90,7 +90,7 @@ class OnboardingViewModel(
                 apiClients.updateDateOfBirth(UpdateDateOfBirthRequest(dateOfBirth))
                 val updatedUser = apiClients.getCurrentProfile()
                 sessionManager.setCurrentUser(updatedUser)
-                _uiState.value = OnboardingUiState.Idle
+                _uiState.value = OnboardingUiState.NaturalPresentation
             } catch (e: Exception) {
                 _uiState.value = OnboardingUiState.Error(Strings.Errors.FAILED_SAVE_DATE_OF_BIRTH)
             }
@@ -108,7 +108,9 @@ class OnboardingViewModel(
                 if (response.interpretedServices.isEmpty() && response.blockedDescriptions.isNotEmpty()) {
                     _uiState.value = OnboardingUiState.Error(Strings.Errors.SERVICE_NOT_ALLOWED)
                 } else if (response.llmUnavailable || response.followUpQuestions.isEmpty()) {
-                    _uiState.value = OnboardingUiState.ReviewServices(response)
+                    val description = response.editedDescription.ifBlank { response.normalizedDescription }
+                    val serviceIds = response.interpretedServices.map { it.serviceId }
+                    _uiState.value = OnboardingUiState.SmartConfirmation(response, serviceIds, description)
                 } else {
                     _uiState.value = OnboardingUiState.NeedsClarification(inputText, response)
                 }
@@ -130,11 +132,12 @@ class OnboardingViewModel(
                         clarificationRound = clarificationRound,
                     )
                 )
-                // Client-side cap: after 1 round, always proceed to ReviewServices
                 if (response.interpretedServices.isEmpty() && response.blockedDescriptions.isNotEmpty()) {
                     _uiState.value = OnboardingUiState.Error(Strings.Errors.SERVICE_NOT_ALLOWED)
                 } else if (response.llmUnavailable || response.followUpQuestions.isEmpty() || clarificationRound >= 1) {
-                    _uiState.value = OnboardingUiState.ReviewServices(response)
+                    val description = response.editedDescription.ifBlank { response.normalizedDescription }
+                    val serviceIds = response.interpretedServices.map { it.serviceId }
+                    _uiState.value = OnboardingUiState.SmartConfirmation(response, serviceIds, description)
                 } else {
                     _uiState.value = OnboardingUiState.NeedsClarification(originalDescription, response)
                 }
@@ -145,41 +148,38 @@ class OnboardingViewModel(
     }
 
     fun skipClarification(draft: CreateProfessionalProfileDraftResponse) {
-        _uiState.value = OnboardingUiState.ReviewServices(draft)
+        val description = draft.editedDescription.ifBlank { draft.normalizedDescription }
+        val serviceIds = draft.interpretedServices.map { it.serviceId }
+        _uiState.value = OnboardingUiState.SmartConfirmation(draft, serviceIds, description)
     }
 
     fun goBack() {
         _uiState.value = when (val current = _uiState.value) {
             is OnboardingUiState.BirthDateRequired -> current
-            is OnboardingUiState.Idle -> OnboardingUiState.BirthDateRequired
-            is OnboardingUiState.NeedsClarification -> OnboardingUiState.Idle
-            is OnboardingUiState.ReviewServices -> OnboardingUiState.Idle
-            is OnboardingUiState.ReviewDescription -> OnboardingUiState.ReviewServices(current.draft)
-            is OnboardingUiState.PhotoRequired -> OnboardingUiState.ReviewDescription(
-                current.draft, current.confirmedServiceIds
+            is OnboardingUiState.NaturalPresentation -> OnboardingUiState.BirthDateRequired
+            is OnboardingUiState.NeedsClarification -> OnboardingUiState.NaturalPresentation
+            is OnboardingUiState.SmartConfirmation -> OnboardingUiState.NaturalPresentation
+            is OnboardingUiState.PhotoRequired -> OnboardingUiState.SmartConfirmation(
+                current.draft, current.confirmedServiceIds, current.confirmedDescription
             )
-            is OnboardingUiState.KnownName -> {
+            is OnboardingUiState.ProfilePreview -> {
                 val hasPhoto = sessionManager.currentUser.value?.photoUrl != null
-                if (hasPhoto) OnboardingUiState.ReviewDescription(current.draft, current.confirmedServiceIds)
+                if (hasPhoto) OnboardingUiState.SmartConfirmation(current.draft, current.confirmedServiceIds, current.confirmedDescription)
                 else OnboardingUiState.PhotoRequired(current.draft, current.confirmedServiceIds, current.confirmedDescription)
             }
-            is OnboardingUiState.Error -> OnboardingUiState.Idle
+            is OnboardingUiState.Error -> OnboardingUiState.NaturalPresentation
             else -> current
         }
     }
 
-    fun proceedFromServices(draft: CreateProfessionalProfileDraftResponse, confirmedServiceIds: List<String>) {
-        _uiState.value = OnboardingUiState.ReviewDescription(draft, confirmedServiceIds)
-    }
-
-    fun proceedFromDescription(
+    fun confirmFromSmartConfirmation(
         draft: CreateProfessionalProfileDraftResponse,
         confirmedServiceIds: List<String>,
         confirmedDescription: String,
     ) {
         val hasPhoto = sessionManager.currentUser.value?.photoUrl != null
         _uiState.value = if (hasPhoto) {
-            OnboardingUiState.KnownName(draft, confirmedServiceIds, confirmedDescription)
+            OnboardingUiState.ProfilePreview(draft, confirmedServiceIds, confirmedDescription)
         } else {
             OnboardingUiState.PhotoRequired(draft, confirmedServiceIds, confirmedDescription)
         }
@@ -200,7 +200,7 @@ class OnboardingViewModel(
                     SetProfilePhotoRequest(photoUrl = uploadResponse.url)
                 )
                 sessionManager.setCurrentUser(userResponse)
-                _uiState.value = OnboardingUiState.KnownName(draft, confirmedServiceIds, confirmedDescription)
+                _uiState.value = OnboardingUiState.ProfilePreview(draft, confirmedServiceIds, confirmedDescription)
             } catch (e: Exception) {
                 _uiState.value = OnboardingUiState.Error(e.message ?: Strings.Errors.FAILED_UPLOAD_PHOTO)
             }
@@ -220,13 +220,15 @@ class OnboardingViewModel(
             )
         }
         val updatedDraft = draft.copy(interpretedServices = manualServices)
-        _uiState.value = OnboardingUiState.ReviewDescription(
+        val description = updatedDraft.editedDescription.ifBlank { updatedDraft.normalizedDescription }
+        _uiState.value = OnboardingUiState.SmartConfirmation(
             updatedDraft,
             selectedServiceIds.toList(),
+            description,
         )
     }
 
-    fun submitKnownName(
+    fun publishProfile(
         fullName: String?,
         knownName: String?,
         confirmedServiceIds: List<String>,

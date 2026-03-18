@@ -12,6 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
+import com.fugisawa.quemfaz.ui.components.ErrorMessage
+import com.fugisawa.quemfaz.ui.components.FullScreenLoading
+import com.fugisawa.quemfaz.ui.strings.Strings
 import com.fugisawa.quemfaz.ui.theme.Spacing
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -37,7 +40,7 @@ fun CategoryBrowsingScreen(
         uiState = try {
             CatalogUiState.Success(catalogApiClient.getCatalog())
         } catch (e: Exception) {
-            CatalogUiState.Error(e.message ?: "Erro ao carregar categorias")
+            CatalogUiState.Error(e.message ?: Strings.Categories.ERROR_LOADING)
         }
     }
 
@@ -46,12 +49,12 @@ fun CategoryBrowsingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Categorias") },
+                title = { Text(Strings.Categories.TITLE) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar"
+                            contentDescription = Strings.Common.BACK,
                         )
                     }
                 }
@@ -62,27 +65,20 @@ fun CategoryBrowsingScreen(
             is CatalogUiState.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator()
+                    FullScreenLoading()
                 }
             }
             is CatalogUiState.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            state.message,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(Spacing.md))
-                        Button(onClick = { scope.launch { loadCatalog() } }) {
-                            Text("Tentar novamente")
-                        }
-                    }
+                    ErrorMessage(
+                        message = state.message,
+                        onRetry = { scope.launch { loadCatalog() } },
+                    )
                 }
             }
             is CatalogUiState.Success -> {
@@ -119,17 +115,21 @@ fun CategoryBrowsingScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable { onServiceClick(service.displayName) },
+                                    color = MaterialTheme.colorScheme.surface,
                                 ) {
                                     Text(
                                         text = service.displayName,
                                         style = MaterialTheme.typography.bodyLarge,
                                         modifier = Modifier.padding(
-                                            horizontal = Spacing.sm,
+                                            horizontal = Spacing.md,
                                             vertical = Spacing.sm,
                                         )
                                     )
                                 }
-                                HorizontalDivider(thickness = Spacing.divider)
+                                HorizontalDivider(
+                                    thickness = Spacing.divider,
+                                    modifier = Modifier.padding(horizontal = Spacing.sm),
+                                )
                             }
                         }
                     }

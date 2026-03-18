@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.fugisawa.quemfaz.LocalBaseUrl
@@ -42,8 +43,8 @@ fun ProfileAvatar(
 
     Surface(
         modifier = modifier.size(size),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.primaryContainer
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (resolvedUrl != null) {
@@ -52,7 +53,7 @@ fun ProfileAvatar(
                     AsyncImage(
                         model = resolvedUrl,
                         contentDescription = name,
-                        modifier = Modifier.fillMaxSize().clip(MaterialTheme.shapes.medium),
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
                         contentScale = ContentScale.Crop,
                         onError = { imageLoadFailed = true }
                     )

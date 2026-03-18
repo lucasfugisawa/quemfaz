@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
@@ -76,18 +77,26 @@ fun SearchResultsScreen(
             }
             is SearchUiState.Success -> {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Interpreted services banner — shown when AI mapped the query to services
+                    // Interpreted services banner
                     AnimatedVisibility(
                         visible = uiState.response.interpretedServices.isNotEmpty(),
                         enter = expandVertically() + fadeIn(),
                         exit = shrinkVertically() + fadeOut(),
                     ) {
-                        Text(
-                            text = Strings.Search.showingResults(uiState.response.interpretedServices.joinToString(" · ") { it.displayName }),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm)
-                        )
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                        ) {
+                            Text(
+                                text = Strings.Search.showingResults(uiState.response.interpretedServices.joinToString(" · ") { it.displayName }),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+                            )
+                        }
                     }
 
                     if (uiState.response.results.isEmpty()) {
@@ -132,7 +141,10 @@ fun SearchResultsScreen(
                             }
                         }
                     } else {
-                        LazyColumn(contentPadding = PaddingValues(Spacing.md)) {
+                        LazyColumn(
+                            contentPadding = PaddingValues(Spacing.md),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                        ) {
                             items(uiState.response.results) { profile ->
                                 ProfessionalCard(
                                     profile = profile,
@@ -140,17 +152,19 @@ fun SearchResultsScreen(
                                     isFavorited = profile.id in favoritedProfileIds,
                                     onFavoriteToggle = { onFavoriteToggle(profile.id) }
                                 )
-                                Spacer(modifier = Modifier.height(Spacing.sm))
                             }
                             if (hasMore) {
                                 item {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(Spacing.md),
+                                            .padding(vertical = Spacing.md),
                                         contentAlignment = Alignment.Center,
                                     ) {
-                                        Button(onClick = onLoadMore) {
+                                        OutlinedButton(
+                                            onClick = onLoadMore,
+                                            shape = MaterialTheme.shapes.medium,
+                                        ) {
                                             Text(Strings.Search.LOAD_MORE)
                                         }
                                     }
@@ -173,8 +187,6 @@ fun ProfessionalCard(
     isFavorited: Boolean = false,
     onFavoriteToggle: (() -> Unit)? = null
 ) {
-    // Transition must be declared at composable scope — not inside the conditional.
-    // Compose requires state/animation calls to be unconditional (no if/when guards).
     val favTransition = updateTransition(isFavorited, label = "favoriteTransition")
     val favScale by favTransition.animateFloat(
         transitionSpec = {
@@ -188,21 +200,29 @@ fun ProfessionalCard(
 
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(modifier = Modifier.padding(Spacing.md)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ProfileAvatar(
                     name = profile.knownName ?: profile.fullName,
                     photoUrl = profile.photoUrl,
-                    size = Spacing.professionalAvatarSize
+                    size = Spacing.professionalAvatarSize,
                 )
                 Spacer(modifier = Modifier.width(Spacing.sm + Spacing.xs))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(profile.knownName ?: profile.fullName, style = MaterialTheme.typography.titleMedium)
-                    Text(profile.cityName, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        profile.knownName ?: profile.fullName,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        profile.cityName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
-                // Inline favorite button — only shown when a toggle callback is provided
                 if (onFavoriteToggle != null) {
                     IconButton(onClick = onFavoriteToggle) {
                         Icon(
@@ -215,6 +235,19 @@ fun ProfessionalCard(
                     }
                 }
             }
+
+            // Description snippet
+            if (profile.description.isNotBlank()) {
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                Text(
+                    profile.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+
             if (profile.services.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 ServiceChipList(services = profile.services, maxItems = 3)
@@ -233,7 +266,11 @@ fun ProfessionalCard(
 
 @Composable
 fun ProfessionalCardSkeleton() {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
         Column(modifier = Modifier.padding(Spacing.md)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ShimmerBox(
@@ -249,6 +286,8 @@ fun ProfessionalCardSkeleton() {
                 }
             }
             Spacer(modifier = Modifier.height(Spacing.sm))
+            ShimmerBox(modifier = Modifier.fillMaxWidth(0.85f).height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.xs))
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 repeat(3) {
                     ShimmerBox(

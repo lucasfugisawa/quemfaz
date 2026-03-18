@@ -43,6 +43,20 @@ private val OnBackgroundDark = Color(0xFFF5F5FA)
 private val SurfaceDark = Color(0xFF1A1A2E)
 private val OnSurfaceDark = Color(0xFFF5F5FA)
 
+// Contact button colors
+val WhatsAppGreen = Color(0xFF22C55E)
+val CallBlue = Color(0xFF3B82F6)
+
+// Category-colored service tags
+val TagBlueBg = Color(0xFFDBEAFE)
+val TagBlueText = Color(0xFF1D4ED8)
+val TagGreenBg = Color(0xFFDCFCE7)
+val TagGreenText = Color(0xFF15803D)
+val TagPurpleBg = Color(0xFFF3E8FF)
+val TagPurpleText = Color(0xFF7E22CE)
+val TagOrangeBg = Color(0xFFFFEDD5)
+val TagOrangeText = Color(0xFFC2410C)
+
 val LightColorScheme = lightColorScheme(
     primary = PrimaryLight,
     onPrimary = OnPrimaryLight,

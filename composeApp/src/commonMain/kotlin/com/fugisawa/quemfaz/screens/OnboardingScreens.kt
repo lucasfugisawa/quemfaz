@@ -29,7 +29,10 @@ import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.domain.city.SupportedCities
 import com.fugisawa.quemfaz.session.SessionManager
+import com.fugisawa.quemfaz.ui.components.ChatBubble
+import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
+import com.fugisawa.quemfaz.ui.components.ServiceListItem
 import com.fugisawa.quemfaz.ui.components.VoiceInputButton
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
@@ -40,16 +43,13 @@ import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
 // Maps each state to its step ordinal for slide direction detection.
-// Idle and NeedsClarification share index 1 — transitions between them always pass
-// through Loading (which triggers a fade), so the same-index == forward shortcut is safe.
 private fun OnboardingUiState.stepIndex() = when (this) {
     is OnboardingUiState.BirthDateRequired -> 0
-    is OnboardingUiState.Idle -> 1
+    is OnboardingUiState.NaturalPresentation -> 1
     is OnboardingUiState.NeedsClarification -> 1
-    is OnboardingUiState.ReviewServices -> 2
-    is OnboardingUiState.ReviewDescription -> 3
-    is OnboardingUiState.PhotoRequired -> 4
-    is OnboardingUiState.KnownName -> 5
+    is OnboardingUiState.SmartConfirmation -> 2
+    is OnboardingUiState.PhotoRequired -> 2
+    is OnboardingUiState.ProfilePreview -> 3
     else -> -1
 }
 
@@ -77,11 +77,10 @@ fun OnboardingScreens(
     onSubmitDateOfBirth: (dateOfBirth: String) -> Unit,
     onCreateDraft: (String, InputMode) -> Unit,
     onSelectCity: (String) -> Unit,
-    onProceedFromServices: (CreateProfessionalProfileDraftResponse, List<String>) -> Unit,
+    onConfirmFromSmartConfirmation: (CreateProfessionalProfileDraftResponse, List<String>, String) -> Unit,
     onProceedWithManualServices: (CreateProfessionalProfileDraftResponse, Set<String>) -> Unit,
-    onProceedFromDescription: (CreateProfessionalProfileDraftResponse, List<String>, String) -> Unit,
     onPickPhoto: () -> Unit,
-    onSubmitKnownName: (fullName: String?, knownName: String?, confirmedServiceIds: List<String>, confirmedDescription: String) -> Unit,
+    onPublishProfile: (fullName: String?, knownName: String?, confirmedServiceIds: List<String>, confirmedDescription: String) -> Unit,
     onSubmitClarifications: (String, List<ClarificationAnswer>) -> Unit,
     onSkipClarification: (CreateProfessionalProfileDraftResponse) -> Unit,
     onBack: () -> Unit,
@@ -92,16 +91,14 @@ fun OnboardingScreens(
     var currentStep by remember { mutableStateOf(0) }
 
     // Update currentStep whenever uiState changes to a non-Loading, non-terminal state.
-    // During Loading, currentStep stays frozen so the indicator doesn't flicker.
     LaunchedEffect(uiState) {
         currentStep = when (uiState) {
             is OnboardingUiState.BirthDateRequired -> 0
-            is OnboardingUiState.Idle -> 1
+            is OnboardingUiState.NaturalPresentation -> 1
             is OnboardingUiState.NeedsClarification -> 1
-            is OnboardingUiState.ReviewServices -> 2
-            is OnboardingUiState.ReviewDescription -> 3
-            is OnboardingUiState.PhotoRequired -> 4
-            is OnboardingUiState.KnownName -> 5
+            is OnboardingUiState.SmartConfirmation -> 2
+            is OnboardingUiState.PhotoRequired -> 2
+            is OnboardingUiState.ProfilePreview -> 3
             is OnboardingUiState.Loading,
             is OnboardingUiState.Published,
             is OnboardingUiState.Error -> currentStep
@@ -110,19 +107,16 @@ fun OnboardingScreens(
 
     Scaffold { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = Spacing.screenEdge)) {
-            // Step indicator — visible for all active steps, hidden for terminal states
             val showStepIndicator = uiState !is OnboardingUiState.Published &&
                                     uiState !is OnboardingUiState.Error
 
             val showBack = uiState is OnboardingUiState.BirthDateRequired ||
-                           uiState is OnboardingUiState.Idle ||
+                           uiState is OnboardingUiState.NaturalPresentation ||
                            uiState is OnboardingUiState.NeedsClarification ||
-                           uiState is OnboardingUiState.ReviewServices ||
-                           uiState is OnboardingUiState.ReviewDescription ||
+                           uiState is OnboardingUiState.SmartConfirmation ||
                            uiState is OnboardingUiState.PhotoRequired ||
-                           uiState is OnboardingUiState.KnownName
+                           uiState is OnboardingUiState.ProfilePreview
 
-            // Header row with properly aligned back button and step indicator
             if (showStepIndicator || showBack) {
                 Row(
                     modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
@@ -205,7 +199,6 @@ fun OnboardingScreens(
                                     singleLine = true,
                                     shape = MaterialTheme.shapes.medium
                                 )
-                                // Invisible overlay to capture clicks and open date picker
                                 Box(
                                     modifier = Modifier
                                         .matchParentSize()
@@ -220,10 +213,7 @@ fun OnboardingScreens(
                         Spacer(modifier = Modifier.height(Spacing.md))
 
                         Button(
-                            onClick = {
-                                // Server validates 18+ age requirement authoritatively
-                                onSubmitDateOfBirth(isoDate)
-                            },
+                            onClick = { onSubmitDateOfBirth(isoDate) },
                             modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                             enabled = isoDate.isNotBlank(),
                             shape = MaterialTheme.shapes.medium
@@ -254,31 +244,33 @@ fun OnboardingScreens(
                         }
                     }
                 }
-                is OnboardingUiState.Idle -> {
+                is OnboardingUiState.NaturalPresentation -> {
                     Column(modifier = Modifier.fillMaxSize()) {
                         Column(
                             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
                         ) {
-                            Text(Strings.Onboarding.BECOME_PROFESSIONAL, style = MaterialTheme.typography.headlineLarge)
-                            Text(Strings.Onboarding.DESCRIBE_SERVICES, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            ChatBubble {
+                                Text(
+                                    Strings.Onboarding.STEP_1_MESSAGE,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            }
 
-                            Spacer(modifier = Modifier.height(Spacing.sectionGap))
+                            Spacer(modifier = Modifier.height(Spacing.lg))
 
-                            OutlinedTextField(
-                                value = inputText,
-                                onValueChange = { inputText = it },
-                                modifier = Modifier.fillMaxWidth().height(200.dp),
-                                placeholder = { Text(Strings.Onboarding.DESCRIPTION_PLACEHOLDER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
-                                shape = MaterialTheme.shapes.medium
-                            )
-
-                            Spacer(modifier = Modifier.height(Spacing.sm))
-
-                            Text(
-                                Strings.Onboarding.DESCRIPTION_EXAMPLE,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Button(
+                                onClick = {
+                                    usedVoice = true
+                                    // Voice input button below handles transcription
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondary,
+                                ),
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.medium,
+                            ) {
+                                Text(Strings.Onboarding.SPEAK_WHAT_I_DO)
+                            }
 
                             Spacer(modifier = Modifier.height(Spacing.md))
 
@@ -290,6 +282,24 @@ fun OnboardingScreens(
                                     },
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(Spacing.md))
+
+                            OutlinedTextField(
+                                value = inputText,
+                                onValueChange = { inputText = it },
+                                modifier = Modifier.fillMaxWidth().height(150.dp),
+                                placeholder = { Text(Strings.Onboarding.DESCRIPTION_PLACEHOLDER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
+                                shape = MaterialTheme.shapes.medium
+                            )
+
+                            Spacer(modifier = Modifier.height(Spacing.sm))
+
+                            Text(
+                                Strings.Onboarding.SPEAK_NATURALLY_HINT,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(Spacing.md))
@@ -300,7 +310,7 @@ fun OnboardingScreens(
                             enabled = inputText.isNotBlank(),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Text(Strings.Onboarding.ANALYZE_SERVICES, style = MaterialTheme.typography.titleMedium)
+                            Text(Strings.Common.CONTINUE, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(Spacing.md))
                     }
@@ -343,8 +353,17 @@ fun OnboardingScreens(
                         Column(
                             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
                         ) {
-                            Text(Strings.Onboarding.MORE_INFO_TITLE, style = MaterialTheme.typography.headlineLarge)
-                            Text(Strings.Onboarding.MORE_INFO_SUBTITLE, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            ChatBubble {
+                                Text(
+                                    Strings.Onboarding.MORE_INFO_TITLE,
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                                Spacer(modifier = Modifier.height(Spacing.xs))
+                                Text(
+                                    Strings.Onboarding.MORE_INFO_SUBTITLE,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
 
                             Spacer(modifier = Modifier.height(Spacing.lg))
 
@@ -390,9 +409,11 @@ fun OnboardingScreens(
                         Spacer(modifier = Modifier.height(Spacing.sm))
                     }
                 }
-                is OnboardingUiState.ReviewServices -> {
+                is OnboardingUiState.SmartConfirmation -> {
                     val draft = state.draft
+
                     if (draft.interpretedServices.isEmpty()) {
+                        // Manual service selection fallback
                         var manualSelectedServices by remember { mutableStateOf(emptySet<String>()) }
                         Column(modifier = Modifier.fillMaxSize()) {
                             Text(Strings.Onboarding.SELECT_SERVICES_TITLE, style = MaterialTheme.typography.headlineLarge)
@@ -426,79 +447,90 @@ fun OnboardingScreens(
                             }
                         }
                     } else {
+                        // Smart confirmation: merged ReviewServices + ReviewDescription
                         var cityDropdownExpanded by remember { mutableStateOf(false) }
+                        var confirmedServiceIds by remember { mutableStateOf(state.confirmedServiceIds) }
                         var additionalServiceIds by remember { mutableStateOf(emptySet<String>()) }
-                        var removedInterpretedIds by remember { mutableStateOf(emptySet<String>()) }
                         var showAddServicePicker by remember { mutableStateOf(false) }
-                        val visibleInterpretedServices = draft.interpretedServices.filter { it.serviceId !in removedInterpretedIds }
+                        var descriptionText by remember { mutableStateOf(state.confirmedDescription) }
 
                         Column(modifier = Modifier.fillMaxSize()) {
                             Column(
                                 modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
                             ) {
-                                Text(Strings.Onboarding.REVIEW_TITLE, style = MaterialTheme.typography.headlineLarge)
-                                Text(Strings.Onboarding.REVIEW_SUBTITLE, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                ChatBubble {
+                                    Text(
+                                        Strings.Onboarding.STEP_2_MESSAGE,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                    )
+                                }
 
-                                Spacer(modifier = Modifier.height(Spacing.sectionGap))
+                                Spacer(modifier = Modifier.height(Spacing.md))
 
+                                // Services list with remove buttons
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                                 ) {
                                     Column(modifier = Modifier.padding(Spacing.md)) {
-                                        Text(Strings.Onboarding.INTERPRETED_SERVICES, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                                        @OptIn(ExperimentalLayoutApi::class)
-                                        FlowRow(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                                        ) {
-                                            visibleInterpretedServices.forEach { service ->
-                                                InputChip(
-                                                    selected = true,
-                                                    onClick = { removedInterpretedIds = removedInterpretedIds + service.serviceId },
-                                                    label = { Text(service.displayName) },
-                                                    trailingIcon = {
+                                        confirmedServiceIds.forEach { serviceId ->
+                                            val displayName = draft.interpretedServices.find { it.serviceId == serviceId }?.displayName
+                                                ?: catalog?.services?.find { it.id == serviceId }?.displayName
+                                                ?: serviceId
+                                            ServiceListItem(
+                                                serviceName = displayName,
+                                                trailingContent = {
+                                                    IconButton(
+                                                        onClick = { confirmedServiceIds = confirmedServiceIds - serviceId },
+                                                        modifier = Modifier.size(24.dp),
+                                                    ) {
                                                         Icon(Icons.Default.Close, contentDescription = Strings.EditProfile.REMOVE, modifier = Modifier.size(16.dp))
-                                                    },
-                                                )
-                                            }
+                                                    }
+                                                },
+                                            )
                                         }
 
-                                        // Show manually added services
-                                        if (additionalServiceIds.isNotEmpty() && catalog != null) {
-                                            Spacer(modifier = Modifier.height(Spacing.sm))
-                                            Text(Strings.Onboarding.ADDITIONAL_SERVICES, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                                            @OptIn(ExperimentalLayoutApi::class)
-                                            FlowRow(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                                            ) {
-                                                additionalServiceIds.forEach { serviceId ->
-                                                    val displayName = catalog.services.find { it.id == serviceId }?.displayName ?: serviceId
-                                                    InputChip(
-                                                        selected = true,
+                                        // Additional manually-added services
+                                        additionalServiceIds.forEach { serviceId ->
+                                            val displayName = catalog?.services?.find { it.id == serviceId }?.displayName ?: serviceId
+                                            ServiceListItem(
+                                                serviceName = displayName,
+                                                trailingContent = {
+                                                    IconButton(
                                                         onClick = { additionalServiceIds = additionalServiceIds - serviceId },
-                                                        label = { Text(displayName) },
-                                                        trailingIcon = {
-                                                            Icon(Icons.Default.Close, contentDescription = Strings.EditProfile.REMOVE, modifier = Modifier.size(16.dp))
-                                                        },
-                                                    )
-                                                }
-                                            }
+                                                        modifier = Modifier.size(24.dp),
+                                                    ) {
+                                                        Icon(Icons.Default.Close, contentDescription = Strings.EditProfile.REMOVE, modifier = Modifier.size(16.dp))
+                                                    }
+                                                },
+                                            )
                                         }
                                     }
                                 }
 
                                 Spacer(modifier = Modifier.height(Spacing.sm))
 
-                                // Add more services button
+                                // Add more services
                                 if (catalog != null) {
-                                    OutlinedButton(onClick = { showAddServicePicker = true }) {
+                                    TextButton(onClick = { showAddServicePicker = true }) {
                                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(Strings.Onboarding.ADD_MORE_SERVICES)
+                                        Spacer(modifier = Modifier.width(Spacing.xs))
+                                        Text(Strings.Onboarding.ADD_SERVICE)
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.height(Spacing.md))
+
+                                // Editable description
+                                Text(Strings.Onboarding.PROFILE_DESCRIPTION_LABEL, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+                                OutlinedTextField(
+                                    value = descriptionText,
+                                    onValueChange = { descriptionText = it },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
+                                    maxLines = 6,
+                                    shape = MaterialTheme.shapes.medium,
+                                )
 
                                 Spacer(modifier = Modifier.height(Spacing.lg))
 
@@ -540,29 +572,40 @@ fun OnboardingScreens(
 
                             Spacer(modifier = Modifier.height(Spacing.md))
 
+                            // Primary action: confirm
                             Button(
                                 onClick = {
-                                    val allServiceIds = visibleInterpretedServices.map { it.serviceId } + additionalServiceIds.toList()
-                                    onProceedFromServices(draft, allServiceIds)
+                                    val allServiceIds = confirmedServiceIds + additionalServiceIds.toList()
+                                    onConfirmFromSmartConfirmation(draft, allServiceIds, descriptionText)
                                 },
                                 modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
-                                enabled = visibleInterpretedServices.isNotEmpty() || additionalServiceIds.isNotEmpty(),
+                                enabled = (confirmedServiceIds.isNotEmpty() || additionalServiceIds.isNotEmpty()) && descriptionText.isNotBlank(),
                                 shape = MaterialTheme.shapes.medium
                             ) {
-                                Text(Strings.Onboarding.LOOKS_GOOD, style = MaterialTheme.typography.titleMedium)
+                                Text(Strings.Onboarding.THATS_CORRECT, style = MaterialTheme.typography.titleMedium)
+                            }
+
+                            Spacer(modifier = Modifier.height(Spacing.sm))
+
+                            // Secondary action: go back to explain better
+                            OutlinedButton(
+                                onClick = onBack,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.medium,
+                            ) {
+                                Text(Strings.Onboarding.LET_ME_EXPLAIN)
                             }
                             Spacer(modifier = Modifier.height(Spacing.md))
                         }
 
                         // Add service picker dialog
                         if (showAddServicePicker && catalog != null) {
-                            val interpretedIds = visibleInterpretedServices.map { it.serviceId }.toSet()
-                            val alreadySelected = interpretedIds + additionalServiceIds
+                            val alreadySelected = confirmedServiceIds.toSet() + additionalServiceIds
                             var pickerSelection by remember { mutableStateOf(emptySet<String>()) }
 
                             AlertDialog(
                                 onDismissRequest = { showAddServicePicker = false },
-                                title = { Text(Strings.Onboarding.ADD_MORE_SERVICES) },
+                                title = { Text(Strings.Onboarding.ADD_SERVICE) },
                                 text = {
                                     Box(modifier = Modifier.heightIn(max = 400.dp)) {
                                         ServiceCategoryPicker(
@@ -586,43 +629,6 @@ fun OnboardingScreens(
                         }
                     }
                 }
-                is OnboardingUiState.ReviewDescription -> {
-                    var descriptionText by remember {
-                        mutableStateOf(state.draft.editedDescription.ifBlank { state.draft.normalizedDescription })
-                    }
-
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Column(
-                            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.md),
-                        ) {
-                            Text(Strings.Onboarding.PROFILE_DESCRIPTION_TITLE, style = MaterialTheme.typography.headlineLarge)
-                            Text(
-                                Strings.Onboarding.PROFILE_DESCRIPTION_SUBTITLE,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            OutlinedTextField(
-                                value = descriptionText,
-                                onValueChange = { descriptionText = it },
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
-                                label = { Text(Strings.Onboarding.PROFILE_DESCRIPTION_LABEL) },
-                                maxLines = 8,
-                                shape = MaterialTheme.shapes.medium,
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(Spacing.md))
-                        Button(
-                            onClick = { onProceedFromDescription(state.draft, state.confirmedServiceIds, descriptionText) },
-                            enabled = descriptionText.isNotBlank(),
-                            modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
-                            shape = MaterialTheme.shapes.medium,
-                        ) {
-                            Text(Strings.Common.CONTINUE, style = MaterialTheme.typography.titleMedium)
-                        }
-                        Spacer(modifier = Modifier.height(Spacing.md))
-                    }
-                }
                 is OnboardingUiState.PhotoRequired -> {
                     val sessionManager: SessionManager = koinInject()
                     val currentUser by sessionManager.currentUser.collectAsState()
@@ -639,67 +645,136 @@ fun OnboardingScreens(
                         onSkip = null,
                     )
                 }
-                is OnboardingUiState.KnownName -> {
+                is OnboardingUiState.ProfilePreview -> {
                     val sessionManager: SessionManager = koinInject()
                     val currentUser by sessionManager.currentUser.collectAsState()
                     val needsFullName = currentUser?.fullName.isNullOrBlank()
                     var fullNameInput by remember { mutableStateOf("") }
                     var knownNameInput by remember { mutableStateOf("") }
 
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(0.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        // Full name field — only shown when user has no fullName set
-                        if (needsFullName) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Column(
+                            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        ) {
+                            ChatBubble {
+                                Text(
+                                    Strings.Onboarding.STEP_3_MESSAGE,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(Spacing.md))
+
+                            // Profile preview card
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            ) {
+                                Column(modifier = Modifier.padding(Spacing.md)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        ProfileAvatar(
+                                            name = currentUser?.fullName,
+                                            photoUrl = currentUser?.photoUrl,
+                                            size = 64.dp,
+                                        )
+                                        Spacer(modifier = Modifier.width(Spacing.md))
+                                        Column {
+                                            if (knownNameInput.isNotBlank()) {
+                                                Text(knownNameInput, style = MaterialTheme.typography.titleMedium)
+                                            }
+                                            Text(
+                                                currentUser?.fullName ?: fullNameInput.ifBlank { "" },
+                                                style = MaterialTheme.typography.bodyMedium,
+                                            )
+                                            Text(
+                                                selectedCity ?: "",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(Spacing.sm))
+
+                                    Text(
+                                        state.confirmedDescription,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+
+                                    Spacer(modifier = Modifier.height(Spacing.sm))
+
+                                    state.confirmedServiceIds.forEach { serviceId ->
+                                        val displayName = state.draft.interpretedServices.find { it.serviceId == serviceId }?.displayName ?: serviceId
+                                        ServiceListItem(serviceName = displayName)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(Spacing.lg))
+
+                            // Full name field — only shown when user has no fullName set
+                            if (needsFullName) {
+                                Text(
+                                    Strings.Onboarding.FULL_NAME_REQUIRED,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+                                OutlinedTextField(
+                                    value = fullNameInput,
+                                    onValueChange = { fullNameInput = it },
+                                    label = { Text(Strings.Onboarding.FULL_NAME_LABEL) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                )
+                                Spacer(modifier = Modifier.height(Spacing.md))
+                            }
+
+                            // Known name (optional)
+                            Text(Strings.Auth.KNOWN_NAME_TITLE, style = MaterialTheme.typography.titleSmall)
                             Text(
-                                Strings.Onboarding.FULL_NAME_REQUIRED,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.error,
+                                Strings.Auth.KNOWN_NAME_SUBTITLE,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
+                            Spacer(modifier = Modifier.height(Spacing.sm))
                             OutlinedTextField(
-                                value = fullNameInput,
-                                onValueChange = { fullNameInput = it },
-                                label = { Text(Strings.Onboarding.FULL_NAME_LABEL) },
+                                value = knownNameInput,
+                                onValueChange = { knownNameInput = it },
+                                label = { Text(Strings.Auth.KNOWN_NAME_LABEL) },
+                                placeholder = { Text(Strings.Auth.KNOWN_NAME_PLACEHOLDER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                             )
                         }
 
-                        Text(Strings.Auth.KNOWN_NAME_TITLE, style = MaterialTheme.typography.headlineMedium)
-                        Text(
-                            Strings.Auth.KNOWN_NAME_SUBTITLE,
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
+                        Spacer(modifier = Modifier.height(Spacing.md))
 
-                        OutlinedTextField(
-                            value = knownNameInput,
-                            onValueChange = { knownNameInput = it },
-                            label = { Text(Strings.Auth.KNOWN_NAME_LABEL) },
-                            placeholder = { Text(Strings.Auth.KNOWN_NAME_PLACEHOLDER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                        )
-
+                        // Primary: publish
                         Button(
                             onClick = {
                                 val fullName = if (needsFullName) fullNameInput.trim() else null
-                                onSubmitKnownName(fullName, knownNameInput.trim().ifBlank { null }, state.confirmedServiceIds, state.confirmedDescription)
+                                onPublishProfile(fullName, knownNameInput.trim().ifBlank { null }, state.confirmedServiceIds, state.confirmedDescription)
                             },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                             enabled = !needsFullName || fullNameInput.isNotBlank(),
+                            shape = MaterialTheme.shapes.medium,
                         ) {
-                            Text(Strings.Common.CONTINUE)
+                            Text(Strings.Onboarding.PUBLISH_PROFILE, style = MaterialTheme.typography.titleMedium)
                         }
 
-                        if (!needsFullName) {
-                            TextButton(
-                                onClick = { onSubmitKnownName(null, null, state.confirmedServiceIds, state.confirmedDescription) },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text(Strings.Auth.SKIP)
-                            }
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+
+                        // Secondary: go back to edit
+                        OutlinedButton(
+                            onClick = onBack,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium,
+                        ) {
+                            Text(Strings.Onboarding.EDIT_DESCRIPTION)
                         }
+                        Spacer(modifier = Modifier.height(Spacing.md))
                     }
                 }
                 is OnboardingUiState.Published -> {
@@ -754,49 +829,58 @@ fun OnboardingScreens(
 
 // ── Previews ──
 
-@LightDarkScreenPreview
-@Composable
-private fun OnboardingBirthDatePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.BirthDateRequired, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
-}
-
-@LightDarkScreenPreview
-@Composable
-private fun OnboardingIdlePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Idle, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
-}
-
-@LightDarkScreenPreview
-@Composable
-private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
-}
-
-@LightDarkScreenPreview
-@Composable
-private fun OnboardingReviewServicesPreview() {
-    AppTheme {
+private val previewCallbacks: @Composable (OnboardingUiState) -> @Composable () -> Unit = { uiState ->
+    @Composable {
         OnboardingScreens(
-            uiState = OnboardingUiState.ReviewServices(PreviewSamples.sampleDraftResponse),
+            uiState = uiState,
             selectedCity = "Franca",
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {},
+            onCreateDraft = { _, _ -> },
+            onSelectCity = {},
+            onConfirmFromSmartConfirmation = { _, _, _ -> },
+            onProceedWithManualServices = { _, _ -> },
+            onPickPhoto = {},
+            onPublishProfile = { _, _, _, _ -> },
+            onSubmitClarifications = { _, _ -> },
+            onSkipClarification = {},
+            onBack = {},
+            onFinish = { _ -> },
         )
     }
 }
 
 @LightDarkScreenPreview
 @Composable
-private fun OnboardingReviewDescriptionPreview() {
+private fun OnboardingBirthDatePreview() {
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.BirthDateRequired, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun OnboardingNaturalPresentationPreview() {
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.NaturalPresentation, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun OnboardingLoadingPreview() {
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun OnboardingSmartConfirmationPreview() {
     AppTheme {
         OnboardingScreens(
-            uiState = OnboardingUiState.ReviewDescription(
+            uiState = OnboardingUiState.SmartConfirmation(
                 PreviewSamples.sampleDraftResponse,
                 listOf("paint-residential"),
+                "Pintor residencial com 10 anos de experiência.",
             ),
             selectedCity = "Franca",
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -809,7 +893,7 @@ private fun OnboardingPublishedPreview() {
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
             selectedCity = null,
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }
@@ -822,7 +906,7 @@ private fun OnboardingErrorPreview() {
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
             selectedCity = null,
             catalog = null,
-            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onProceedFromServices = { _, _ -> }, onProceedWithManualServices = { _, _ -> }, onProceedFromDescription = { _, _, _ -> }, onPickPhoto = {}, onSubmitKnownName = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
+            onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
     }
 }

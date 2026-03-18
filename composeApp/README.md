@@ -51,7 +51,7 @@ commonMain/kotlin/com/fugisawa/quemfaz/
 | ProfessionalProfile | `ProfileScreens.kt` | No (favorites/report require auth) |
 | Favorites | `FavoritesScreen.kt` | Yes |
 | MyProfile | `MyProfileScreen.kt` | Yes |
-| OnboardingStart, OnboardingDraft, OnboardingConfirmation | `OnboardingScreens.kt` | Yes |
+| Onboarding (BirthDate → NaturalPresentation → SmartConfirmation → ProfilePreview) | `OnboardingScreens.kt` | Yes |
 | EditProfessionalProfile | `EditProfessionalProfileScreen.kt` | Yes |
 | CitySelection | `CitySelectionScreen.kt` | Post-auth gate |
 | BlockedUser | `BlockedUserScreen.kt` | N/A |
@@ -125,6 +125,9 @@ Located in `ui/components/`. Check these before creating new ones.
 | `ProfileAvatar` | Professional profile photo/placeholder |
 | `ServiceChipList` | Horizontal chip list of services |
 | `StatusChipRow` | Trust signal chips (complete profile, recently active) |
+| `ChatBubble` | Rounded surfaceVariant card for conversational system messages |
+| `ServiceListItem` | Row with checkmark icon + service name (used in profile & onboarding) |
+| `VoiceInputButton` | Voice input button with optional `compact` mode (40dp inline) and pulse animation when listening |
 
 ---
 

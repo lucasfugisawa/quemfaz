@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
@@ -66,28 +67,38 @@ fun PhoneLoginScreen(
 
     Box(modifier = Modifier.fillMaxSize().padding(Spacing.screenEdge)) {
         Column(
-            modifier = Modifier.align(Alignment.Center),
+            modifier = Modifier.align(Alignment.Center).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(Strings.Auth.WELCOME_TITLE, style = MaterialTheme.typography.headlineLarge)
-            Text(Strings.Auth.WELCOME_SUBTITLE, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            
+            Text(
+                Strings.Auth.WELCOME_TITLE,
+                style = MaterialTheme.typography.headlineLarge,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(modifier = Modifier.height(Spacing.sm))
+            Text(
+                Strings.Auth.WELCOME_SUBTITLE,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
             Spacer(modifier = Modifier.height(Spacing.xl))
-            
+
             OutlinedTextField(
                 value = phone,
                 onValueChange = { new -> phone = new.filter { it.isDigit() }.take(11) },
                 label = { Text(Strings.Auth.PHONE_LABEL) },
-                placeholder = { Text(Strings.Auth.PHONE_PLACEHOLDER) },
+                placeholder = { Text(Strings.Auth.PHONE_PLACEHOLDER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = MaterialTheme.shapes.medium,
                 visualTransformation = BrazilianPhoneTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             )
-            
+
             Spacer(modifier = Modifier.height(Spacing.lg))
-            
+
             Button(
                 onClick = { onSendOtp(phone) },
                 enabled = phone.isNotBlank() && uiState !is AuthUiState.Loading,
@@ -102,8 +113,13 @@ fun PhoneLoginScreen(
             }
 
             if (uiState is AuthUiState.Error) {
-                Spacer(modifier = Modifier.height(Spacing.formFieldGap))
-                Text(uiState.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(Spacing.md))
+                Text(
+                    uiState.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
     }
@@ -119,21 +135,31 @@ fun OtpVerificationScreen(
 
     Box(modifier = Modifier.fillMaxSize().padding(Spacing.screenEdge)) {
         Column(
-            modifier = Modifier.align(Alignment.Center),
+            modifier = Modifier.align(Alignment.Center).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(Strings.Auth.OTP_TITLE, style = MaterialTheme.typography.headlineLarge)
-            Text(Strings.Auth.otpSubtitle(phone), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            
+            Text(
+                Strings.Auth.OTP_TITLE,
+                style = MaterialTheme.typography.headlineLarge,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(modifier = Modifier.height(Spacing.sm))
+            Text(
+                Strings.Auth.otpSubtitle(phone),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
             Spacer(modifier = Modifier.height(Spacing.xl))
-            
+
             OtpInputRow(
                 value = otp,
                 onValueChange = { otp = it }
             )
-            
+
             Spacer(modifier = Modifier.height(Spacing.lg))
-            
+
             Button(
                 onClick = { onVerifyOtp(otp) },
                 enabled = otp.length == 6 && uiState !is AuthUiState.Loading,
@@ -146,10 +172,15 @@ fun OtpVerificationScreen(
                     Text(Strings.Auth.OTP_CONFIRM, style = MaterialTheme.typography.titleMedium)
                 }
             }
-            
+
             if (uiState is AuthUiState.Error) {
-                Spacer(modifier = Modifier.height(Spacing.formFieldGap))
-                Text(uiState.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(Spacing.md))
+                Text(
+                    uiState.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
     }
@@ -170,7 +201,7 @@ fun NameInputScreen(
             .padding(Spacing.screenEdge),
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
-        Text(Strings.Auth.NAME_TITLE, style = MaterialTheme.typography.headlineMedium)
+        Text(Strings.Auth.NAME_TITLE, style = MaterialTheme.typography.headlineLarge)
 
         OutlinedTextField(
             value = displayName,
@@ -189,6 +220,8 @@ fun NameInputScreen(
             )
         }
 
+        Spacer(modifier = Modifier.weight(1f))
+
         Button(
             onClick = { onSubmitName(trimmed) },
             enabled = hasAtLeastTwoWords && uiState !is AuthUiState.Loading,
@@ -197,13 +230,14 @@ fun NameInputScreen(
         ) {
             if (uiState is AuthUiState.Loading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(24.dp),
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text(Strings.Common.CONTINUE)
+                Text(Strings.Common.CONTINUE, style = MaterialTheme.typography.titleMedium)
             }
         }
+        Spacer(modifier = Modifier.height(Spacing.md))
     }
 }
 
@@ -223,34 +257,57 @@ fun ProfilePhotoScreen(
             .fillMaxSize()
             .padding(Spacing.screenEdge),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
-        Text(headline, style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(Spacing.xl))
+
+        Text(
+            headline,
+            style = MaterialTheme.typography.headlineLarge,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(modifier = Modifier.height(Spacing.sectionGap))
 
         ProfileAvatar(
             name = displayName,
             photoUrl = currentPhotoUrl,
-            size = 96.dp,
+            size = Spacing.profileAvatarLarge,
         )
 
+        Spacer(modifier = Modifier.height(Spacing.lg))
+
         if (error != null) {
-            Text(error, color = MaterialTheme.colorScheme.error)
+            Text(
+                error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(modifier = Modifier.height(Spacing.sm))
         }
+
+        Spacer(modifier = Modifier.weight(1f))
 
         Button(
             onClick = onPickImage,
             enabled = !isLoading,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
+            shape = MaterialTheme.shapes.medium,
         ) {
-            if (isLoading) CircularProgressIndicator(Modifier.size(20.dp))
-            else Text(Strings.Auth.PHOTO_CHOOSE)
+            if (isLoading) CircularProgressIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+            else Text(Strings.Auth.PHOTO_CHOOSE, style = MaterialTheme.typography.titleMedium)
         }
 
         if (showSkip && onSkip != null) {
-            TextButton(onClick = onSkip) {
+            Spacer(modifier = Modifier.height(Spacing.sm))
+            TextButton(
+                onClick = onSkip,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 Text(Strings.Auth.PHOTO_SKIP)
             }
         }
+        Spacer(modifier = Modifier.height(Spacing.md))
     }
 }
 
@@ -273,21 +330,19 @@ private fun OtpInputRow(
             horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
             repeat(6) { index ->
-                val isCurrent = index == value.length  // cursor position
+                val isCurrent = index == value.length
                 val isFilled = index < value.length
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(Spacing.ctaButtonHeight)
                         .border(
-                            // Border widths (1dp/2dp) are structural atomic constants;
-                            // no AppSpacing token exists at this scale — used directly.
                             width = if (isCurrent) 2.dp else 1.dp,
                             color = when {
                                 isCurrent || isFilled -> MaterialTheme.colorScheme.primary
                                 else -> MaterialTheme.colorScheme.outline
                             },
-                            shape = MaterialTheme.shapes.small
+                            shape = MaterialTheme.shapes.medium
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -300,11 +355,9 @@ private fun OtpInputRow(
         }
 
         // Hidden BasicTextField captures actual keyboard input.
-        // matchParentSize() + alpha(0f) makes it cover the visual area without being visible.
         BasicTextField(
             value = value,
             onValueChange = { new ->
-                // Accept only digits, max 6 characters
                 if (new.length <= 6 && new.all { it.isDigit() }) {
                     onValueChange(new)
                 }
@@ -314,11 +367,10 @@ private fun OtpInputRow(
                 .alpha(0f)
                 .focusRequester(focusRequester),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-            decorationBox = {}  // No visual decoration — purely functional
+            decorationBox = {}
         )
     }
 
-    // Request focus automatically when this composable enters the composition
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }

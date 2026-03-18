@@ -14,8 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.ui.components.ErrorMessage
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
+import com.fugisawa.quemfaz.ui.components.ServiceListItem
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.strings.Strings
@@ -81,15 +83,10 @@ fun EditProfessionalProfileScreen(
                         modifier = Modifier.fillMaxSize().padding(Spacing.screenEdge),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                uiState.message,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(modifier = Modifier.height(Spacing.md))
-                            Button(onClick = onNavigateBack) { Text(Strings.EditProfile.GO_BACK) }
-                        }
+                        ErrorMessage(
+                            message = uiState.message,
+                            onRetry = onNavigateBack,
+                        )
                     }
                 }
                 is EditProfileUiState.Ready -> EditProfileForm(
@@ -106,7 +103,6 @@ fun EditProfessionalProfileScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun EditProfileForm(
     profile: ProfessionalProfileResponse,
@@ -125,46 +121,58 @@ private fun EditProfileForm(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(Spacing.md)
+            .padding(horizontal = Spacing.screenEdge, vertical = Spacing.md)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             ProfileAvatar(
                 name = profile.fullName.ifBlank { null },
                 photoUrl = profile.photoUrl,
-                size = 64.dp
+                size = Spacing.professionalAvatarSize,
             )
             Spacer(modifier = Modifier.width(Spacing.md))
+            Column {
+                Text(
+                    profile.knownName ?: profile.fullName,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    profile.cityName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(Spacing.md))
+        Spacer(modifier = Modifier.height(Spacing.lg))
 
         // Services section
         Text(Strings.EditProfile.SERVICES, style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(Spacing.sm))
 
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-        ) {
-            editedServiceIds.forEach { serviceId ->
-                val displayName = catalog?.services?.find { it.id == serviceId }?.displayName
-                    ?: profile.services.find { it.serviceId == serviceId }?.displayName
-                    ?: serviceId
-                InputChip(
-                    selected = true,
-                    onClick = { onRemoveService(serviceId) },
-                    label = { Text(displayName) },
-                    trailingIcon = {
-                        Icon(Icons.Default.Close, contentDescription = Strings.EditProfile.REMOVE, modifier = Modifier.size(16.dp))
-                    },
-                )
-            }
+        editedServiceIds.forEach { serviceId ->
+            val displayName = catalog?.services?.find { it.id == serviceId }?.displayName
+                ?: profile.services.find { it.serviceId == serviceId }?.displayName
+                ?: serviceId
+            ServiceListItem(
+                serviceName = displayName,
+                trailingContent = {
+                    IconButton(onClick = { onRemoveService(serviceId) }) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = Strings.EditProfile.REMOVE,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+            )
         }
 
         if (editedServiceIds.isEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
             ) {
                 Text(
                     Strings.EditProfile.ALL_SERVICES_REMOVED,
@@ -179,9 +187,12 @@ private fun EditProfileForm(
 
         // Add service button + dialog
         var showServicePicker by remember { mutableStateOf(false) }
-        OutlinedButton(onClick = { showServicePicker = true }) {
+        OutlinedButton(
+            onClick = { showServicePicker = true },
+            shape = MaterialTheme.shapes.medium,
+        ) {
             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(Spacing.xs))
             Text(Strings.EditProfile.ADD_SERVICE)
         }
 
@@ -259,17 +270,15 @@ private fun EditProfileForm(
         }
 
         Button(
-            onClick = {
-                onSave(description, city)
-            },
+            onClick = { onSave(description, city) },
             enabled = !isSaving,
             modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
         ) {
             if (isSaving) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
             } else {
-                Text(Strings.Common.SAVE)
+                Text(Strings.Common.SAVE, style = MaterialTheme.typography.titleMedium)
             }
         }
     }
