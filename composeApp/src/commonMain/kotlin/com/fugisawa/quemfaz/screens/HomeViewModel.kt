@@ -88,7 +88,7 @@ class HomeViewModel(
         sessionManager.currentUser,
         sessionManager.offerServicesCardDismissed,
     ) { user, dismissed ->
-        user?.hasProfessionalProfile != true && !dismissed
+        user != null && user.hasProfessionalProfile != true && !dismissed
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun dismissOfferServicesCard() {

@@ -27,14 +27,40 @@ object Strings {
         const val ADDED_FAVORITE = "Adicionado aos favoritos"
         const val REMOVED_FAVORITE = "Removido dos favoritos"
         const val FAVORITE_ERROR = "Não foi possível atualizar favoritos. Tente novamente."
-        const val GREETING = "Oi! 👋"
-        const val WHAT_LOOKING_FOR = "O que você está procurando?"
+        const val WHAT_LOOKING_FOR = "O que você está\nprocurando?"
         const val SEARCH_HINT = "Conte o que você precisa..."
         const val SPEAK_OR_TYPE = "Fale ou digite naturalmente"
-        const val EXAMPLE_HEADER = "Você pode falar assim:"
-        const val EXAMPLE_1 = "\"Preciso de alguém para consertar minha pia\""
-        const val EXAMPLE_2 = "\"Quem faz limpeza pesada aqui?\""
+        const val EXAMPLE_HEADER = "Você pode digitar ou falar assim:"
         const val RECENT_SEARCHES = "Suas últimas buscas:"
+        const val VIEW_ALL_CATEGORIES = "Ver todas as categorias"
+        const val OFFER_SERVICES_SUBTITLE = "Conta pra gente o que você faz e montaremos o seu perfil automaticamente."
+
+        val EXAMPLE_PHRASES = listOf(
+            "Minha pia tá vazando, preciso de ajuda",
+            "Tô precisando de um eletricista urgente",
+            "Alguém faz faxina pesada aqui na região?",
+            "Quero pintar a casa toda, preciso de um pintor",
+            "Preciso de alguém pra cortar a grama",
+            "Meu chuveiro queimou, quem troca?",
+            "Comprei uns móveis e preciso montar",
+            "Pia da cozinha entupiu, alguém resolve?",
+            "Preciso de um encanador pra hoje se possível",
+            "Tô procurando alguém pra limpar meu sofá",
+            "Quem instala ar-condicionado por aqui?",
+            "Preciso de pintor e eletricista pro meu apê",
+            "Meu portão não tá abrindo direito",
+            "Alguém faz pequenos reparos aqui perto?",
+            "Quero deixar meu quintal bonito, quem ajuda?",
+            "A parede do quarto tá com infiltração",
+            "Preciso de um fotógrafo pra festa de aniversário",
+            "Alguém faz frete de geladeira aqui na cidade?",
+            "Tô procurando uma manicure que atenda em casa",
+            "Preciso de alguém pra cuidar do meu cachorro no fim de semana",
+            "Meu computador tá muito lento, quem arruma?",
+            "Quero colocar câmeras de segurança em casa",
+            "Preciso de aulas particulares de matemática pro meu filho",
+            "Vou mudar de casa e preciso de ajuda com a mudança",
+        )
     }
 
     object Auth {
@@ -105,7 +131,7 @@ object Strings {
 
         const val STEP_1_MESSAGE = "Vamos começar! 🚀\nMe conte: o que você faz?"
         const val SPEAK_WHAT_I_DO = "Falar o que faço"
-        const val SPEAK_NATURALLY_HINT = "Fale naturalmente como você se apresentaria para um vizinho"
+        const val SPEAK_NATURALLY_HINT = "Fale naturalmente como você se apresentaria para um cliente ou vizinho"
         const val STEP_2_MESSAGE = "Entendi! ✨\nBaseado no que você disse, você oferece:"
         const val THATS_CORRECT = "Está correto!"
         const val LET_ME_EXPLAIN = "Deixe-me explicar melhor"

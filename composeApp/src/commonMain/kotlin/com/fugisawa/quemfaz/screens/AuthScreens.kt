@@ -1,5 +1,6 @@
 package com.fugisawa.quemfaz.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
@@ -59,16 +64,70 @@ private class BrazilianPhoneTransformation : VisualTransformation {
 }
 
 @Composable
+private fun AuthDecorativeBackground() {
+    val primary = MaterialTheme.colorScheme.primary
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
+    val secondaryContainer = MaterialTheme.colorScheme.secondaryContainer
+    val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+
+        // Large circle — top-right, partially off-screen
+        drawCircle(
+            color = primaryContainer.copy(alpha = 0.4f),
+            radius = w * 0.35f,
+            center = Offset(w * 0.9f, h * 0.08f),
+        )
+
+        // Medium circle — top-left, partially off-screen
+        drawCircle(
+            color = primary.copy(alpha = 0.08f),
+            radius = w * 0.25f,
+            center = Offset(w * 0.05f, h * 0.15f),
+        )
+
+        // Rounded rectangle — bottom-left
+        drawRoundRect(
+            color = secondaryContainer.copy(alpha = 0.35f),
+            topLeft = Offset(-w * 0.1f, h * 0.78f),
+            size = Size(w * 0.45f, w * 0.45f),
+            cornerRadius = CornerRadius(w * 0.08f),
+        )
+
+        // Small circle — bottom-right accent
+        drawCircle(
+            color = tertiaryContainer.copy(alpha = 0.3f),
+            radius = w * 0.12f,
+            center = Offset(w * 0.85f, h * 0.88f),
+        )
+
+        // Tiny circle — mid-left decorative dot
+        drawCircle(
+            color = primary.copy(alpha = 0.12f),
+            radius = w * 0.06f,
+            center = Offset(w * 0.12f, h * 0.55f),
+        )
+    }
+}
+
+@Composable
 fun PhoneLoginScreen(
     onSendOtp: (String) -> Unit,
     uiState: AuthUiState
 ) {
     var phone by remember { mutableStateOf("") }
 
-    Box(modifier = Modifier.fillMaxSize().padding(Spacing.screenEdge)) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        AuthDecorativeBackground()
+
         Column(
-            modifier = Modifier.align(Alignment.Center).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.screenEdge),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 Strings.Auth.WELCOME_TITLE,
@@ -103,7 +162,7 @@ fun PhoneLoginScreen(
                 onClick = { onSendOtp(phone) },
                 enabled = phone.isNotBlank() && uiState !is AuthUiState.Loading,
                 modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
             ) {
                 if (uiState is AuthUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
