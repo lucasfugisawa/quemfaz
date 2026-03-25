@@ -1,0 +1,7 @@
+root = true
+
+[*.{kt,kts}]
+ktlint_standard_no-wildcard-imports = enabled
+ktlint_standard_function-naming = disabled
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
