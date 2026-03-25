@@ -19,41 +19,44 @@ import org.jetbrains.exposed.sql.update
 object ReportsTable : Table("reports") {
     val id = varchar("id", 128)
     val reporterUserId = varchar("reporter_user_id", 128)
-    val targetType = customEnumeration(
-        "target_type",
-        "report_target_type",
-        { ReportTargetType.valueOf(it as String) },
-        {
-            val pgObject = org.postgresql.util.PGobject()
-            pgObject.type = "report_target_type"
-            pgObject.value = it.name
-            pgObject
-        },
-    )
+    val targetType =
+        customEnumeration(
+            "target_type",
+            "report_target_type",
+            { ReportTargetType.valueOf(it as String) },
+            {
+                val pgObject = org.postgresql.util.PGobject()
+                pgObject.type = "report_target_type"
+                pgObject.value = it.name
+                pgObject
+            },
+        )
     val targetId = varchar("target_id", 128)
-    val reason = customEnumeration(
-        "reason",
-        "report_reason",
-        { ReportReason.valueOf(it as String) },
-        {
-            val pgObject = org.postgresql.util.PGobject()
-            pgObject.type = "report_reason"
-            pgObject.value = it.name
-            pgObject
-        },
-    )
+    val reason =
+        customEnumeration(
+            "reason",
+            "report_reason",
+            { ReportReason.valueOf(it as String) },
+            {
+                val pgObject = org.postgresql.util.PGobject()
+                pgObject.type = "report_reason"
+                pgObject.value = it.name
+                pgObject
+            },
+        )
     val description = text("description").nullable()
-    val status = customEnumeration(
-        "status",
-        "report_status",
-        { ReportStatus.valueOf(it as String) },
-        {
-            val pgObject = org.postgresql.util.PGobject()
-            pgObject.type = "report_status"
-            pgObject.value = it.name
-            pgObject
-        },
-    )
+    val status =
+        customEnumeration(
+            "status",
+            "report_status",
+            { ReportStatus.valueOf(it as String) },
+            {
+                val pgObject = org.postgresql.util.PGobject()
+                pgObject.type = "report_status"
+                pgObject.value = it.name
+                pgObject
+            },
+        )
     val createdAt = timestamp("created_at")
     val resolvedAt = timestamp("resolved_at").nullable()
     val resolutionAction = text("resolution_action").nullable()

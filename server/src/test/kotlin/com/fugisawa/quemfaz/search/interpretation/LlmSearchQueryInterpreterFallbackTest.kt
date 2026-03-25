@@ -1,7 +1,7 @@
 package com.fugisawa.quemfaz.search.interpretation
 
-import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.catalog.application.CatalogEntry
+import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.catalog.application.SignalCaptureService
 import com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus
 import com.fugisawa.quemfaz.llm.LlmAgentService
@@ -9,38 +9,40 @@ import kotlinx.serialization.KSerializer
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import kotlin.test.assertTrue
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class LlmSearchQueryInterpreterFallbackTest {
-
     private val mockCatalogService: CatalogService = mock()
     private val mockSignalCaptureService: SignalCaptureService = mock()
 
-    private val electricianEntry = CatalogEntry(
-        id = "maintenance-electrician",
-        displayName = "Elétrica Residencial",
-        description = "Instalação e manutenção elétrica",
-        categoryId = "MAINTENANCE",
-        aliases = listOf("eletricista", "elétrico"),
-        status = CatalogServiceStatus.ACTIVE,
-    )
-    private val cleanEntry = CatalogEntry(
-        id = "clean-house",
-        displayName = "Limpeza Residencial",
-        description = "Limpeza da casa",
-        categoryId = "CLEANING",
-        aliases = listOf("faxina", "diarista", "limpeza"),
-        status = CatalogServiceStatus.ACTIVE,
-    )
-    private val paintEntry = CatalogEntry(
-        id = "paint-residential",
-        displayName = "Pintura Residencial",
-        description = "Pintura de residências",
-        categoryId = "PAINTING",
-        aliases = listOf("pintor", "pintura"),
-        status = CatalogServiceStatus.ACTIVE,
-    )
+    private val electricianEntry =
+        CatalogEntry(
+            id = "maintenance-electrician",
+            displayName = "Elétrica Residencial",
+            description = "Instalação e manutenção elétrica",
+            categoryId = "MAINTENANCE",
+            aliases = listOf("eletricista", "elétrico"),
+            status = CatalogServiceStatus.ACTIVE,
+        )
+    private val cleanEntry =
+        CatalogEntry(
+            id = "clean-house",
+            displayName = "Limpeza Residencial",
+            description = "Limpeza da casa",
+            categoryId = "CLEANING",
+            aliases = listOf("faxina", "diarista", "limpeza"),
+            status = CatalogServiceStatus.ACTIVE,
+        )
+    private val paintEntry =
+        CatalogEntry(
+            id = "paint-residential",
+            displayName = "Pintura Residencial",
+            description = "Pintura de residências",
+            categoryId = "PAINTING",
+            aliases = listOf("pintor", "pintura"),
+            status = CatalogServiceStatus.ACTIVE,
+        )
 
     init {
         val entries = listOf(electricianEntry, cleanEntry, paintEntry)
@@ -59,11 +61,12 @@ class LlmSearchQueryInterpreterFallbackTest {
         ): T = throw RuntimeException("LLM unavailable")
     }
 
-    private val interpreter = LlmSearchQueryInterpreter(
-        FailingLlmAgentService(),
-        mockCatalogService,
-        mockSignalCaptureService,
-    )
+    private val interpreter =
+        LlmSearchQueryInterpreter(
+            FailingLlmAgentService(),
+            mockCatalogService,
+            mockSignalCaptureService,
+        )
 
     @Test
     fun `fallback with matching alias returns matched service IDs`() {

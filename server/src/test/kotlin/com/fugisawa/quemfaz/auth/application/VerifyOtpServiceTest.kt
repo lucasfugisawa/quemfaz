@@ -48,10 +48,15 @@ class VerifyOtpServiceTest {
     }
 
     private class FakeRefreshTokenRepository : com.fugisawa.quemfaz.auth.domain.RefreshTokenRepository {
-        override fun create(refreshToken: com.fugisawa.quemfaz.auth.domain.RefreshToken): com.fugisawa.quemfaz.auth.domain.RefreshToken = refreshToken
+        override fun create(refreshToken: com.fugisawa.quemfaz.auth.domain.RefreshToken): com.fugisawa.quemfaz.auth.domain.RefreshToken =
+            refreshToken
+
         override fun findByToken(token: String): com.fugisawa.quemfaz.auth.domain.RefreshToken? = null
+
         override fun revokeByUserId(userId: UserId) {}
+
         override fun revokeByToken(token: String) {}
+
         override fun deleteExpired(now: Instant) {}
     }
 

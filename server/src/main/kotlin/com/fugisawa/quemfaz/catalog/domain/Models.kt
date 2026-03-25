@@ -12,7 +12,8 @@ enum class CatalogServiceStatus {
     ACTIVE,
     PENDING_REVIEW,
     REJECTED,
-    MERGED;
+    MERGED,
+    ;
 
     fun toDbValue(): String = name.lowercase()
 

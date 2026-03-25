@@ -20,45 +20,52 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ProfileUpdateIntegrationTest : BaseIntegrationTest() {
-    override val tablesToClean: List<Table> = listOf(
-        ProfessionalProfilesTable,
-        UserPhoneAuthIdentitiesTable,
-        UsersTable,
-        OtpChallengesTable,
-    )
+    override val tablesToClean: List<Table> =
+        listOf(
+            ProfessionalProfilesTable,
+            UserPhoneAuthIdentitiesTable,
+            UsersTable,
+            OtpChallengesTable,
+        )
 
     @Test
-    fun `updating profile can change services`() = integrationTestApplication {
-        // Set up user: auth + name + photo (required before confirming a profile)
-        val token = obtainAuthToken("+5516900000070")
-        completeNameStep(token, "Test User")
-        setUserPhoto(token, "/api/images/profileupdatetestphoto0001")
-        val client = createTestClient(token)
+    fun `updating profile can change services`() =
+        integrationTestApplication {
+            // Set up user: auth + name + photo (required before confirming a profile)
+            val token = obtainAuthToken("+5516900000070")
+            completeNameStep(token, "Test User")
+            setUserPhoto(token, "/api/images/profileupdatetestphoto0001")
+            val client = createTestClient(token)
 
-        // Create a profile with initial service
-        client.post("/professional-profile/confirm") {
-            contentType(ContentType.Application.Json)
-            setBody(ConfirmProfessionalProfileRequest(
-                description = "Pintor residencial",
-                selectedServiceIds = listOf("paint-residential"),
-                cityName = "Franca",
-                portfolioPhotoUrls = emptyList(),
-            ))
-        }
+            // Create a profile with initial service
+            client.post("/professional-profile/confirm") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    ConfirmProfessionalProfileRequest(
+                        description = "Pintor residencial",
+                        selectedServiceIds = listOf("paint-residential"),
+                        cityName = "Franca",
+                        portfolioPhotoUrls = emptyList(),
+                    ),
+                )
+            }
 
-        // Update with an additional service
-        val updateResponse = client.put("/professional-profile/me") {
-            contentType(ContentType.Application.Json)
-            setBody(ConfirmProfessionalProfileRequest(
-                description = "Pintor residencial",
-                selectedServiceIds = listOf("paint-residential", "paint-commercial"),
-                cityName = "Franca",
-                portfolioPhotoUrls = emptyList(),
-            ))
+            // Update with an additional service
+            val updateResponse =
+                client.put("/professional-profile/me") {
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        ConfirmProfessionalProfileRequest(
+                            description = "Pintor residencial",
+                            selectedServiceIds = listOf("paint-residential", "paint-commercial"),
+                            cityName = "Franca",
+                            portfolioPhotoUrls = emptyList(),
+                        ),
+                    )
+                }
+            assertEquals(HttpStatusCode.OK, updateResponse.status)
+            val updated = updateResponse.body<ProfessionalProfileResponse>()
+            assertEquals(2, updated.services.size)
+            assertTrue(updated.services.any { it.serviceId == "paint-commercial" })
         }
-        assertEquals(HttpStatusCode.OK, updateResponse.status)
-        val updated = updateResponse.body<ProfessionalProfileResponse>()
-        assertEquals(2, updated.services.size)
-        assertTrue(updated.services.any { it.serviceId == "paint-commercial" })
-    }
 }

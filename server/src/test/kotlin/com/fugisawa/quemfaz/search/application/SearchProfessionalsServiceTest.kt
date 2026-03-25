@@ -47,10 +47,16 @@ class SearchProfessionalsServiceTest {
             logged.addAll(events)
         }
 
-        override fun getPopularServices(cityName: String?, limit: Int, windowDays: Int): List<PopularServiceResult> =
-            emptyList()
+        override fun getPopularServices(
+            cityName: String?,
+            limit: Int,
+            windowDays: Int,
+        ): List<PopularServiceResult> = emptyList()
 
-        override fun countSearchesInWindow(cityName: String, windowDays: Int): Long = 0
+        override fun countSearchesInWindow(
+            cityName: String,
+            windowDays: Int,
+        ): Long = 0
     }
 
     private class FakeProfileRepository(
@@ -82,7 +88,10 @@ class SearchProfessionalsServiceTest {
             status: ProfessionalProfileStatus,
         ): Boolean = false
 
-        override fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean = false
+        override fun updateKnownName(
+            id: ProfessionalProfileId,
+            knownName: String?,
+        ): Boolean = false
 
         override fun incrementViewCount(id: ProfessionalProfileId) {}
 
@@ -94,13 +103,23 @@ class SearchProfessionalsServiceTest {
     private class FakeUserRepository : UserRepository {
         override fun create(user: User): User = user
 
-        override fun findById(id: UserId): User = User(id, "User ${id.value}", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now())
+        override fun findById(id: UserId): User =
+            User(id, "User ${id.value}", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now())
 
-        override fun updateName(id: UserId, fullName: String): User? = null
+        override fun updateName(
+            id: UserId,
+            fullName: String,
+        ): User? = null
 
-        override fun updateDateOfBirth(id: UserId, dateOfBirth: java.time.LocalDate): User? = null
+        override fun updateDateOfBirth(
+            id: UserId,
+            dateOfBirth: java.time.LocalDate,
+        ): User? = null
 
-        override fun updatePhotoUrl(id: UserId, photoUrl: String): User? = null
+        override fun updatePhotoUrl(
+            id: UserId,
+            photoUrl: String,
+        ): User? = null
 
         override fun updateStatus(
             id: UserId,
@@ -110,9 +129,15 @@ class SearchProfessionalsServiceTest {
 
     private class FakePhoneAuthRepository : UserPhoneAuthIdentityRepository {
         override fun findByPhoneNumber(phoneNumber: String): UserPhoneAuthIdentity? = null
+
         override fun findByUserId(userId: UserId): UserPhoneAuthIdentity? = null
+
         override fun create(identity: UserPhoneAuthIdentity) = identity
-        override fun markVerified(id: String, verifiedAt: Instant): Boolean = false
+
+        override fun markVerified(
+            id: String,
+            verifiedAt: Instant,
+        ): Boolean = false
     }
 
     private class FakeInterpreter : SearchQueryInterpreter {

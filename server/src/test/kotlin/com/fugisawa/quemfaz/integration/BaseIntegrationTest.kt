@@ -147,10 +147,11 @@ abstract class BaseIntegrationTest {
             contentType(ContentType.Application.Json)
             setBody(StartOtpRequest(phoneNumber = phone))
         }
-        val verifyResponse = client.post("/auth/verify-otp") {
-            contentType(ContentType.Application.Json)
-            setBody(VerifyOtpRequest(phoneNumber = phone, otpCode = "123456"))
-        }
+        val verifyResponse =
+            client.post("/auth/verify-otp") {
+                contentType(ContentType.Application.Json)
+                setBody(VerifyOtpRequest(phoneNumber = phone, otpCode = "123456"))
+            }
         return verifyResponse.headers[HttpHeaders.Authorization]!!.removePrefix("Bearer ")
     }
 
@@ -176,22 +177,27 @@ abstract class BaseIntegrationTest {
 
     protected suspend fun ApplicationTestBuilder.createAndConfirmProfile(token: String) {
         val client = createTestClient(token)
-        val draftResponse = client.post("/professional-profile/draft") {
-            contentType(ContentType.Application.Json)
-            setBody(CreateProfessionalProfileDraftRequest(
-                inputText = "Pintor residencial em São Paulo",
-                inputMode = InputMode.TEXT,
-            ))
-        }
+        val draftResponse =
+            client.post("/professional-profile/draft") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    CreateProfessionalProfileDraftRequest(
+                        inputText = "Pintor residencial em São Paulo",
+                        inputMode = InputMode.TEXT,
+                    ),
+                )
+            }
         val draft = draftResponse.body<CreateProfessionalProfileDraftResponse>()
         client.post("/professional-profile/confirm") {
             contentType(ContentType.Application.Json)
-            setBody(ConfirmProfessionalProfileRequest(
-                description = draft.normalizedDescription,
-                selectedServiceIds = draft.interpretedServices.map { it.serviceId },
-                cityName = "São Paulo",
-                portfolioPhotoUrls = emptyList(),
-            ))
+            setBody(
+                ConfirmProfessionalProfileRequest(
+                    description = draft.normalizedDescription,
+                    selectedServiceIds = draft.interpretedServices.map { it.serviceId },
+                    cityName = "São Paulo",
+                    portfolioPhotoUrls = emptyList(),
+                ),
+            )
         }
     }
 }

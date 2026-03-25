@@ -107,29 +107,38 @@ class ExposedUserRepository : UserRepository {
                 .singleOrNull()
         }
 
-    override fun updateName(id: UserId, fullName: String): User? =
+    override fun updateName(
+        id: UserId,
+        fullName: String,
+    ): User? =
         transaction {
             UsersTable.update({ UsersTable.id eq id.value }) {
                 it[UsersTable.fullName] = fullName
-                it[updatedAt]           = Instant.now()
+                it[updatedAt] = Instant.now()
             }
             findById(id)
         }
 
-    override fun updateDateOfBirth(id: UserId, dateOfBirth: LocalDate): User? =
+    override fun updateDateOfBirth(
+        id: UserId,
+        dateOfBirth: LocalDate,
+    ): User? =
         transaction {
             UsersTable.update({ UsersTable.id eq id.value }) {
                 it[UsersTable.dateOfBirth] = dateOfBirth
-                it[updatedAt]              = Instant.now()
+                it[updatedAt] = Instant.now()
             }
             findById(id)
         }
 
-    override fun updatePhotoUrl(id: UserId, photoUrl: String): User? =
+    override fun updatePhotoUrl(
+        id: UserId,
+        photoUrl: String,
+    ): User? =
         transaction {
             UsersTable.update({ UsersTable.id eq id.value }) {
                 it[UsersTable.photoUrl] = photoUrl
-                it[updatedAt]          = Instant.now()
+                it[updatedAt] = Instant.now()
             }
             findById(id)
         }

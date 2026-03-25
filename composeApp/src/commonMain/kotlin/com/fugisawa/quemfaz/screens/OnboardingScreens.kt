@@ -8,7 +8,18 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -16,8 +27,37 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -51,6 +91,14 @@ private fun OnboardingUiState.stepIndex() = when (this) {
     is OnboardingUiState.PhotoRequired -> 2
     is OnboardingUiState.ProfilePreview -> 3
     else -> -1
+}
+
+/** Returns true if the person born on [birthMillis] is at least 18 years old relative to [nowMillis]. */
+private fun isAtLeast18(birthMillis: Long, nowMillis: Long): Boolean {
+    val (by, bm, bd) = epochMillisToDateParts(birthMillis)
+    val (ny, nm, nd) = epochMillisToDateParts(nowMillis)
+    val age = ny - by - (if (nm < bm || (nm == bm && nd < bd)) 1 else 0)
+    return age >= 18
 }
 
 /** Converts epoch millis (UTC midnight) to (year, month, day) using civil_from_days algorithm. */
@@ -167,9 +215,13 @@ fun OnboardingScreens(
                 when (state) {
                 is OnboardingUiState.BirthDateRequired -> {
                     val datePickerState = rememberDatePickerState()
+                    // Capture current time once at composition — displayedMonthMillis defaults to "now"
+                    val nowMillis = remember { datePickerState.displayedMonthMillis }
                     var showDatePicker by remember { mutableStateOf(false) }
                     var displayDate by remember { mutableStateOf("") }
                     var isoDate by remember { mutableStateOf("") }
+                    var selectedMillis by remember { mutableStateOf<Long?>(null) }
+                    val isUnderage = selectedMillis?.let { !isAtLeast18(it, nowMillis) } ?: false
 
                     Column(modifier = Modifier.fillMaxSize()) {
                         Column(
@@ -177,12 +229,13 @@ fun OnboardingScreens(
                         ) {
                             Text(
                                 Strings.Onboarding.BIRTH_DATE_TITLE,
-                                style = MaterialTheme.typography.headlineLarge
+                                style = MaterialTheme.typography.headlineLarge,
                             )
+                            Spacer(modifier = Modifier.height(Spacing.sm))
                             Text(
                                 Strings.Onboarding.BIRTH_DATE_SUBTITLE,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
                             Spacer(modifier = Modifier.height(Spacing.sectionGap))
@@ -195,9 +248,10 @@ fun OnboardingScreens(
                                     label = { Text(Strings.Onboarding.BIRTH_DATE_LABEL) },
                                     placeholder = { Text(Strings.Onboarding.BIRTH_DATE_PLACEHOLDER, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
                                     trailingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = Strings.Onboarding.SELECT_DATE) },
+                                    isError = isUnderage,
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true,
-                                    shape = MaterialTheme.shapes.medium
+                                    shape = MaterialTheme.shapes.medium,
                                 )
                                 Box(
                                     modifier = Modifier
@@ -208,6 +262,15 @@ fun OnboardingScreens(
                                         ) { showDatePicker = true }
                                 )
                             }
+
+                            if (isUnderage) {
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+                                Text(
+                                    Strings.Onboarding.BIRTH_DATE_UNDERAGE,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(Spacing.md))
@@ -215,8 +278,8 @@ fun OnboardingScreens(
                         Button(
                             onClick = { onSubmitDateOfBirth(isoDate) },
                             modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
-                            enabled = isoDate.isNotBlank(),
-                            shape = MaterialTheme.shapes.medium
+                            enabled = isoDate.isNotBlank() && !isUnderage,
+                            shape = MaterialTheme.shapes.medium,
                         ) {
                             Text(Strings.Common.CONTINUE, style = MaterialTheme.typography.titleMedium)
                         }
@@ -230,6 +293,7 @@ fun OnboardingScreens(
                                 TextButton(onClick = {
                                     showDatePicker = false
                                     datePickerState.selectedDateMillis?.let { millis ->
+                                        selectedMillis = millis
                                         val (year, month, day) = epochMillisToDateParts(millis)
                                         displayDate = "${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year.toString().padStart(4, '0')}"
                                         isoDate = "${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
@@ -417,9 +481,10 @@ fun OnboardingScreens(
                         var manualSelectedServices by remember { mutableStateOf(emptySet<String>()) }
                         Column(modifier = Modifier.fillMaxSize()) {
                             Text(Strings.Onboarding.SELECT_SERVICES_TITLE, style = MaterialTheme.typography.headlineLarge)
+                            Spacer(modifier = Modifier.height(Spacing.sm))
                             Text(Strings.Onboarding.SELECT_SERVICES_SUBTITLE, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(Spacing.md))
 
                             if (catalog != null) {
                                 ServiceCategoryPicker(
@@ -435,13 +500,13 @@ fun OnboardingScreens(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(Spacing.md))
 
                             Button(
                                 onClick = { onProceedWithManualServices(draft, manualSelectedServices) },
-                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
                                 enabled = manualSelectedServices.isNotEmpty(),
-                                shape = MaterialTheme.shapes.medium
+                                shape = MaterialTheme.shapes.medium,
                             ) {
                                 Text(Strings.Common.CONTINUE, style = MaterialTheme.typography.titleMedium)
                             }
@@ -675,7 +740,7 @@ fun OnboardingScreens(
                                         ProfileAvatar(
                                             name = currentUser?.fullName,
                                             photoUrl = currentUser?.photoUrl,
-                                            size = 64.dp,
+                                            size = Spacing.professionalAvatarSize,
                                         )
                                         Spacer(modifier = Modifier.width(Spacing.md))
                                         Column {
@@ -781,18 +846,25 @@ fun OnboardingScreens(
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text("🎉", style = MaterialTheme.typography.displayLarge)
+                        Spacer(modifier = Modifier.height(Spacing.md))
                         Text(Strings.Onboarding.PROFILE_PUBLISHED, style = MaterialTheme.typography.headlineMedium)
-                        Text(Strings.Onboarding.PROFILE_PUBLISHED_SUBTITLE, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                        Text(
+                            Strings.Onboarding.PROFILE_PUBLISHED_SUBTITLE,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(Spacing.sectionGap))
 
                         Button(
                             onClick = { onFinish(state.profile) },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = MaterialTheme.shapes.medium
+                            modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
+                            shape = MaterialTheme.shapes.medium,
                         ) {
                             Text(Strings.Onboarding.VIEW_MY_PROFILE, style = MaterialTheme.typography.titleMedium)
                         }
@@ -802,22 +874,49 @@ fun OnboardingScreens(
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text("❌", style = MaterialTheme.typography.displayLarge)
+                        Spacer(modifier = Modifier.height(Spacing.md))
                         Text(Strings.Onboarding.ERROR_TITLE, style = MaterialTheme.typography.headlineSmall)
-                        Text(state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+                        Text(
+                            state.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                        )
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(Spacing.lg))
 
-                        Button(onClick = onBack) {
-                            Text(Strings.Errors.CHANGE_DESCRIPTION)
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedButton(onClick = { onCreateDraft(inputText, InputMode.TEXT) }) {
-                            Text(Strings.Common.RETRY)
+                        when (state.source) {
+                            OnboardingErrorSource.DESCRIPTION -> {
+                                Button(
+                                    onClick = onBack,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.medium,
+                                ) {
+                                    Text(Strings.Errors.CHANGE_DESCRIPTION)
+                                }
+                                Spacer(modifier = Modifier.height(Spacing.sm))
+                                OutlinedButton(
+                                    onClick = { onCreateDraft(inputText, InputMode.TEXT) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.medium,
+                                ) {
+                                    Text(Strings.Common.RETRY)
+                                }
+                            }
+                            else -> {
+                                // Birth date, photo, publish errors — generic "Voltar"
+                                Button(
+                                    onClick = onBack,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.medium,
+                                ) {
+                                    Text(Strings.Common.BACK)
+                                }
+                            }
                         }
                     }
                 }

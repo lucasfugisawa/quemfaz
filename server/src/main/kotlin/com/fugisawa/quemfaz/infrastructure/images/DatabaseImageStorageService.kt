@@ -9,23 +9,28 @@ import java.time.Instant
 import java.util.UUID
 
 object StoredImagesTable : Table("stored_images") {
-    val id          = varchar("id", 128)
-    val data        = blob("data")
+    val id = varchar("id", 128)
+    val data = blob("data")
     val contentType = varchar("content_type", 128)
-    val createdAt   = timestamp("created_at")
+    val createdAt = timestamp("created_at")
 
     override val primaryKey = PrimaryKey(id)
 }
 
 class DatabaseImageStorageService : ImageStorageService {
-    override suspend fun store(data: ByteArray, contentType: String): String =
+    override suspend fun store(
+        data: ByteArray,
+        contentType: String,
+    ): String =
         newSuspendedTransaction {
             val id = UUID.randomUUID().toString()
             StoredImagesTable.insert {
-                it[StoredImagesTable.id]          = id
-                it[StoredImagesTable.data]        = org.jetbrains.exposed.sql.statements.api.ExposedBlob(data)
+                it[StoredImagesTable.id] = id
+                it[StoredImagesTable.data] =
+                    org.jetbrains.exposed.sql.statements.api
+                        .ExposedBlob(data)
                 it[StoredImagesTable.contentType] = contentType
-                it[StoredImagesTable.createdAt]   = Instant.now()
+                it[StoredImagesTable.createdAt] = Instant.now()
             }
             "/api/images/$id"
         }

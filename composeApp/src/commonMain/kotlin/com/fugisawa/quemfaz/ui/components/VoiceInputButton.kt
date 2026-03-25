@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +31,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.fugisawa.quemfaz.platform.SpeechRecognizerState
 import com.fugisawa.quemfaz.platform.isSpeechRecognizerAvailable
 import com.fugisawa.quemfaz.platform.rememberSpeechRecognizer
@@ -68,6 +71,9 @@ fun VoiceInputButton(
         1.0f
     }
 
+    val isListening = state == SpeechRecognizerState.LISTENING
+    val icon = if (isListening) Icons.Default.Stop else Icons.Default.Mic
+
     if (compact) {
         Box(
             contentAlignment = Alignment.Center,
@@ -78,22 +84,20 @@ fun VoiceInputButton(
                 .background(MaterialTheme.colorScheme.primary)
                 .clickable {
                     errorMessage = null
-                    if (state == SpeechRecognizerState.LISTENING) {
-                        recognizer.stopListening()
-                    } else {
-                        recognizer.startListening()
-                    }
+                    if (isListening) recognizer.stopListening() else recognizer.startListening()
                 }
         ) {
-            Text(
-                text = if (state == SpeechRecognizerState.LISTENING) "\u23F9" else "\uD83C\uDFA4",
-                fontSize = 18.sp,
+            Icon(
+                imageVector = icon,
+                contentDescription = if (isListening) "Parar" else "Falar",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onPrimary,
             )
         }
     } else {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier
+            modifier = modifier,
         ) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -105,34 +109,29 @@ fun VoiceInputButton(
                         brush = Brush.linearGradient(
                             colors = listOf(
                                 MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.tertiary
+                                MaterialTheme.colorScheme.tertiary,
                             )
                         )
                     )
                     .clickable {
                         errorMessage = null
-                        if (state == SpeechRecognizerState.LISTENING) {
-                            recognizer.stopListening()
-                        } else {
-                            recognizer.startListening()
-                        }
+                        if (isListening) recognizer.stopListening() else recognizer.startListening()
                     }
             ) {
-                Text(
-                    text = if (state == SpeechRecognizerState.LISTENING) "\u23F9" else "\uD83C\uDFA4",
-                    fontSize = 28.sp
+                Icon(
+                    imageVector = icon,
+                    contentDescription = if (isListening) "Parar" else "Falar",
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
 
             Spacer(modifier = Modifier.height(Spacing.sm))
 
             Text(
-                text = when (state) {
-                    SpeechRecognizerState.LISTENING -> "Ouvindo..."
-                    else -> "Falar"
-                },
+                text = if (isListening) "Ouvindo..." else "Falar",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             errorMessage?.let { msg ->
@@ -140,7 +139,7 @@ fun VoiceInputButton(
                     text = msg,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = Spacing.xs)
+                    modifier = Modifier.padding(top = Spacing.xs),
                 )
             }
         }

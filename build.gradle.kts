@@ -8,5 +8,5 @@ plugins {
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.ktor) apply false
-    id("org.jmailen.kotlinter") version "5.4.2"
+    id("org.jmailen.kotlinter") version "5.4.2" apply false
 }

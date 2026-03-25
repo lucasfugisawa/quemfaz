@@ -55,23 +55,29 @@ class LlmProfessionalInputInterpreter(
                 }.distinctBy { it.serviceId }
 
         // Edge case: LLM succeeded but returned empty services without requesting clarification
-        val finalServices = if (interpretedServices.isEmpty() && !interpretation.needsClarification) {
-            catalogService.search(inputText).map { entry ->
-                InterpretedServiceDto(entry.id, entry.displayName, ServiceMatchLevel.PRIMARY.name)
+        val finalServices =
+            if (interpretedServices.isEmpty() && !interpretation.needsClarification) {
+                catalogService.search(inputText).map { entry ->
+                    InterpretedServiceDto(entry.id, entry.displayName, ServiceMatchLevel.PRIMARY.name)
+                }
+            } else {
+                interpretedServices
             }
-        } else {
-            interpretedServices
-        }
 
         // Process unmatched descriptions — capture signals, provision safe services, collect blocked
         val blockedDescriptions = mutableListOf<String>()
         val provisionedServices = mutableListOf<InterpretedServiceDto>()
         interpretation.unmatchedDescriptions.forEach { unmatched ->
-            val provisionalId = signalCaptureService.captureSignal(
-                unmatched.rawDescription, "onboarding", null, null,
-                unmatched.safetyClassification, unmatched.safetyReason,
-                forceProvision = true,
-            )
+            val provisionalId =
+                signalCaptureService.captureSignal(
+                    unmatched.rawDescription,
+                    "onboarding",
+                    null,
+                    null,
+                    unmatched.safetyClassification,
+                    unmatched.safetyReason,
+                    forceProvision = true,
+                )
             if (unmatched.safetyClassification == "unsafe") {
                 blockedDescriptions.add(unmatched.rawDescription)
             } else if (provisionalId != null) {
@@ -79,9 +85,11 @@ class LlmProfessionalInputInterpreter(
                 if (entry != null) {
                     provisionedServices.add(
                         InterpretedServiceDto(
-                            entry.id, entry.displayName, ServiceMatchLevel.PRIMARY.name,
+                            entry.id,
+                            entry.displayName,
+                            ServiceMatchLevel.PRIMARY.name,
                             status = "pending_review",
-                        )
+                        ),
                     )
                 }
             }
@@ -102,9 +110,10 @@ class LlmProfessionalInputInterpreter(
 
         return CreateProfessionalProfileDraftResponse(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
-            editedDescription = interpretation.editedDescription.ifBlank {
-                inputText.replaceFirstChar { it.uppercase() }
-            },
+            editedDescription =
+                interpretation.editedDescription.ifBlank {
+                    inputText.replaceFirstChar { it.uppercase() }
+                },
             interpretedServices = allServices,
             cityName = null,
             missingFields = missingFields,
@@ -117,30 +126,46 @@ class LlmProfessionalInputInterpreter(
 
     private fun fallbackResponse(inputText: String): CreateProfessionalProfileDraftResponse {
         val localMatches = catalogService.search(inputText)
-        val interpretedServices = localMatches.map { entry ->
-            InterpretedServiceDto(entry.id, entry.displayName, ServiceMatchLevel.PRIMARY.name)
-        }
+        val interpretedServices =
+            localMatches.map { entry ->
+                InterpretedServiceDto(entry.id, entry.displayName, ServiceMatchLevel.PRIMARY.name)
+            }
 
         // Capture signal and try provisioning if no matches found
-        val allServices = if (interpretedServices.isEmpty()) {
-            val provisionalId = runBlocking {
-                signalCaptureService.captureSignal(
-                    inputText, "onboarding", null, null, null, null,
-                    forceProvision = true,
-                )
-            }
-            if (provisionalId != null) {
-                val entry = catalogService.findById(provisionalId)
-                if (entry != null) {
-                    listOf(
-                        InterpretedServiceDto(
-                            entry.id, entry.displayName, ServiceMatchLevel.PRIMARY.name,
-                            status = "pending_review",
+        val allServices =
+            if (interpretedServices.isEmpty()) {
+                val provisionalId =
+                    runBlocking {
+                        signalCaptureService.captureSignal(
+                            inputText,
+                            "onboarding",
+                            null,
+                            null,
+                            null,
+                            null,
+                            forceProvision = true,
                         )
-                    )
-                } else interpretedServices
-            } else interpretedServices
-        } else interpretedServices
+                    }
+                if (provisionalId != null) {
+                    val entry = catalogService.findById(provisionalId)
+                    if (entry != null) {
+                        listOf(
+                            InterpretedServiceDto(
+                                entry.id,
+                                entry.displayName,
+                                ServiceMatchLevel.PRIMARY.name,
+                                status = "pending_review",
+                            ),
+                        )
+                    } else {
+                        interpretedServices
+                    }
+                } else {
+                    interpretedServices
+                }
+            } else {
+                interpretedServices
+            }
 
         return CreateProfessionalProfileDraftResponse(
             normalizedDescription = inputText.replaceFirstChar { it.uppercase() },
@@ -164,27 +189,30 @@ class LlmProfessionalInputInterpreter(
             runBlocking {
                 val answersText = clarificationAnswers.joinToString("\n") { "Q: ${it.question}\nA: ${it.answer}" }
                 val userMessage = "Original description:\n$originalDescription\n\nClarification answers:\n$answersText"
-                val systemPrompt = if (clarificationRound >= 1) {
-                    buildSystemPrompt() + "\n\n" + """
-                        IMPORTANT: This is a follow-up after clarification round $clarificationRound.
-                        Do NOT request further clarification. You MUST set needsClarification = false.
-                        Work with the information you have. Map what you can to the catalog and add
-                        the rest to unmatchedDescriptions as "safe".
-                    """.trimIndent()
-                } else {
-                    buildSystemPrompt()
-                }
+                val systemPrompt =
+                    if (clarificationRound >= 1) {
+                        buildSystemPrompt() + "\n\n" +
+                            """
+                            IMPORTANT: This is a follow-up after clarification round $clarificationRound.
+                            Do NOT request further clarification. You MUST set needsClarification = false.
+                            Work with the information you have. Map what you can to the catalog and add
+                            the rest to unmatchedDescriptions as "safe".
+                            """.trimIndent()
+                    } else {
+                        buildSystemPrompt()
+                    }
                 val interpretation =
                     llmAgentService.executeStructured<OnboardingInterpretation>(
                         systemPrompt = systemPrompt,
                         userMessage = userMessage,
                     )
                 // Server-side enforcement: after round 1, force needsClarification=false
-                val finalInterpretation = if (clarificationRound >= 1) {
-                    interpretation.copy(needsClarification = false, clarificationQuestions = emptyList())
-                } else {
-                    interpretation
-                }
+                val finalInterpretation =
+                    if (clarificationRound >= 1) {
+                        interpretation.copy(needsClarification = false, clarificationQuestions = emptyList())
+                    } else {
+                        interpretation
+                    }
                 mapToResponse(originalDescription, finalInterpretation)
             }
         } catch (e: Exception) {
@@ -198,9 +226,10 @@ class LlmProfessionalInputInterpreter(
         }
 
     private fun buildSystemPrompt(): String {
-        val catalog = catalogService.getActiveServices().joinToString("\n") { service ->
-            "- ${service.id}: ${service.displayName} (aliases: ${service.aliases.joinToString(", ")})"
-        }
+        val catalog =
+            catalogService.getActiveServices().joinToString("\n") { service ->
+                "- ${service.id}: ${service.displayName} (aliases: ${service.aliases.joinToString(", ")})"
+            }
         return """
             Extract structured data about a professional service provider.
 
@@ -280,6 +309,6 @@ class LlmProfessionalInputInterpreter(
 
             The editedDescription must preserve the user's authentic voice and wording.
             It is a cleaned-up, slightly condensed, better-structured version of what they wrote — not a rewrite.
-        """.trimIndent()
+            """.trimIndent()
     }
 }

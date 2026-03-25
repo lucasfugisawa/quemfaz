@@ -216,7 +216,10 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
             } > 0
         }
 
-    override fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean =
+    override fun updateKnownName(
+        id: ProfessionalProfileId,
+        knownName: String?,
+    ): Boolean =
         transaction {
             ProfessionalProfilesTable.update({ ProfessionalProfilesTable.id eq id.value }) {
                 it[ProfessionalProfilesTable.knownName] = knownName

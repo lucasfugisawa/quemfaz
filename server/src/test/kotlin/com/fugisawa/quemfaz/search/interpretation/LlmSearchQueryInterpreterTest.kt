@@ -18,14 +18,15 @@ class LlmSearchQueryInterpreterTest {
     private val mockCatalogService: CatalogService = mock()
     private val mockSignalCaptureService: SignalCaptureService = mock()
 
-    private val paintEntry = CatalogEntry(
-        id = "paint-residential",
-        displayName = "Pintura Residencial",
-        description = "Pintura de residências",
-        categoryId = "PAINTING",
-        aliases = listOf("pintor", "pintura"),
-        status = CatalogServiceStatus.ACTIVE,
-    )
+    private val paintEntry =
+        CatalogEntry(
+            id = "paint-residential",
+            displayName = "Pintura Residencial",
+            description = "Pintura de residências",
+            categoryId = "PAINTING",
+            aliases = listOf("pintor", "pintura"),
+            status = CatalogServiceStatus.ACTIVE,
+        )
 
     init {
         whenever(mockCatalogService.getActiveServices()).thenReturn(listOf(paintEntry))

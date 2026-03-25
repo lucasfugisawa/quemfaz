@@ -49,7 +49,10 @@ class ProfileServicesTest {
             return true
         }
 
-        override fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean {
+        override fun updateKnownName(
+            id: ProfessionalProfileId,
+            knownName: String?,
+        ): Boolean {
             val p = profiles[id.value] ?: return false
             profiles[id.value] = p.copy(knownName = knownName)
             return true
@@ -78,21 +81,30 @@ class ProfileServicesTest {
 
         override fun findById(id: UserId) = users[id.value]
 
-        override fun updateName(id: UserId, fullName: String): User? {
+        override fun updateName(
+            id: UserId,
+            fullName: String,
+        ): User? {
             val u = users[id.value] ?: return null
             val updated = u.copy(fullName = fullName)
             users[id.value] = updated
             return updated
         }
 
-        override fun updateDateOfBirth(id: UserId, dateOfBirth: java.time.LocalDate): User? {
+        override fun updateDateOfBirth(
+            id: UserId,
+            dateOfBirth: java.time.LocalDate,
+        ): User? {
             val u = users[id.value] ?: return null
             val updated = u.copy(dateOfBirth = dateOfBirth)
             users[id.value] = updated
             return updated
         }
 
-        override fun updatePhotoUrl(id: UserId, photoUrl: String): User? {
+        override fun updatePhotoUrl(
+            id: UserId,
+            photoUrl: String,
+        ): User? {
             val u = users[id.value] ?: return null
             val updated = u.copy(photoUrl = photoUrl)
             users[id.value] = updated
@@ -112,16 +124,16 @@ class ProfileServicesTest {
     private class FakeUserPhoneAuthIdentityRepository : UserPhoneAuthIdentityRepository {
         val identities = mutableMapOf<String, UserPhoneAuthIdentity>()
 
-        override fun findByPhoneNumber(phoneNumber: String) =
-            identities.values.find { it.phoneNumber == phoneNumber }
+        override fun findByPhoneNumber(phoneNumber: String) = identities.values.find { it.phoneNumber == phoneNumber }
 
-        override fun findByUserId(userId: UserId) =
-            identities.values.find { it.userId == userId }
+        override fun findByUserId(userId: UserId) = identities.values.find { it.userId == userId }
 
-        override fun create(identity: UserPhoneAuthIdentity) =
-            identity.also { identities[it.id] = it }
+        override fun create(identity: UserPhoneAuthIdentity) = identity.also { identities[it.id] = it }
 
-        override fun markVerified(id: String, verifiedAt: Instant): Boolean {
+        override fun markVerified(
+            id: String,
+            verifiedAt: Instant,
+        ): Boolean {
             val i = identities[id] ?: return false
             identities[id] = i.copy(isVerified = true, verifiedAt = verifiedAt)
             return true
@@ -134,7 +146,17 @@ class ProfileServicesTest {
         val userRepo = FakeUserRepository()
         val phoneAuthRepo = FakeUserPhoneAuthIdentityRepository()
         val userId = UserId("user-123")
-        userRepo.create(User(userId, "John Doe", "https://example.com/photo.jpg", UserStatus.ACTIVE, dateOfBirth = java.time.LocalDate.of(1990, 1, 1), createdAt = Instant.now(), updatedAt = Instant.now()))
+        userRepo.create(
+            User(
+                userId,
+                "John Doe",
+                "https://example.com/photo.jpg",
+                UserStatus.ACTIVE,
+                dateOfBirth = java.time.LocalDate.of(1990, 1, 1),
+                createdAt = Instant.now(),
+                updatedAt = Instant.now(),
+            ),
+        )
         phoneAuthRepo.create(UserPhoneAuthIdentity("id-123", userId, "+5516999999999", true, Instant.now(), Instant.now(), Instant.now()))
 
         val service = ConfirmProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
@@ -162,7 +184,17 @@ class ProfileServicesTest {
         val userRepo = FakeUserRepository()
         val phoneAuthRepo = FakeUserPhoneAuthIdentityRepository()
         val userId = UserId("user-123")
-        userRepo.create(User(userId, "John Doe", "https://example.com/photo.jpg", UserStatus.ACTIVE, dateOfBirth = java.time.LocalDate.of(1990, 1, 1), createdAt = Instant.now(), updatedAt = Instant.now()))
+        userRepo.create(
+            User(
+                userId,
+                "John Doe",
+                "https://example.com/photo.jpg",
+                UserStatus.ACTIVE,
+                dateOfBirth = java.time.LocalDate.of(1990, 1, 1),
+                createdAt = Instant.now(),
+                updatedAt = Instant.now(),
+            ),
+        )
         phoneAuthRepo.create(UserPhoneAuthIdentity("id-123", userId, "+5516999999999", true, Instant.now(), Instant.now(), Instant.now()))
 
         // Create initial profile via confirm service

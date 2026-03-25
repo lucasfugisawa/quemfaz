@@ -16,38 +16,43 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class SetKnownNameIntegrationTest : BaseIntegrationTest() {
-    override val tablesToClean: List<Table> = listOf(
-        ProfessionalProfilesTable,
-        UserPhoneAuthIdentitiesTable,
-        UsersTable,
-        OtpChallengesTable,
-    )
+    override val tablesToClean: List<Table> =
+        listOf(
+            ProfessionalProfilesTable,
+            UserPhoneAuthIdentitiesTable,
+            UsersTable,
+            OtpChallengesTable,
+        )
 
     @Test
-    fun `should set known name on existing profile`() = integrationTestApplication {
-        val token = obtainAuthToken("+5511900000010")
-        completeNameStep(token, "Lucas Test")
-        setUserPhoto(token, "/api/images/test-photo-id")
-        createAndConfirmProfile(token)
+    fun `should set known name on existing profile`() =
+        integrationTestApplication {
+            val token = obtainAuthToken("+5511900000010")
+            completeNameStep(token, "Lucas Test")
+            setUserPhoto(token, "/api/images/test-photo-id")
+            createAndConfirmProfile(token)
 
-        val client = createTestClient(token)
-        val response = client.put("/professional-profile/known-name") {
-            contentType(ContentType.Application.Json)
-            setBody(SetKnownNameRequest(knownName = "Lu"))
+            val client = createTestClient(token)
+            val response =
+                client.put("/professional-profile/known-name") {
+                    contentType(ContentType.Application.Json)
+                    setBody(SetKnownNameRequest(knownName = "Lu"))
+                }
+            assertEquals(HttpStatusCode.NoContent, response.status)
         }
-        assertEquals(HttpStatusCode.NoContent, response.status)
-    }
 
     @Test
-    fun `should return 404 when no profile exists`() = integrationTestApplication {
-        val token = obtainAuthToken("+5511900000011")
-        completeNameStep(token, "Lucas Test")
+    fun `should return 404 when no profile exists`() =
+        integrationTestApplication {
+            val token = obtainAuthToken("+5511900000011")
+            completeNameStep(token, "Lucas Test")
 
-        val client = createTestClient(token)
-        val response = client.put("/professional-profile/known-name") {
-            contentType(ContentType.Application.Json)
-            setBody(SetKnownNameRequest(knownName = "Lu"))
+            val client = createTestClient(token)
+            val response =
+                client.put("/professional-profile/known-name") {
+                    contentType(ContentType.Application.Json)
+                    setBody(SetKnownNameRequest(knownName = "Lu"))
+                }
+            assertEquals(HttpStatusCode.NotFound, response.status)
         }
-        assertEquals(HttpStatusCode.NotFound, response.status)
-    }
 }

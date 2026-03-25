@@ -102,17 +102,26 @@ fun Route.authRoutes() {
 
             post("/photo") {
                 val principal = call.principal<JWTPrincipal>()
-                val userId = principal?.payload?.getClaim("userId")?.asString()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized)
+                val userId =
+                    principal?.payload?.getClaim("userId")?.asString()
+                        ?: return@post call.respond(HttpStatusCode.Unauthorized)
 
                 val request = call.receive<SetProfilePhotoRequest>()
                 when (val result = setProfilePhotoService.execute(UserId(userId), request)) {
-                    is SetPhotoResult.Success    -> call.respond(result.response)
-                    is SetPhotoResult.NotFound   -> call.respond(HttpStatusCode.NotFound)
-                    is SetPhotoResult.InvalidUrl -> call.respond(
-                        HttpStatusCode.BadRequest,
-                        mapOf("message" to "photoUrl must be a server-issued image URL"),
-                    )
+                    is SetPhotoResult.Success -> {
+                        call.respond(result.response)
+                    }
+
+                    is SetPhotoResult.NotFound -> {
+                        call.respond(HttpStatusCode.NotFound)
+                    }
+
+                    is SetPhotoResult.InvalidUrl -> {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            mapOf("message" to "photoUrl must be a server-issued image URL"),
+                        )
+                    }
                 }
             }
 

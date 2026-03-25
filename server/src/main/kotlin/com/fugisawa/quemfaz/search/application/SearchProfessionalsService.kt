@@ -59,14 +59,15 @@ class SearchProfessionalsService(
         // 2b. Log search events for popular-searches analytics
         if (interpreted.serviceIds.isNotEmpty() && city != null) {
             val now = Instant.now()
-            val events = interpreted.serviceIds.map { serviceId ->
-                SearchEvent(
-                    id = UUID.randomUUID().toString(),
-                    resolvedServiceId = serviceId,
-                    cityName = city,
-                    createdAt = now,
-                )
-            }
+            val events =
+                interpreted.serviceIds.map { serviceId ->
+                    SearchEvent(
+                        id = UUID.randomUUID().toString(),
+                        resolvedServiceId = serviceId,
+                        cityName = city,
+                        createdAt = now,
+                    )
+                }
             try {
                 searchEventRepository.logEvents(events)
             } catch (e: Exception) {

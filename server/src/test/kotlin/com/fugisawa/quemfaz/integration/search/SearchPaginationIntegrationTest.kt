@@ -19,52 +19,63 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class SearchPaginationIntegrationTest : BaseIntegrationTest() {
-    override val tablesToClean: List<Table> = listOf(
-        ProfessionalProfilesTable,
-        UserPhoneAuthIdentitiesTable,
-        UsersTable,
-        OtpChallengesTable,
-    )
+    override val tablesToClean: List<Table> =
+        listOf(
+            ProfessionalProfilesTable,
+            UserPhoneAuthIdentitiesTable,
+            UsersTable,
+            OtpChallengesTable,
+        )
 
     @Test
-    fun `search response includes pagination metadata`() = integrationTestApplication {
-        val token = obtainAuthToken("+5511900000031")
-        completeNameStep(token, "Test Painter")
-        createAndConfirmProfile(token)
+    fun `search response includes pagination metadata`() =
+        integrationTestApplication {
+            val token = obtainAuthToken("+5511900000031")
+            completeNameStep(token, "Test Painter")
+            createAndConfirmProfile(token)
 
-        val client = createTestClient()
-        val response = client.post("/search/professionals") {
-            contentType(ContentType.Application.Json)
-            setBody(SearchProfessionalsRequest(
-                query = "pintor",
-                cityName = "São Paulo",
-                inputMode = InputMode.TEXT,
-                page = 0,
-                pageSize = 10,
-            ))
-        }.body<SearchProfessionalsResponse>()
+            val client = createTestClient()
+            val response =
+                client
+                    .post("/search/professionals") {
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            SearchProfessionalsRequest(
+                                query = "pintor",
+                                cityName = "São Paulo",
+                                inputMode = InputMode.TEXT,
+                                page = 0,
+                                pageSize = 10,
+                            ),
+                        )
+                    }.body<SearchProfessionalsResponse>()
 
-        assertEquals(0, response.page)
-        assertEquals(10, response.pageSize)
-        assertTrue(response.totalCount >= 0)
-        assertTrue(response.results.size <= response.pageSize)
-    }
+            assertEquals(0, response.page)
+            assertEquals(10, response.pageSize)
+            assertTrue(response.totalCount >= 0)
+            assertTrue(response.results.size <= response.pageSize)
+        }
 
     @Test
-    fun `page beyond total count returns empty results`() = integrationTestApplication {
-        val client = createTestClient()
-        val response = client.post("/search/professionals") {
-            contentType(ContentType.Application.Json)
-            setBody(SearchProfessionalsRequest(
-                query = "pintor",
-                cityName = "São Paulo",
-                inputMode = InputMode.TEXT,
-                page = 999,
-                pageSize = 10,
-            ))
-        }.body<SearchProfessionalsResponse>()
+    fun `page beyond total count returns empty results`() =
+        integrationTestApplication {
+            val client = createTestClient()
+            val response =
+                client
+                    .post("/search/professionals") {
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            SearchProfessionalsRequest(
+                                query = "pintor",
+                                cityName = "São Paulo",
+                                inputMode = InputMode.TEXT,
+                                page = 999,
+                                pageSize = 10,
+                            ),
+                        )
+                    }.body<SearchProfessionalsResponse>()
 
-        assertEquals(999, response.page)
-        assertEquals(0, response.results.size)
-    }
+            assertEquals(999, response.page)
+            assertEquals(0, response.results.size)
+        }
 }

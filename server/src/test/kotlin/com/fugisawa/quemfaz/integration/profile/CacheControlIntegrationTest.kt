@@ -13,37 +13,40 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class CacheControlIntegrationTest : BaseIntegrationTest() {
-    override val tablesToClean: List<Table> = listOf(
-        ProfessionalProfilesTable,
-        UserPhoneAuthIdentitiesTable,
-        UsersTable,
-        OtpChallengesTable,
-    )
+    override val tablesToClean: List<Table> =
+        listOf(
+            ProfessionalProfilesTable,
+            UserPhoneAuthIdentitiesTable,
+            UsersTable,
+            OtpChallengesTable,
+        )
 
     @Test
-    fun `GET public profile returns Cache-Control public header`() = integrationTestApplication {
-        val token = obtainAuthToken("+5511900000060")
-        completeNameStep(token, "Cache Test")
-        setUserPhoto(token, "/api/images/test-photo-id")
-        createAndConfirmProfile(token)
+    fun `GET public profile returns Cache-Control public header`() =
+        integrationTestApplication {
+            val token = obtainAuthToken("+5511900000060")
+            completeNameStep(token, "Cache Test")
+            setUserPhoto(token, "/api/images/test-photo-id")
+            createAndConfirmProfile(token)
 
-        val authedClient = createTestClient(token)
-        val myProfile = authedClient.get("/professional-profile/me").body<ProfessionalProfileResponse>()
+            val authedClient = createTestClient(token)
+            val myProfile = authedClient.get("/professional-profile/me").body<ProfessionalProfileResponse>()
 
-        val publicClient = createTestClient()
-        val response = publicClient.get("/professional-profile/${myProfile.id}")
-        assertEquals("public, max-age=120", response.headers["Cache-Control"])
-    }
+            val publicClient = createTestClient()
+            val response = publicClient.get("/professional-profile/${myProfile.id}")
+            assertEquals("public, max-age=120", response.headers["Cache-Control"])
+        }
 
     @Test
-    fun `GET own profile returns Cache-Control private no-cache header`() = integrationTestApplication {
-        val token = obtainAuthToken("+5511900000061")
-        completeNameStep(token, "Cache Private")
-        setUserPhoto(token, "/api/images/test-photo-id")
-        createAndConfirmProfile(token)
+    fun `GET own profile returns Cache-Control private no-cache header`() =
+        integrationTestApplication {
+            val token = obtainAuthToken("+5511900000061")
+            completeNameStep(token, "Cache Private")
+            setUserPhoto(token, "/api/images/test-photo-id")
+            createAndConfirmProfile(token)
 
-        val authedClient = createTestClient(token)
-        val response = authedClient.get("/professional-profile/me")
-        assertEquals("private, no-cache", response.headers["Cache-Control"])
-    }
+            val authedClient = createTestClient(token)
+            val response = authedClient.get("/professional-profile/me")
+            assertEquals("private, no-cache", response.headers["Cache-Control"])
+        }
 }

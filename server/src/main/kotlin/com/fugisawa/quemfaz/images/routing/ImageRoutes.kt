@@ -19,7 +19,7 @@ import kotlinx.io.readByteArray
 import org.koin.ktor.ext.inject
 
 private val ALLOWED_CONTENT_TYPES = setOf("image/jpeg", "image/png", "image/webp")
-private const val MAX_BYTES = 5 * 1024 * 1024  // 5 MB
+private const val MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 
 fun Route.imageRoutes() {
     val imageStorageService by inject<ImageStorageService>()
@@ -55,18 +55,27 @@ fun Route.imageRoutes() {
                 }
 
                 when {
-                    missingPart -> return@post call.respond(
-                        HttpStatusCode.BadRequest,
-                        mapOf("message" to "Missing image part"),
-                    )
-                    mimeError -> return@post call.respond(
-                        HttpStatusCode.BadRequest,
-                        mapOf("message" to "Unsupported image type. Allowed: image/jpeg, image/png, image/webp"),
-                    )
-                    sizeError -> return@post call.respond(
-                        HttpStatusCode.BadRequest,
-                        mapOf("message" to "Image exceeds maximum size of 5 MB"),
-                    )
+                    missingPart -> {
+                        return@post call.respond(
+                            HttpStatusCode.BadRequest,
+                            mapOf("message" to "Missing image part"),
+                        )
+                    }
+
+                    mimeError -> {
+                        return@post call.respond(
+                            HttpStatusCode.BadRequest,
+                            mapOf("message" to "Unsupported image type. Allowed: image/jpeg, image/png, image/webp"),
+                        )
+                    }
+
+                    sizeError -> {
+                        return@post call.respond(
+                            HttpStatusCode.BadRequest,
+                            mapOf("message" to "Image exceeds maximum size of 5 MB"),
+                        )
+                    }
+
                     else -> {
                         val (bytes, contentType) = uploadResult!!
                         val url = imageStorageService.store(bytes, contentType)
@@ -77,11 +86,13 @@ fun Route.imageRoutes() {
         }
 
         get("/{id}") {
-            val id = call.parameters["id"]
-                ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val id =
+                call.parameters["id"]
+                    ?: return@get call.respond(HttpStatusCode.BadRequest)
 
-            val image = imageStorageService.retrieve(id)
-                ?: return@get call.respond(HttpStatusCode.NotFound)
+            val image =
+                imageStorageService.retrieve(id)
+                    ?: return@get call.respond(HttpStatusCode.NotFound)
 
             call.respondBytes(
                 bytes = image.data,

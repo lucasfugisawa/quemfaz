@@ -17,6 +17,15 @@ data class PopularServiceResult(
 
 interface SearchEventRepository {
     fun logEvents(events: List<SearchEvent>)
-    fun getPopularServices(cityName: String?, limit: Int, windowDays: Int): List<PopularServiceResult>
-    fun countSearchesInWindow(cityName: String, windowDays: Int): Long
+
+    fun getPopularServices(
+        cityName: String?,
+        limit: Int,
+        windowDays: Int,
+    ): List<PopularServiceResult>
+
+    fun countSearchesInWindow(
+        cityName: String,
+        windowDays: Int,
+    ): Long
 }

@@ -58,7 +58,10 @@ class ModerationServiceTest {
             return true
         }
 
-        override fun updateKnownName(id: ProfessionalProfileId, knownName: String?): Boolean = false
+        override fun updateKnownName(
+            id: ProfessionalProfileId,
+            knownName: String?,
+        ): Boolean = false
 
         override fun incrementViewCount(id: ProfessionalProfileId) {
             val p = profiles[id.value] ?: return
@@ -83,11 +86,20 @@ class ModerationServiceTest {
 
         override fun findById(id: UserId) = users[id.value]
 
-        override fun updateName(id: UserId, fullName: String): User? = null
+        override fun updateName(
+            id: UserId,
+            fullName: String,
+        ): User? = null
 
-        override fun updateDateOfBirth(id: UserId, dateOfBirth: java.time.LocalDate): User? = null
+        override fun updateDateOfBirth(
+            id: UserId,
+            dateOfBirth: java.time.LocalDate,
+        ): User? = null
 
-        override fun updatePhotoUrl(id: UserId, photoUrl: String): User? = null
+        override fun updatePhotoUrl(
+            id: UserId,
+            photoUrl: String,
+        ): User? = null
 
         override fun updateStatus(
             id: UserId,

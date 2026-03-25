@@ -1,6 +1,10 @@
 package com.fugisawa.quemfaz.catalog.application
 
-import com.fugisawa.quemfaz.catalog.domain.*
+import com.fugisawa.quemfaz.catalog.domain.CatalogRepository
+import com.fugisawa.quemfaz.catalog.domain.CatalogServiceRecord
+import com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus
+import com.fugisawa.quemfaz.catalog.domain.ServiceCategory
+import com.fugisawa.quemfaz.catalog.domain.SystemConfigRepository
 import org.slf4j.LoggerFactory
 import java.text.Normalizer
 
@@ -19,13 +23,14 @@ class CatalogService(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Volatile
-    private var snapshot = CatalogSnapshot(
-        categories = emptyList(),
-        activeServices = emptyList(),
-        allVisibleServices = emptyList(),
-        byId = emptyMap(),
-        version = "",
-    )
+    private var snapshot =
+        CatalogSnapshot(
+            categories = emptyList(),
+            activeServices = emptyList(),
+            allVisibleServices = emptyList(),
+            byId = emptyMap(),
+            version = "",
+        )
 
     init {
         refreshCache()
@@ -39,13 +44,14 @@ class CatalogService(
         val allVisible = (active + pendingReview).map { it.toEntry() }
         val version = configRepository.get("catalog.version") ?: "0"
 
-        snapshot = CatalogSnapshot(
-            categories = categories,
-            activeServices = activeEntries,
-            allVisibleServices = allVisible,
-            byId = allVisible.associateBy { it.id },
-            version = version,
-        )
+        snapshot =
+            CatalogSnapshot(
+                categories = categories,
+                activeServices = activeEntries,
+                allVisibleServices = allVisible,
+                byId = allVisible.associateBy { it.id },
+                version = version,
+            )
         logger.info("Catalog cache refreshed: {} active, {} pending_review, version={}", active.size, pendingReview.size, version)
     }
 
@@ -59,8 +65,7 @@ class CatalogService(
 
     fun getCatalogVersion(): String = snapshot.version
 
-    fun isAutoProvisioningEnabled(): Boolean =
-        configRepository.get("catalog.auto-provisioning.enabled") == "true"
+    fun isAutoProvisioningEnabled(): Boolean = configRepository.get("catalog.auto-provisioning.enabled") == "true"
 
     fun incrementVersion() {
         val current = configRepository.get("catalog.version")?.toLongOrNull() ?: 0
@@ -80,18 +85,32 @@ class CatalogService(
             var score = 0
             val normalizedDisplayName = service.displayName.stripAccents().lowercase()
 
-            if (normalizedDisplayName == normalizedQuery) score += 100
-            else if (normalizedDisplayName.contains(normalizedQuery)) score += 50
-            else if (normalizedQuery.contains(normalizedDisplayName)) score += 70
+            if (normalizedDisplayName == normalizedQuery) {
+                score += 100
+            } else if (normalizedDisplayName.contains(normalizedQuery)) {
+                score += 50
+            } else if (normalizedQuery.contains(normalizedDisplayName)) {
+                score += 70
+            }
 
             service.aliases.forEach { alias ->
                 val normalizedAlias = alias.stripAccents().lowercase()
-                if (normalizedAlias == normalizedQuery) score += 80
-                else if (normalizedAlias.contains(normalizedQuery)) score += 40
-                else if (normalizedQuery.contains(normalizedAlias)) score += 60
+                if (normalizedAlias == normalizedQuery) {
+                    score += 80
+                } else if (normalizedAlias.contains(normalizedQuery)) {
+                    score += 40
+                } else if (normalizedQuery.contains(normalizedAlias)) {
+                    score += 60
+                }
             }
 
-            if (service.description.stripAccents().lowercase().contains(normalizedQuery)) score += 10
+            if (service.description
+                    .stripAccents()
+                    .lowercase()
+                    .contains(normalizedQuery)
+            ) {
+                score += 10
+            }
 
             if (score > 0) results.add(service to score)
         }
@@ -113,15 +132,17 @@ data class CatalogEntry(
     val status: CatalogServiceStatus,
 )
 
-private fun CatalogServiceRecord.toEntry() = CatalogEntry(
-    id = this.id,
-    displayName = this.displayName,
-    description = this.description,
-    categoryId = this.categoryId,
-    aliases = this.aliases,
-    status = this.status,
-)
+private fun CatalogServiceRecord.toEntry() =
+    CatalogEntry(
+        id = this.id,
+        displayName = this.displayName,
+        description = this.description,
+        categoryId = this.categoryId,
+        aliases = this.aliases,
+        status = this.status,
+    )
 
 private fun String.stripAccents(): String =
-    Normalizer.normalize(this, Normalizer.Form.NFD)
+    Normalizer
+        .normalize(this, Normalizer.Form.NFD)
         .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")

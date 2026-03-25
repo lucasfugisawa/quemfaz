@@ -64,6 +64,7 @@ class RefreshTokenService(
                 refreshToken = newRefreshTokenValue,
             )
         }
+
     fun revoke(token: String) =
         transaction {
             refreshTokenRepository.revokeByToken(token)

@@ -14,7 +14,10 @@ class PopularSearchesService(
     private val limit: Int = 8,
     private val cacheDurationMinutes: Long = 15,
 ) {
-    private data class CacheEntry(val response: PopularServicesResponse, val cachedAt: Instant)
+    private data class CacheEntry(
+        val response: PopularServicesResponse,
+        val cachedAt: Instant,
+    )
 
     private val cache = ConcurrentHashMap<String, CacheEntry>()
 

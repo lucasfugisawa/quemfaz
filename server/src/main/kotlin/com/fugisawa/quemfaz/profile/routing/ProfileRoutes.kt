@@ -26,8 +26,8 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
 import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
@@ -145,12 +145,20 @@ fun Route.profileRoutes() {
                         ?: return@delete call.respond(HttpStatusCode.Unauthorized)
 
                 when (disableProfileService.execute(UserId(userId))) {
-                    is DisableProfileResult.Success -> call.respond(HttpStatusCode.NoContent)
-                    is DisableProfileResult.NotFound -> call.respond(
-                        HttpStatusCode.NotFound,
-                        mapOf("message" to "Professional profile not found"),
-                    )
-                    is DisableProfileResult.AlreadyInactive -> call.respond(HttpStatusCode.NoContent)
+                    is DisableProfileResult.Success -> {
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+
+                    is DisableProfileResult.NotFound -> {
+                        call.respond(
+                            HttpStatusCode.NotFound,
+                            mapOf("message" to "Professional profile not found"),
+                        )
+                    }
+
+                    is DisableProfileResult.AlreadyInactive -> {
+                        call.respond(HttpStatusCode.NoContent)
+                    }
                 }
             }
 
@@ -162,11 +170,16 @@ fun Route.profileRoutes() {
 
                 val request = call.receive<SetKnownNameRequest>()
                 return@put when (setKnownNameService.execute(UserId(userId), request)) {
-                    SetKnownNameResult.Success -> call.respond(HttpStatusCode.NoContent)
-                    SetKnownNameResult.NotFound -> call.respond(
-                        HttpStatusCode.NotFound,
-                        mapOf("message" to "Profile not found"),
-                    )
+                    SetKnownNameResult.Success -> {
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+
+                    SetKnownNameResult.NotFound -> {
+                        call.respond(
+                            HttpStatusCode.NotFound,
+                            mapOf("message" to "Profile not found"),
+                        )
+                    }
                 }
             }
         }

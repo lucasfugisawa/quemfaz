@@ -47,7 +47,7 @@ class MockSearchQueryInterpreterTest {
                     aliases = listOf("barman", "bartender", "bar"),
                     status = CatalogServiceStatus.ACTIVE,
                 ),
-            )
+            ),
         )
     }
 

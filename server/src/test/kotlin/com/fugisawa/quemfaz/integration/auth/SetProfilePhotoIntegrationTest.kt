@@ -18,40 +18,45 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class SetProfilePhotoIntegrationTest : BaseIntegrationTest() {
-    override val tablesToClean: List<Table> = listOf(
-        UserPhoneAuthIdentitiesTable,
-        UsersTable,
-        OtpChallengesTable,
-        StoredImagesTable,
-    )
+    override val tablesToClean: List<Table> =
+        listOf(
+            UserPhoneAuthIdentitiesTable,
+            UsersTable,
+            OtpChallengesTable,
+            StoredImagesTable,
+        )
 
     // obtainAuthToken and completeNameStep are inherited from BaseIntegrationTest
 
     @Test
-    fun `should set photo URL when given a valid internal URL`() = integrationTestApplication {
-        val token = obtainAuthToken("+5511900000010")
-        completeNameStep(token, "João Silva")
-        val client = createTestClient(token)
+    fun `should set photo URL when given a valid internal URL`() =
+        integrationTestApplication {
+            val token = obtainAuthToken("+5511900000010")
+            completeNameStep(token, "João Silva")
+            val client = createTestClient(token)
 
-        val response = client.post("/auth/photo") {
-            contentType(ContentType.Application.Json)
-            setBody(SetProfilePhotoRequest(photoUrl = "/api/images/01ABCDEF1234567890ABCDEF"))
+            val response =
+                client.post("/auth/photo") {
+                    contentType(ContentType.Application.Json)
+                    setBody(SetProfilePhotoRequest(photoUrl = "/api/images/01ABCDEF1234567890ABCDEF"))
+                }
+            assertEquals(HttpStatusCode.OK, response.status)
+            val body = response.body<UserProfileResponse>()
+            assertEquals("/api/images/01ABCDEF1234567890ABCDEF", body.photoUrl)
         }
-        assertEquals(HttpStatusCode.OK, response.status)
-        val body = response.body<UserProfileResponse>()
-        assertEquals("/api/images/01ABCDEF1234567890ABCDEF", body.photoUrl)
-    }
 
     @Test
-    fun `should reject arbitrary external URL`() = integrationTestApplication {
-        val token = obtainAuthToken("+5511900000011")
-        completeNameStep(token, "Ana Souza")
-        val client = createTestClient(token)
+    fun `should reject arbitrary external URL`() =
+        integrationTestApplication {
+            val token = obtainAuthToken("+5511900000011")
+            completeNameStep(token, "Ana Souza")
+            val client = createTestClient(token)
 
-        val response = client.post("/auth/photo") {
-            contentType(ContentType.Application.Json)
-            setBody(SetProfilePhotoRequest(photoUrl = "https://evil.com/hack.png"))
+            val response =
+                client.post("/auth/photo") {
+                    contentType(ContentType.Application.Json)
+                    setBody(SetProfilePhotoRequest(photoUrl = "https://evil.com/hack.png"))
+                }
+            assertEquals(HttpStatusCode.BadRequest, response.status)
         }
-        assertEquals(HttpStatusCode.BadRequest, response.status)
-    }
 }

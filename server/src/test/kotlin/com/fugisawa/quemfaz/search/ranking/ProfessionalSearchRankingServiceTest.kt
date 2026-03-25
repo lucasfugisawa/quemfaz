@@ -79,16 +79,18 @@ class ProfessionalSearchRankingServiceTest {
 
     @Test
     fun `profile with contact clicks ranks higher than one without`() {
-        val profileWithClicks = createProfile(
-            "with-clicks",
-            listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
-            contactClickCount = 10,
-        )
-        val profileWithout = createProfile(
-            "without-clicks",
-            listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
-            contactClickCount = 0,
-        )
+        val profileWithClicks =
+            createProfile(
+                "with-clicks",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                contactClickCount = 10,
+            )
+        val profileWithout =
+            createProfile(
+                "without-clicks",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                contactClickCount = 0,
+            )
         val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList())
         val ranked = rankingService.rank(listOf(profileWithout, profileWithClicks), query)
         assertTrue(ranked.first().id.value == "with-clicks")
@@ -96,16 +98,18 @@ class ProfessionalSearchRankingServiceTest {
 
     @Test
     fun `profile with views ranks higher than one without`() {
-        val profileWithViews = createProfile(
-            "with-views",
-            listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
-            viewCount = 30,
-        )
-        val profileWithout = createProfile(
-            "without-views",
-            listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
-            viewCount = 0,
-        )
+        val profileWithViews =
+            createProfile(
+                "with-views",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                viewCount = 30,
+            )
+        val profileWithout =
+            createProfile(
+                "without-views",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                viewCount = 0,
+            )
         val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList())
         val ranked = rankingService.rank(listOf(profileWithout, profileWithViews), query)
         assertTrue(ranked.first().id.value == "with-views")
@@ -113,16 +117,18 @@ class ProfessionalSearchRankingServiceTest {
 
     @Test
     fun `contact click score is capped at 20 clicks`() {
-        val profileAtCap = createProfile(
-            "at-cap",
-            listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
-            contactClickCount = 20,
-        )
-        val profileOverCap = createProfile(
-            "over-cap",
-            listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
-            contactClickCount = 100,
-        )
+        val profileAtCap =
+            createProfile(
+                "at-cap",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                contactClickCount = 20,
+            )
+        val profileOverCap =
+            createProfile(
+                "over-cap",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                contactClickCount = 100,
+            )
         val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList())
         val rankedOverFirst = rankingService.rank(listOf(profileOverCap, profileAtCap), query)
         val rankedAtFirst = rankingService.rank(listOf(profileAtCap, profileOverCap), query)
@@ -133,16 +139,18 @@ class ProfessionalSearchRankingServiceTest {
 
     @Test
     fun `view score is capped at 50 views`() {
-        val profileAtCap = createProfile(
-            "at-cap",
-            listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
-            viewCount = 50,
-        )
-        val profileOverCap = createProfile(
-            "over-cap",
-            listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
-            viewCount = 200,
-        )
+        val profileAtCap =
+            createProfile(
+                "at-cap",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                viewCount = 50,
+            )
+        val profileOverCap =
+            createProfile(
+                "over-cap",
+                listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
+                viewCount = 200,
+            )
         val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList())
         val rankedOverFirst = rankingService.rank(listOf(profileOverCap, profileAtCap), query)
         val rankedAtFirst = rankingService.rank(listOf(profileAtCap, profileOverCap), query)

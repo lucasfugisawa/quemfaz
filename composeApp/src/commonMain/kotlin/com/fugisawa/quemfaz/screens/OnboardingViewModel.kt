@@ -5,7 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.UpdateDateOfBirthRequest
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
-import com.fugisawa.quemfaz.contract.profile.*
+import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
+import com.fugisawa.quemfaz.contract.profile.ClarifyDraftRequest
+import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
+import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftRequest
+import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
+import com.fugisawa.quemfaz.contract.profile.InputMode
+import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
+import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.contract.profile.SetKnownNameRequest
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.network.FeatureApiClients
@@ -15,6 +23,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+enum class OnboardingErrorSource { BIRTH_DATE, DESCRIPTION, PHOTO, PUBLISH }
 
 sealed class OnboardingUiState {
     object BirthDateRequired : OnboardingUiState()
@@ -40,7 +50,10 @@ sealed class OnboardingUiState {
         val confirmedDescription: String,
     ) : OnboardingUiState()
     data class Published(val profile: ProfessionalProfileResponse) : OnboardingUiState()
-    data class Error(val message: String) : OnboardingUiState()
+    data class Error(
+        val message: String,
+        val source: OnboardingErrorSource = OnboardingErrorSource.DESCRIPTION,
+    ) : OnboardingUiState()
 }
 
 class OnboardingViewModel(
@@ -92,7 +105,10 @@ class OnboardingViewModel(
                 sessionManager.setCurrentUser(updatedUser)
                 _uiState.value = OnboardingUiState.NaturalPresentation
             } catch (e: Exception) {
-                _uiState.value = OnboardingUiState.Error(Strings.Errors.FAILED_SAVE_DATE_OF_BIRTH)
+                _uiState.value = OnboardingUiState.Error(
+                    Strings.Errors.FAILED_SAVE_DATE_OF_BIRTH,
+                    source = OnboardingErrorSource.BIRTH_DATE,
+                )
             }
         }
     }
@@ -167,7 +183,12 @@ class OnboardingViewModel(
                 if (hasPhoto) OnboardingUiState.SmartConfirmation(current.draft, current.confirmedServiceIds, current.confirmedDescription)
                 else OnboardingUiState.PhotoRequired(current.draft, current.confirmedServiceIds, current.confirmedDescription)
             }
-            is OnboardingUiState.Error -> OnboardingUiState.NaturalPresentation
+            is OnboardingUiState.Error -> when (current.source) {
+                OnboardingErrorSource.BIRTH_DATE -> OnboardingUiState.BirthDateRequired
+                OnboardingErrorSource.DESCRIPTION -> OnboardingUiState.NaturalPresentation
+                OnboardingErrorSource.PHOTO -> OnboardingUiState.NaturalPresentation
+                OnboardingErrorSource.PUBLISH -> OnboardingUiState.NaturalPresentation
+            }
             else -> current
         }
     }
@@ -202,7 +223,10 @@ class OnboardingViewModel(
                 sessionManager.setCurrentUser(userResponse)
                 _uiState.value = OnboardingUiState.ProfilePreview(draft, confirmedServiceIds, confirmedDescription)
             } catch (e: Exception) {
-                _uiState.value = OnboardingUiState.Error(e.message ?: Strings.Errors.FAILED_UPLOAD_PHOTO)
+                _uiState.value = OnboardingUiState.Error(
+                    e.message ?: Strings.Errors.FAILED_UPLOAD_PHOTO,
+                    source = OnboardingErrorSource.PHOTO,
+                )
             }
         }
     }
@@ -254,7 +278,10 @@ class OnboardingViewModel(
                 }
                 _uiState.value = OnboardingUiState.Published(response)
             } catch (e: Exception) {
-                _uiState.value = OnboardingUiState.Error(e.message ?: Strings.Errors.FAILED_PUBLISH_PROFILE)
+                _uiState.value = OnboardingUiState.Error(
+                    e.message ?: Strings.Errors.FAILED_PUBLISH_PROFILE,
+                    source = OnboardingErrorSource.PUBLISH,
+                )
             }
         }
     }

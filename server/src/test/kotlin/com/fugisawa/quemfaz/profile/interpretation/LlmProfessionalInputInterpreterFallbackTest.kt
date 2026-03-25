@@ -17,34 +17,36 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class LlmProfessionalInputInterpreterFallbackTest {
-
     private val mockCatalogService: CatalogService = mock()
     private val mockSignalCaptureService: SignalCaptureService = mock()
 
-    private val electricianEntry = CatalogEntry(
-        id = "maintenance-electrician",
-        displayName = "Elétrica Residencial",
-        description = "Instalação e manutenção elétrica",
-        categoryId = "MAINTENANCE",
-        aliases = listOf("eletricista", "elétrico"),
-        status = CatalogServiceStatus.ACTIVE,
-    )
-    private val paintResidentialEntry = CatalogEntry(
-        id = "paint-residential",
-        displayName = "Pintura Residencial",
-        description = "Pintura de casas e apartamentos",
-        categoryId = "PAINTING",
-        aliases = listOf("pintor", "pintura residencial"),
-        status = CatalogServiceStatus.ACTIVE,
-    )
-    private val paintCommercialEntry = CatalogEntry(
-        id = "paint-commercial",
-        displayName = "Pintura Comercial",
-        description = "Pintura de lojas e escritórios",
-        categoryId = "PAINTING",
-        aliases = listOf("pintor comercial", "pintura comercial"),
-        status = CatalogServiceStatus.ACTIVE,
-    )
+    private val electricianEntry =
+        CatalogEntry(
+            id = "maintenance-electrician",
+            displayName = "Elétrica Residencial",
+            description = "Instalação e manutenção elétrica",
+            categoryId = "MAINTENANCE",
+            aliases = listOf("eletricista", "elétrico"),
+            status = CatalogServiceStatus.ACTIVE,
+        )
+    private val paintResidentialEntry =
+        CatalogEntry(
+            id = "paint-residential",
+            displayName = "Pintura Residencial",
+            description = "Pintura de casas e apartamentos",
+            categoryId = "PAINTING",
+            aliases = listOf("pintor", "pintura residencial"),
+            status = CatalogServiceStatus.ACTIVE,
+        )
+    private val paintCommercialEntry =
+        CatalogEntry(
+            id = "paint-commercial",
+            displayName = "Pintura Comercial",
+            description = "Pintura de lojas e escritórios",
+            categoryId = "PAINTING",
+            aliases = listOf("pintor comercial", "pintura comercial"),
+            status = CatalogServiceStatus.ACTIVE,
+        )
 
     init {
         val entries = listOf(electricianEntry, paintResidentialEntry, paintCommercialEntry)
@@ -65,11 +67,12 @@ class LlmProfessionalInputInterpreterFallbackTest {
         ): T = throw RuntimeException("LLM unavailable")
     }
 
-    private val interpreter = LlmProfessionalInputInterpreter(
-        FailingLlmAgentService(),
-        mockCatalogService,
-        mockSignalCaptureService,
-    )
+    private val interpreter =
+        LlmProfessionalInputInterpreter(
+            FailingLlmAgentService(),
+            mockCatalogService,
+            mockSignalCaptureService,
+        )
 
     @Test
     fun `fallback with matching alias sets llmUnavailable and returns matched services`() {
@@ -101,14 +104,15 @@ class LlmProfessionalInputInterpreterFallbackTest {
 
     @Test
     fun `fallback provisions service when no local matches found`() {
-        val provisionedEntry = CatalogEntry(
-            id = "camera-installation",
-            displayName = "Instalação de Câmeras",
-            description = "Instalação de câmeras de segurança",
-            categoryId = "SECURITY",
-            aliases = listOf("câmera", "cftv"),
-            status = CatalogServiceStatus.PENDING_REVIEW,
-        )
+        val provisionedEntry =
+            CatalogEntry(
+                id = "camera-installation",
+                displayName = "Instalação de Câmeras",
+                description = "Instalação de câmeras de segurança",
+                categoryId = "SECURITY",
+                aliases = listOf("câmera", "cftv"),
+                status = CatalogServiceStatus.PENDING_REVIEW,
+            )
 
         val mockSignal: SignalCaptureService = mock()
         val mockCatalog: CatalogService = mock()
@@ -118,16 +122,23 @@ class LlmProfessionalInputInterpreterFallbackTest {
         runBlocking {
             whenever(
                 mockSignal.captureSignal(
-                    eq("Instalo câmeras de segurança"), eq("onboarding"), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), eq(true),
-                )
+                    eq("Instalo câmeras de segurança"),
+                    eq("onboarding"),
+                    anyOrNull(),
+                    anyOrNull(),
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq(true),
+                ),
             ).thenReturn("camera-installation")
         }
 
-        val fallbackInterpreter = LlmProfessionalInputInterpreter(
-            FailingLlmAgentService(),
-            mockCatalog,
-            mockSignal,
-        )
+        val fallbackInterpreter =
+            LlmProfessionalInputInterpreter(
+                FailingLlmAgentService(),
+                mockCatalog,
+                mockSignal,
+            )
 
         val response = fallbackInterpreter.interpret("Instalo câmeras de segurança", InputMode.TEXT)
 

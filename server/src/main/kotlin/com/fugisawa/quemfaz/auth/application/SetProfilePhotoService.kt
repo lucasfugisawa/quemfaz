@@ -15,7 +15,10 @@ class SetProfilePhotoService(
     private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
     private val profileRepository: ProfessionalProfileRepository,
 ) {
-    fun execute(userId: UserId, request: SetProfilePhotoRequest): SetPhotoResult {
+    fun execute(
+        userId: UserId,
+        request: SetProfilePhotoRequest,
+    ): SetPhotoResult {
         if (!INTERNAL_IMAGE_PATH_REGEX.matches(request.photoUrl)) {
             return SetPhotoResult.InvalidUrl
         }
@@ -43,7 +46,11 @@ class SetProfilePhotoService(
 }
 
 sealed class SetPhotoResult {
-    data class Success(val response: UserProfileResponse) : SetPhotoResult()
+    data class Success(
+        val response: UserProfileResponse,
+    ) : SetPhotoResult()
+
     object NotFound : SetPhotoResult()
+
     object InvalidUrl : SetPhotoResult()
 }

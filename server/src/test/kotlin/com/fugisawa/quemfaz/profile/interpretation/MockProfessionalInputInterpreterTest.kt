@@ -40,7 +40,7 @@ class MockProfessionalInputInterpreterTest {
                     aliases = listOf("faxina", "diarista", "limpeza residencial"),
                     status = CatalogServiceStatus.ACTIVE,
                 ),
-            )
+            ),
         )
     }
 

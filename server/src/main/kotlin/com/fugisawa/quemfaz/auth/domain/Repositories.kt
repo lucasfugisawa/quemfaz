@@ -9,11 +9,20 @@ interface UserRepository {
 
     fun findById(id: UserId): User?
 
-    fun updateName(id: UserId, fullName: String): User?
+    fun updateName(
+        id: UserId,
+        fullName: String,
+    ): User?
 
-    fun updateDateOfBirth(id: UserId, dateOfBirth: LocalDate): User?
+    fun updateDateOfBirth(
+        id: UserId,
+        dateOfBirth: LocalDate,
+    ): User?
 
-    fun updatePhotoUrl(id: UserId, photoUrl: String): User?
+    fun updatePhotoUrl(
+        id: UserId,
+        photoUrl: String,
+    ): User?
 
     fun updateStatus(
         id: UserId,

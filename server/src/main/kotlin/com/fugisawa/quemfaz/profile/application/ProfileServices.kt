@@ -148,7 +148,9 @@ class GetPublicProfessionalProfileService(
 
 sealed class DisableProfileResult {
     object Success : DisableProfileResult()
+
     object NotFound : DisableProfileResult()
+
     object AlreadyInactive : DisableProfileResult()
 }
 
@@ -211,11 +213,12 @@ class UpdateProfessionalProfileService(
             }
 
         // Auto-disable when all services are removed; auto-reactivate when services are added back.
-        val newStatus = when {
-            services.isEmpty() -> ProfessionalProfileStatus.INACTIVE
-            existing.status == ProfessionalProfileStatus.INACTIVE && services.isNotEmpty() -> ProfessionalProfileStatus.PUBLISHED
-            else -> existing.status
-        }
+        val newStatus =
+            when {
+                services.isEmpty() -> ProfessionalProfileStatus.INACTIVE
+                existing.status == ProfessionalProfileStatus.INACTIVE && services.isNotEmpty() -> ProfessionalProfileStatus.PUBLISHED
+                else -> existing.status
+            }
 
         val updated =
             existing.copy(
@@ -251,14 +254,16 @@ private fun mapToResponse(
         photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
         description = profile.description ?: "",
         cityName = profile.cityName ?: "",
-        services = profile.services.map { svc ->
-            val canonical = catalogService.findById(svc.serviceId)
-            val status = when (canonical?.status) {
-                com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus.PENDING_REVIEW -> "pending_review"
-                else -> "active"
-            }
-            InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name, status = status)
-        },
+        services =
+            profile.services.map { svc ->
+                val canonical = catalogService.findById(svc.serviceId)
+                val status =
+                    when (canonical?.status) {
+                        com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus.PENDING_REVIEW -> "pending_review"
+                        else -> "active"
+                    }
+                InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name, status = status)
+            },
         profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
         activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
         phone = phone,

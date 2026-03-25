@@ -21,12 +21,18 @@ class SignalCaptureService(
         safetyClassification: String?,
         safetyReason: String?,
         forceProvision: Boolean = false,
-    ): String? {
-        return try {
-            val provisionalId = provisionalServiceCreator.tryProvision(
-                rawDescription, source, userId, cityName, safetyClassification, safetyReason,
-                forceProvision = forceProvision,
-            )
+    ): String? =
+        try {
+            val provisionalId =
+                provisionalServiceCreator.tryProvision(
+                    rawDescription,
+                    source,
+                    userId,
+                    cityName,
+                    safetyClassification,
+                    safetyReason,
+                    forceProvision = forceProvision,
+                )
             val bestMatch = catalogService.search(rawDescription).firstOrNull()
             signalRepository.create(
                 UnmatchedServiceSignal(
@@ -48,5 +54,4 @@ class SignalCaptureService(
             logger.error("Failed to capture unmatched service signal: {}", e.message)
             null
         }
-    }
 }

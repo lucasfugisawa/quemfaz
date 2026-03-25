@@ -17,7 +17,8 @@ class MockProfessionalInputInterpreter(
         val normalizedText = inputText.lowercase()
 
         val interpretedServices =
-            catalogService.getActiveServices()
+            catalogService
+                .getActiveServices()
                 .flatMap { service ->
                     val matches = mutableListOf<InterpretedServiceDto>()
                     if (normalizedText.contains(service.displayName.lowercase())) {

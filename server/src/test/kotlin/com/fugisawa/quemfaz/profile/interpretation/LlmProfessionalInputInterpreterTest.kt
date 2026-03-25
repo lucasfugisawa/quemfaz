@@ -24,23 +24,25 @@ class LlmProfessionalInputInterpreterTest {
     private val mockCatalogService: CatalogService = mock()
     private val mockSignalCaptureService: SignalCaptureService = mock()
 
-    private val paintEntry = CatalogEntry(
-        id = "paint-residential",
-        displayName = "Pintura Residencial",
-        description = "Pintura de residências",
-        categoryId = "PAINTING",
-        aliases = listOf("pintor", "pintura"),
-        status = CatalogServiceStatus.ACTIVE,
-    )
+    private val paintEntry =
+        CatalogEntry(
+            id = "paint-residential",
+            displayName = "Pintura Residencial",
+            description = "Pintura de residências",
+            categoryId = "PAINTING",
+            aliases = listOf("pintor", "pintura"),
+            status = CatalogServiceStatus.ACTIVE,
+        )
 
-    private val provisionedBakeryEntry = CatalogEntry(
-        id = "bakery-services",
-        displayName = "Padaria",
-        description = "Serviços de padaria",
-        categoryId = "FOOD",
-        aliases = listOf("padeiro"),
-        status = CatalogServiceStatus.PENDING_REVIEW,
-    )
+    private val provisionedBakeryEntry =
+        CatalogEntry(
+            id = "bakery-services",
+            displayName = "Padaria",
+            description = "Serviços de padaria",
+            categoryId = "FOOD",
+            aliases = listOf("padeiro"),
+            status = CatalogServiceStatus.PENDING_REVIEW,
+        )
 
     init {
         whenever(mockCatalogService.getActiveServices()).thenReturn(listOf(paintEntry))
@@ -157,21 +159,28 @@ class LlmProfessionalInputInterpreterTest {
         runBlocking {
             whenever(
                 mockSignalCaptureService.captureSignal(
-                    eq("Sou padeiro"), eq("onboarding"), anyOrNull(), anyOrNull(),
-                    eq("safe"), anyOrNull(), eq(true),
-                )
+                    eq("Sou padeiro"),
+                    eq("onboarding"),
+                    anyOrNull(),
+                    anyOrNull(),
+                    eq("safe"),
+                    anyOrNull(),
+                    eq(true),
+                ),
             ).thenReturn("bakery-services")
         }
 
-        val service = createFakeService(
-            OnboardingInterpretation(
-                serviceIds = listOf("paint-residential"),
-                needsClarification = false,
-                unmatchedDescriptions = listOf(
-                    UnmatchedDescription("Sou padeiro", "safe"),
+        val service =
+            createFakeService(
+                OnboardingInterpretation(
+                    serviceIds = listOf("paint-residential"),
+                    needsClarification = false,
+                    unmatchedDescriptions =
+                        listOf(
+                            UnmatchedDescription("Sou padeiro", "safe"),
+                        ),
                 ),
-            ),
-        )
+            )
         val interpreter = LlmProfessionalInputInterpreter(service, mockCatalogService, mockSignalCaptureService)
 
         val response = interpreter.interpret("Faço pintura e sou padeiro", InputMode.TEXT)
@@ -184,15 +193,17 @@ class LlmProfessionalInputInterpreterTest {
 
     @Test
     fun `should not provision unsafe unmatched descriptions`() {
-        val service = createFakeService(
-            OnboardingInterpretation(
-                serviceIds = listOf("paint-residential"),
-                needsClarification = false,
-                unmatchedDescriptions = listOf(
-                    UnmatchedDescription("Tráfico de drogas", "unsafe", "Atividade ilegal"),
+        val service =
+            createFakeService(
+                OnboardingInterpretation(
+                    serviceIds = listOf("paint-residential"),
+                    needsClarification = false,
+                    unmatchedDescriptions =
+                        listOf(
+                            UnmatchedDescription("Tráfico de drogas", "unsafe", "Atividade ilegal"),
+                        ),
                 ),
-            ),
-        )
+            )
         val interpreter = LlmProfessionalInputInterpreter(service, mockCatalogService, mockSignalCaptureService)
 
         val response = interpreter.interpret("Faço pintura e tráfico", InputMode.TEXT)

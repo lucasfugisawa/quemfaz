@@ -45,16 +45,18 @@ class LlmSearchQueryInterpreter(
         interpretation: SearchInterpretation,
     ): InterpretedSearchQuery {
         // Validate returned service IDs against catalog
-        val validServices = interpretation.serviceIds
-            .mapNotNull { id -> catalogService.findById(id)?.let { id to it } }
+        val validServices =
+            interpretation.serviceIds
+                .mapNotNull { id -> catalogService.findById(id)?.let { id to it } }
 
         // If LLM returned invalid IDs, try local matching
-        val serviceIds = if (validServices.isEmpty() && interpretation.serviceIds.isNotEmpty()) {
-            val localMatches = catalogService.search(query)
-            localMatches.take(1).map { it.id }
-        } else {
-            validServices.map { it.first }
-        }
+        val serviceIds =
+            if (validServices.isEmpty() && interpretation.serviceIds.isNotEmpty()) {
+                val localMatches = catalogService.search(query)
+                localMatches.take(1).map { it.id }
+            } else {
+                validServices.map { it.first }
+            }
 
         val displayNames = serviceIds.mapNotNull { catalogService.findById(it)?.displayName }
 
@@ -62,8 +64,12 @@ class LlmSearchQueryInterpreter(
         val blockedDescriptions = mutableListOf<String>()
         interpretation.unmatchedDescriptions.forEach { unmatched ->
             signalCaptureService.captureSignal(
-                unmatched.rawDescription, "search", null, cityContext,
-                unmatched.safetyClassification, unmatched.safetyReason,
+                unmatched.rawDescription,
+                "search",
+                null,
+                cityContext,
+                unmatched.safetyClassification,
+                unmatched.safetyReason,
             )
             if (unmatched.safetyClassification == "unsafe") {
                 blockedDescriptions.add(unmatched.rawDescription)
@@ -106,9 +112,10 @@ class LlmSearchQueryInterpreter(
     }
 
     private fun buildSystemPrompt(): String {
-        val catalog = catalogService.getActiveServices().joinToString("\n") { service ->
-            "- ${service.id}: ${service.displayName} (aliases: ${service.aliases.joinToString(", ")})"
-        }
+        val catalog =
+            catalogService.getActiveServices().joinToString("\n") { service ->
+                "- ${service.id}: ${service.displayName} (aliases: ${service.aliases.joinToString(", ")})"
+            }
         return """
             Extract structured search information from the user query.
 
@@ -138,6 +145,6 @@ class LlmSearchQueryInterpreter(
             - identify the requested service and map it to canonical service IDs from the catalog
             - the "serviceIds" field must contain only ID values from the catalog
             - do not invent information
-        """.trimIndent()
+            """.trimIndent()
     }
 }

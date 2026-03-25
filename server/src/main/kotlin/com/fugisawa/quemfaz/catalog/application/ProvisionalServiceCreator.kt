@@ -1,6 +1,9 @@
 package com.fugisawa.quemfaz.catalog.application
 
-import com.fugisawa.quemfaz.catalog.domain.*
+import com.fugisawa.quemfaz.catalog.domain.CatalogRepository
+import com.fugisawa.quemfaz.catalog.domain.CatalogServiceRecord
+import com.fugisawa.quemfaz.catalog.domain.CatalogServiceStatus
+import com.fugisawa.quemfaz.catalog.domain.SignalRepository
 import com.fugisawa.quemfaz.llm.LlmAgentService
 import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
@@ -58,9 +61,10 @@ class ProvisionalServiceCreator(
 
             // Deduplication: check display name
             val pendingServices = catalogRepository.findServicesByStatus(CatalogServiceStatus.PENDING_REVIEW)
-            val nameMatch = pendingServices.find {
-                it.displayName.equals(candidate.displayName, ignoreCase = true)
-            }
+            val nameMatch =
+                pendingServices.find {
+                    it.displayName.equals(candidate.displayName, ignoreCase = true)
+                }
             if (nameMatch != null) return nameMatch.id
 
             // Validate category exists
@@ -71,17 +75,18 @@ class ProvisionalServiceCreator(
             }
 
             // Create the provisional service
-            val service = CatalogServiceRecord(
-                id = candidate.serviceId,
-                displayName = candidate.displayName,
-                description = candidate.description,
-                categoryId = candidate.categoryId,
-                aliases = candidate.aliases,
-                status = CatalogServiceStatus.PENDING_REVIEW,
-                createdBy = "system",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now(),
-            )
+            val service =
+                CatalogServiceRecord(
+                    id = candidate.serviceId,
+                    displayName = candidate.displayName,
+                    description = candidate.description,
+                    categoryId = candidate.categoryId,
+                    aliases = candidate.aliases,
+                    status = CatalogServiceStatus.PENDING_REVIEW,
+                    createdBy = "system",
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                )
             catalogRepository.createService(service)
             catalogService.incrementVersion()
             catalogService.refreshCache()
@@ -95,16 +100,21 @@ class ProvisionalServiceCreator(
 
     private suspend fun generateCandidate(rawDescription: String): CandidateServiceDefinition {
         val pendingServices = catalogRepository.findServicesByStatus(CatalogServiceStatus.PENDING_REVIEW)
-        val pendingList = if (pendingServices.isNotEmpty()) {
-            "\n\nExisting pending services (reuse if the description matches one of these):\n" +
-                pendingServices.joinToString("\n") { "- ${it.id}: ${it.displayName}" }
-        } else ""
+        val pendingList =
+            if (pendingServices.isNotEmpty()) {
+                "\n\nExisting pending services (reuse if the description matches one of these):\n" +
+                    pendingServices.joinToString("\n") { "- ${it.id}: ${it.displayName}" }
+            } else {
+                ""
+            }
 
-        val activeList = catalogService.getActiveServices().joinToString("\n") { service ->
-            "- ${service.id}: ${service.displayName} (aliases: ${service.aliases.joinToString(", ")})"
-        }
+        val activeList =
+            catalogService.getActiveServices().joinToString("\n") { service ->
+                "- ${service.id}: ${service.displayName} (aliases: ${service.aliases.joinToString(", ")})"
+            }
 
-        val prompt = """
+        val prompt =
+            """
             Generate a canonical service definition for the following user description.
 
             User description: "$rawDescription"
@@ -120,7 +130,7 @@ class ProvisionalServiceCreator(
             - Include common Portuguese aliases
             - If this matches an existing pending service, set matchesExistingPendingId to that service's ID
             - Do NOT create a service that significantly overlaps with an existing active service
-        """.trimIndent()
+            """.trimIndent()
 
         return llmAgentService.executeStructured<CandidateServiceDefinition>(
             systemPrompt = prompt,
