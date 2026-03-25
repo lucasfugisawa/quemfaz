@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +45,8 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.fugisawa.quemfaz.AppLinks
+import com.fugisawa.quemfaz.platform.openUrl
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.strings.Strings
@@ -387,6 +390,136 @@ fun ProfilePhotoScreen(
             }
         }
         Spacer(modifier = Modifier.height(Spacing.md))
+    }
+}
+
+@Composable
+fun TermsAcceptanceScreen(
+    onAccept: () -> Unit,
+) {
+    var accepted by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(Spacing.screenEdge),
+    ) {
+        Spacer(modifier = Modifier.height(Spacing.xl))
+
+        Text(
+            Strings.Legal.TERMS_TITLE,
+            style = MaterialTheme.typography.headlineLarge,
+        )
+
+        Spacer(modifier = Modifier.height(Spacing.md))
+
+        Text(
+            "Para usar o QuemFaz, é necessário aceitar nossos termos e política de privacidade.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(modifier = Modifier.height(Spacing.sectionGap))
+
+        // Links to open full documents
+        TextButton(onClick = { openUrl(AppLinks.TERMS_OF_USE_URL) }) {
+            Text(Strings.MyProfile.TERMS_OF_USE, style = MaterialTheme.typography.bodyLarge)
+        }
+        TextButton(onClick = { openUrl(AppLinks.PRIVACY_POLICY_URL) }) {
+            Text(Strings.MyProfile.PRIVACY_POLICY, style = MaterialTheme.typography.bodyLarge)
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.lg))
+
+        // Checkbox row
+        Row(
+            modifier = Modifier.fillMaxWidth().clickable { accepted = !accepted },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            androidx.compose.material3.Checkbox(
+                checked = accepted,
+                onCheckedChange = { accepted = it },
+            )
+            Spacer(modifier = Modifier.width(Spacing.sm))
+            Text(
+                Strings.Legal.TERMS_ACCEPT_PREFIX +
+                        Strings.Legal.TERMS_LINK +
+                        Strings.Legal.TERMS_AND +
+                        Strings.Legal.PRIVACY_LINK +
+                        Strings.Legal.TERMS_ACCEPT_SUFFIX,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = onAccept,
+            enabled = accepted,
+            modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
+            shape = MaterialTheme.shapes.medium,
+        ) {
+            Text(Strings.Legal.ACCEPT_AND_CONTINUE, style = MaterialTheme.typography.titleMedium)
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.md))
+    }
+}
+
+@Composable
+fun TermsUpdateDialog(
+    onAccept: () -> Unit,
+    onLogout: () -> Unit,
+) {
+    var showRejectConfirmation by remember { mutableStateOf(false) }
+
+    if (showRejectConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showRejectConfirmation = false },
+            title = { Text(Strings.Legal.TERMS_REJECT_CONFIRM_TITLE) },
+            text = { Text(Strings.Legal.TERMS_REJECT_CONFIRM_MESSAGE) },
+            confirmButton = {
+                TextButton(onClick = onLogout) {
+                    Text(
+                        Strings.Legal.TERMS_REJECT_CONFIRM_LOGOUT,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRejectConfirmation = false }) {
+                    Text(Strings.Legal.TERMS_REJECT_CONFIRM_BACK)
+                }
+            },
+        )
+    } else {
+        AlertDialog(
+            onDismissRequest = { /* non-dismissible */ },
+            title = { Text(Strings.Legal.TERMS_UPDATED_TITLE) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    Text(Strings.Legal.TERMS_UPDATED_MESSAGE)
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        TextButton(onClick = { openUrl(AppLinks.TERMS_OF_USE_URL) }) {
+                            Text(Strings.Legal.TERMS_LINK)
+                        }
+                        TextButton(onClick = { openUrl(AppLinks.PRIVACY_POLICY_URL) }) {
+                            Text(Strings.Legal.PRIVACY_LINK)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onAccept) {
+                    Text(Strings.Legal.TERMS_UPDATED_ACCEPT)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRejectConfirmation = true }) {
+                    Text(Strings.Legal.TERMS_UPDATED_REJECT)
+                }
+            },
+        )
     }
 }
 

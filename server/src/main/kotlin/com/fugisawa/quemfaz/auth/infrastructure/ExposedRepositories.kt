@@ -42,6 +42,10 @@ object UsersTable : Table("users") {
             },
         )
     val dateOfBirth = date("date_of_birth").nullable()
+    val termsAcceptedAt = timestamp("terms_accepted_at").nullable()
+    val termsVersion = varchar("terms_version", 32).nullable()
+    val privacyAcceptedAt = timestamp("privacy_accepted_at").nullable()
+    val privacyVersion = varchar("privacy_version", 32).nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
 
@@ -154,6 +158,23 @@ class ExposedUserRepository : UserRepository {
             } > 0
         }
 
+    override fun acceptTerms(
+        id: UserId,
+        termsVersion: String,
+        privacyVersion: String,
+    ): User? =
+        transaction {
+            val now = Instant.now()
+            UsersTable.update({ UsersTable.id eq id.value }) {
+                it[UsersTable.termsAcceptedAt] = now
+                it[UsersTable.termsVersion] = termsVersion
+                it[UsersTable.privacyAcceptedAt] = now
+                it[UsersTable.privacyVersion] = privacyVersion
+                it[updatedAt] = now
+            }
+            findById(id)
+        }
+
     private fun mapUser(it: ResultRow) =
         User(
             id = UserId(it[UsersTable.id]),
@@ -161,6 +182,10 @@ class ExposedUserRepository : UserRepository {
             photoUrl = it[UsersTable.photoUrl],
             status = it[UsersTable.status],
             dateOfBirth = it[UsersTable.dateOfBirth],
+            termsAcceptedAt = it[UsersTable.termsAcceptedAt],
+            termsVersion = it[UsersTable.termsVersion],
+            privacyAcceptedAt = it[UsersTable.privacyAcceptedAt],
+            privacyVersion = it[UsersTable.privacyVersion],
             createdAt = it[UsersTable.createdAt],
             updatedAt = it[UsersTable.updatedAt],
         )

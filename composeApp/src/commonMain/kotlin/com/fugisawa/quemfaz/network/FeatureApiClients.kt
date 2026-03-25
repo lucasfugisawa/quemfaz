@@ -1,5 +1,6 @@
 package com.fugisawa.quemfaz.network
 
+import com.fugisawa.quemfaz.contract.auth.AcceptTermsRequest
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
@@ -85,6 +86,12 @@ class FeatureApiClients(private val apiClient: ApiClient) {
                     },
                 ),
             )
+        }.body()
+
+    suspend fun acceptTerms(request: AcceptTermsRequest): Unit =
+        apiClient.client.put("/auth/me/accept-terms") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
         }.body()
 
     suspend fun setKnownName(request: SetKnownNameRequest): Unit =

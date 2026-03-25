@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,8 +35,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.fugisawa.quemfaz.AppLinks
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
 import com.fugisawa.quemfaz.platform.launch
+import com.fugisawa.quemfaz.platform.openUrl
 import com.fugisawa.quemfaz.platform.rememberImagePickerLauncher
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
@@ -200,6 +203,63 @@ fun MyProfileScreen(
         HorizontalDivider(thickness = Spacing.divider)
 
         Spacer(modifier = Modifier.height(Spacing.sectionGap))
+
+        // Legal section
+        Text(
+            "Legal",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+        )
+        HorizontalDivider(thickness = Spacing.divider)
+        MyProfileMenuItem(
+            label = Strings.MyProfile.TERMS_OF_USE,
+            onClick = { openUrl(AppLinks.TERMS_OF_USE_URL) },
+        )
+        HorizontalDivider(thickness = Spacing.divider)
+        MyProfileMenuItem(
+            label = Strings.MyProfile.PRIVACY_POLICY,
+            onClick = { openUrl(AppLinks.PRIVACY_POLICY_URL) },
+        )
+        HorizontalDivider(thickness = Spacing.divider)
+        MyProfileMenuItem(
+            label = Strings.MyProfile.COMMUNITY_GUIDELINES,
+            onClick = { openUrl(AppLinks.COMMUNITY_GUIDELINES_URL) },
+        )
+        HorizontalDivider(thickness = Spacing.divider)
+
+        Spacer(modifier = Modifier.height(Spacing.sectionGap))
+
+        // Account deletion
+        var showDeleteDialog by remember { mutableStateOf(false) }
+
+        TextButton(
+            onClick = { showDeleteDialog = true },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(Strings.MyProfile.DELETE_ACCOUNT, color = MaterialTheme.colorScheme.error)
+        }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text(Strings.MyProfile.DELETE_ACCOUNT_DIALOG_TITLE) },
+                text = { Text(Strings.MyProfile.DELETE_ACCOUNT_DIALOG_MESSAGE) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDeleteDialog = false
+                        openUrl("mailto:${AppLinks.SUPPORT_EMAIL}?subject=Exclus%C3%A3o%20de%20conta")
+                    }) {
+                        Text(Strings.MyProfile.DELETE_ACCOUNT_DIALOG_CONFIRM)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text(Strings.Common.CANCEL)
+                    }
+                },
+            )
+        }
 
         TextButton(
             onClick = onLogout,

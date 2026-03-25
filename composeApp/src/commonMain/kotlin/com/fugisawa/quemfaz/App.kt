@@ -97,7 +97,7 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
                         }
                     }
                     is AuthState.Blocked -> {
-                        BlockedUserScreen(onContactSupport = { openUrl("mailto:suporte@quemfaz.com") })
+                        BlockedUserScreen(onContactSupport = { openUrl("mailto:${AppLinks.SUPPORT_EMAIL}") })
                     }
                     is AuthState.Unauthenticated -> {
                         AuthFlow(navigateTo)
@@ -111,6 +111,19 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
                             authViewModel.fetchCurrentUser()
                         }
 
+                        val currentUser by sessionManager.currentUser.collectAsState()
+
+                        // Check if the user needs to re-accept updated terms/privacy.
+                        // The server provides the required versions; compare against what the user accepted.
+                        val needsTermsUpdate = currentUser?.let { user ->
+                            val requiredTerms = user.requiredTermsVersion
+                            val requiredPrivacy = user.requiredPrivacyVersion
+                            requiredTerms != null && requiredPrivacy != null && (
+                                user.termsVersion != requiredTerms ||
+                                user.privacyVersion != requiredPrivacy
+                            )
+                        } ?: false
+
                         MainFlow(
                             currentScreen = currentScreen,
                             currentCity = currentCity,
@@ -121,6 +134,20 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
                             sessionManager = sessionManager,
                             navigationDirection = navigationDirection,
                         )
+
+                        if (needsTermsUpdate) {
+                            TermsUpdateDialog(
+                                onAccept = {
+                                    val user = currentUser!!
+                                    authViewModel.acceptTerms(
+                                        termsVersion = user.requiredTermsVersion!!,
+                                        privacyVersion = user.requiredPrivacyVersion!!,
+                                    )
+                                    authViewModel.fetchCurrentUser()
+                                },
+                                onLogout = { authViewModel.logout() },
+                            )
+                        }
                     }
                 }
             }
@@ -142,6 +169,7 @@ fun AuthFlow(navigateTo: (Screen) -> Unit) {
         when (currentAuthStep) {
             "otp" -> { currentAuthStep = "phone"; viewModel.resetToIdle() }
             "name" -> { currentAuthStep = "otp" }
+            "terms" -> { /* cannot go back from terms */ }
         }
     }
 
@@ -160,18 +188,28 @@ fun AuthFlow(navigateTo: (Screen) -> Unit) {
                 uiState = uiState,
             )
             if (uiState is AuthUiState.ProfileCompletionRequired) currentAuthStep = "name"
+            // Existing user (no profile completion) → show terms before entering the app
+            if (uiState is AuthUiState.Success && currentAuthStep == "otp") {
+                LaunchedEffect(uiState) { currentAuthStep = "terms" }
+            }
         }
         "name" -> {
             NameInputScreen(
                 onSubmitName = { fullName -> viewModel.submitName(fullName) },
                 uiState = uiState,
             )
+            // New user finished name → show terms
+            if (uiState is AuthUiState.Success && currentAuthStep == "name") {
+                LaunchedEffect(uiState) { currentAuthStep = "terms" }
+            }
         }
-    }
-
-    if (uiState is AuthUiState.Success) {
-        LaunchedEffect(uiState) {
-            navigateTo(Screen.Home)
+        "terms" -> {
+            TermsAcceptanceScreen(
+                onAccept = {
+                    viewModel.acceptTerms()
+                    navigateTo(Screen.Home)
+                },
+            )
         }
     }
 }

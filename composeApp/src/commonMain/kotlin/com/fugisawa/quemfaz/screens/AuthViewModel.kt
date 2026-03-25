@@ -2,6 +2,8 @@ package com.fugisawa.quemfaz.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fugisawa.quemfaz.AppLinks
+import com.fugisawa.quemfaz.contract.auth.AcceptTermsRequest
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
@@ -126,6 +128,25 @@ class AuthViewModel(
 
     fun skipPhoto() {
         _uiState.value = AuthUiState.Success
+    }
+
+    fun acceptTerms(
+        termsVersion: String = AppLinks.TERMS_VERSION,
+        privacyVersion: String = AppLinks.PRIVACY_POLICY_VERSION,
+    ) {
+        viewModelScope.launch {
+            try {
+                apiClients.acceptTerms(
+                    AcceptTermsRequest(
+                        termsVersion = termsVersion,
+                        privacyVersion = privacyVersion,
+                    )
+                )
+            } catch (_: Exception) {
+                // Silent fail — acceptance is best-effort; user already consented in the UI.
+                // The next login will retry if the record is missing.
+            }
+        }
     }
 
     fun logout() {

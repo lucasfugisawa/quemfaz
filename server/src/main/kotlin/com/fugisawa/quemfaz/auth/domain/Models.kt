@@ -10,6 +10,10 @@ data class User(
     val photoUrl: String?,
     val status: UserStatus,
     val dateOfBirth: LocalDate? = null,
+    val termsAcceptedAt: Instant? = null,
+    val termsVersion: String? = null,
+    val privacyAcceptedAt: Instant? = null,
+    val privacyVersion: String? = null,
     val createdAt: Instant,
     val updatedAt: Instant,
 )

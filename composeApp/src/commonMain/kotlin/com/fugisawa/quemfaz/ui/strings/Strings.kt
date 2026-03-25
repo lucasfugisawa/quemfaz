@@ -199,6 +199,13 @@ object Strings {
         const val MY_FAVORITES = "Meus favoritos"
         const val CHANGE_CITY = "Trocar cidade"
         const val PROFESSIONAL_PROFILE = "Perfil profissional"
+        const val TERMS_OF_USE = "Termos de Uso"
+        const val PRIVACY_POLICY = "Política de Privacidade"
+        const val COMMUNITY_GUIDELINES = "Diretrizes da Comunidade"
+        const val DELETE_ACCOUNT = "Excluir conta"
+        const val DELETE_ACCOUNT_DIALOG_TITLE = "Excluir conta"
+        const val DELETE_ACCOUNT_DIALOG_MESSAGE = "Para solicitar a exclusão da sua conta e de todos os seus dados pessoais, envie um e-mail para nosso suporte. Responderemos em até 15 dias."
+        const val DELETE_ACCOUNT_DIALOG_CONFIRM = "Enviar e-mail"
         const val LOGOUT = "Sair"
     }
 
@@ -244,6 +251,26 @@ object Strings {
         const val COMPLETE_PROFILE = "Completar perfil"
 
         fun activeDaysAgo(days: Int) = "Ativo(a) há $days dias"
+    }
+
+    object Legal {
+        const val TERMS_TITLE = "Termos e Privacidade"
+        const val TERMS_ACCEPT_PREFIX = "Li e concordo com os "
+        const val TERMS_LINK = "Termos de Uso"
+        const val TERMS_AND = " e a "
+        const val PRIVACY_LINK = "Política de Privacidade"
+        const val TERMS_ACCEPT_SUFFIX = "."
+        const val ACCEPT_AND_CONTINUE = "Aceitar e continuar"
+        const val ONBOARDING_TERMS_PREFIX = "Ao publicar, você concorda com os "
+        const val ONBOARDING_TERMS_SUFFIX = " do QuemFaz."
+        const val TERMS_UPDATED_TITLE = "Termos atualizados"
+        const val TERMS_UPDATED_MESSAGE = "Nossos Termos de Uso e/ou Política de Privacidade foram atualizados. Para continuar usando o QuemFaz, é necessário aceitar os novos termos."
+        const val TERMS_UPDATED_ACCEPT = "Aceitar"
+        const val TERMS_UPDATED_REJECT = "Recusar"
+        const val TERMS_REJECT_CONFIRM_TITLE = "Tem certeza?"
+        const val TERMS_REJECT_CONFIRM_MESSAGE = "Sem aceitar os termos atualizados, não é possível continuar usando o QuemFaz. Você será desconectado(a) da sua conta."
+        const val TERMS_REJECT_CONFIRM_LOGOUT = "Sair da conta"
+        const val TERMS_REJECT_CONFIRM_BACK = "Voltar"
     }
 
     object Errors {

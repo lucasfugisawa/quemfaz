@@ -15,6 +15,7 @@ import com.fugisawa.quemfaz.contract.auth.LogoutRequest
 import com.fugisawa.quemfaz.contract.auth.RefreshTokenRequest
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
+import com.fugisawa.quemfaz.contract.auth.AcceptTermsRequest
 import com.fugisawa.quemfaz.contract.auth.UpdateDateOfBirthRequest
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.core.id.UserId
@@ -154,6 +155,25 @@ fun Route.authRoutes() {
                 }
                 userRepository.updateDateOfBirth(UserId(userId), birthDate)
                 call.respond(HttpStatusCode.OK)
+            }
+
+            put("/me/accept-terms") {
+                val principal = call.principal<JWTPrincipal>()
+                val userId =
+                    principal?.payload?.getClaim("userId")?.asString()
+                        ?: return@put call.respond(HttpStatusCode.Unauthorized)
+
+                val request = call.receive<AcceptTermsRequest>()
+                val updatedUser = userRepository.acceptTerms(
+                    UserId(userId),
+                    termsVersion = request.termsVersion,
+                    privacyVersion = request.privacyVersion,
+                )
+                if (updatedUser != null) {
+                    call.respond(HttpStatusCode.OK, mapOf("success" to true))
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
             }
         }
     }

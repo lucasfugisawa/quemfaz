@@ -109,6 +109,8 @@ class ModerationServiceTest {
             users[id.value] = u.copy(status = status)
             return true
         }
+
+        override fun acceptTerms(id: UserId, termsVersion: String, privacyVersion: String): User? = null
     }
 
     @Test

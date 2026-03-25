@@ -117,6 +117,8 @@ class FavoriteServicesTest {
             id: UserId,
             status: UserStatus,
         ): Boolean = false
+
+        override fun acceptTerms(id: UserId, termsVersion: String, privacyVersion: String): User? = null
     }
 
     @Test

@@ -10,6 +10,7 @@ data class AppConfig(
     val jwt: JwtConfig,
     val admin: AdminConfig,
     val llm: LlmConfig,
+    val legal: LegalConfig = LegalConfig(),
 )
 
 data class AdminConfig(
@@ -55,4 +56,9 @@ data class OtpConfig(
 
 data class LlmConfig(
     val timeoutMs: Long = 8000L,
+)
+
+data class LegalConfig(
+    val requiredTermsVersion: String = "1.0.0",
+    val requiredPrivacyVersion: String = "1.0.0",
 )

@@ -63,11 +63,23 @@ data class UserProfileResponse(
     val status: String,
     val hasProfessionalProfile: Boolean = false,
     val dateOfBirth: String? = null,
+    val termsAcceptedAt: String? = null,
+    val termsVersion: String? = null,
+    val privacyAcceptedAt: String? = null,
+    val privacyVersion: String? = null,
+    val requiredTermsVersion: String? = null,
+    val requiredPrivacyVersion: String? = null,
 )
 
 @Serializable
 data class UpdateDateOfBirthRequest(
     val dateOfBirth: String  // ISO-8601 format, e.g. "1990-05-15"
+)
+
+@Serializable
+data class AcceptTermsRequest(
+    val termsVersion: String,
+    val privacyVersion: String,
 )
 
 @Serializable

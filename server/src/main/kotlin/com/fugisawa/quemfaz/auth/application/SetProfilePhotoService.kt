@@ -2,6 +2,7 @@ package com.fugisawa.quemfaz.auth.application
 
 import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
+import com.fugisawa.quemfaz.config.LegalConfig
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
 import com.fugisawa.quemfaz.core.id.UserId
@@ -14,6 +15,7 @@ class SetProfilePhotoService(
     private val userRepository: UserRepository,
     private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
     private val profileRepository: ProfessionalProfileRepository,
+    private val legalConfig: LegalConfig,
 ) {
     fun execute(
         userId: UserId,
@@ -40,6 +42,12 @@ class SetProfilePhotoService(
                 status = user.status.name,
                 hasProfessionalProfile = profileExists,
                 dateOfBirth = user.dateOfBirth?.toString(),
+                termsAcceptedAt = user.termsAcceptedAt?.toString(),
+                termsVersion = user.termsVersion,
+                privacyAcceptedAt = user.privacyAcceptedAt?.toString(),
+                privacyVersion = user.privacyVersion,
+                requiredTermsVersion = legalConfig.requiredTermsVersion,
+                requiredPrivacyVersion = legalConfig.requiredPrivacyVersion,
             ),
         )
     }

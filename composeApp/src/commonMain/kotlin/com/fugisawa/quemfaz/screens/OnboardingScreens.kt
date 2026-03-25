@@ -32,6 +32,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -62,12 +63,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.fugisawa.quemfaz.AppLinks
 import com.fugisawa.quemfaz.contract.profile.ClarificationAnswer
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.domain.city.SupportedCities
+import com.fugisawa.quemfaz.platform.openUrl
 import com.fugisawa.quemfaz.session.SessionManager
 import com.fugisawa.quemfaz.ui.components.ChatBubble
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
@@ -716,6 +719,7 @@ fun OnboardingScreens(
                     val needsFullName = currentUser?.fullName.isNullOrBlank()
                     var fullNameInput by remember { mutableStateOf("") }
                     var knownNameInput by remember { mutableStateOf("") }
+                    var termsAccepted by remember { mutableStateOf(false) }
 
                     Column(modifier = Modifier.fillMaxSize()) {
                         Column(
@@ -816,6 +820,43 @@ fun OnboardingScreens(
 
                         Spacer(modifier = Modifier.height(Spacing.md))
 
+                        // Terms acceptance row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                ) { termsAccepted = !termsAccepted },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(
+                                checked = termsAccepted,
+                                onCheckedChange = { termsAccepted = it },
+                            )
+                            Spacer(modifier = Modifier.width(Spacing.xs))
+                            Column {
+                                Text(
+                                    Strings.Legal.ONBOARDING_TERMS_PREFIX +
+                                            Strings.Legal.TERMS_LINK +
+                                            Strings.Legal.TERMS_AND +
+                                            Strings.Legal.PRIVACY_LINK +
+                                            Strings.Legal.ONBOARDING_TERMS_SUFFIX,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                                    TextButton(onClick = { openUrl(AppLinks.TERMS_OF_USE_URL) }) {
+                                        Text(Strings.Legal.TERMS_LINK, style = MaterialTheme.typography.labelSmall)
+                                    }
+                                    TextButton(onClick = { openUrl(AppLinks.PRIVACY_POLICY_URL) }) {
+                                        Text(Strings.Legal.PRIVACY_LINK, style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(Spacing.sm))
+
                         // Primary: publish
                         Button(
                             onClick = {
@@ -823,7 +864,7 @@ fun OnboardingScreens(
                                 onPublishProfile(fullName, knownNameInput.trim().ifBlank { null }, state.confirmedServiceIds, state.confirmedDescription)
                             },
                             modifier = Modifier.fillMaxWidth().height(Spacing.ctaButtonHeight),
-                            enabled = !needsFullName || fullNameInput.isNotBlank(),
+                            enabled = termsAccepted && (!needsFullName || fullNameInput.isNotBlank()),
                             shape = MaterialTheme.shapes.medium,
                         ) {
                             Text(Strings.Onboarding.PUBLISH_PROFILE, style = MaterialTheme.typography.titleMedium)

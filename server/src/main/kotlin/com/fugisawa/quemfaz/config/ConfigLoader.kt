@@ -64,6 +64,11 @@ object ConfigLoader {
                 LlmConfig(
                     timeoutMs = ktorConfig.propertyOrNull("llm.timeoutMs")?.getString()?.toLong() ?: 8000L,
                 ),
+            legal =
+                LegalConfig(
+                    requiredTermsVersion = ktorConfig.propertyOrNull("legal.requiredTermsVersion")?.getString() ?: "1.0.0",
+                    requiredPrivacyVersion = ktorConfig.propertyOrNull("legal.requiredPrivacyVersion")?.getString() ?: "1.0.0",
+                ),
         )
     }
 }

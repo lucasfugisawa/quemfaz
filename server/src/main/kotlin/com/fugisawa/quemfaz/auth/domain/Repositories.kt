@@ -28,6 +28,12 @@ interface UserRepository {
         id: UserId,
         status: UserStatus,
     ): Boolean
+
+    fun acceptTerms(
+        id: UserId,
+        termsVersion: String,
+        privacyVersion: String,
+    ): User?
 }
 
 interface UserPhoneAuthIdentityRepository {
