@@ -205,9 +205,9 @@ val infrastructureModule =
 
         // Engagement
         single<ContactClickEventRepository> { ExposedContactClickEventRepository() }
-        single { TrackContactClickService(get(), get()) }
+        single { TrackContactClickService(get(), get(), get()) }
         single<ProfileViewEventRepository> { ExposedProfileViewEventRepository() }
-        single { TrackProfileViewService(get(), get()) }
+        single { TrackProfileViewService(get(), get(), get()) }
 
         // Moderation
         single<ReportRepository> { ExposedReportRepository() }

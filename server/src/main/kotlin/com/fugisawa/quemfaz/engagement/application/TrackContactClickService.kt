@@ -7,6 +7,7 @@ import com.fugisawa.quemfaz.core.id.UserId
 import com.fugisawa.quemfaz.engagement.domain.ContactChannel
 import com.fugisawa.quemfaz.engagement.domain.ContactClickEvent
 import com.fugisawa.quemfaz.engagement.domain.ContactClickEventRepository
+import com.fugisawa.quemfaz.city.application.CityService
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -17,6 +18,7 @@ import java.util.UUID
 class TrackContactClickService(
     private val contactClickEventRepository: ContactClickEventRepository,
     private val profileRepository: ProfessionalProfileRepository,
+    private val cityService: CityService,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -43,7 +45,7 @@ class TrackContactClickService(
                         ContactChannelDto.WHATSAPP -> ContactChannel.WHATSAPP
                         ContactChannelDto.PHONE_CALL -> ContactChannel.PHONE_CALL
                     },
-                cityName = profile.cityName,
+                cityName = cityService.resolveNameFromId(profile.cityId),
                 source = request.source,
                 createdAt = Instant.now(),
             )

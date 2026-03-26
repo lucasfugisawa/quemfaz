@@ -5,6 +5,7 @@ import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
 import com.fugisawa.quemfaz.core.id.UserId
 import com.fugisawa.quemfaz.engagement.domain.ProfileViewEvent
 import com.fugisawa.quemfaz.engagement.domain.ProfileViewEventRepository
+import com.fugisawa.quemfaz.city.application.CityService
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -15,6 +16,7 @@ import java.util.UUID
 class TrackProfileViewService(
     private val profileViewEventRepository: ProfileViewEventRepository,
     private val profileRepository: ProfessionalProfileRepository,
+    private val cityService: CityService,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -36,7 +38,7 @@ class TrackProfileViewService(
                 id = UUID.randomUUID().toString(),
                 professionalProfileId = profileId,
                 userId = userId,
-                cityName = profile.cityName,
+                cityName = cityService.resolveNameFromId(profile.cityId),
                 source = request.source,
                 createdAt = Instant.now(),
             )
