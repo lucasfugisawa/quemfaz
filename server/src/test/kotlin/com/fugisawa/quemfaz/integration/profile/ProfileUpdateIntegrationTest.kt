@@ -44,7 +44,7 @@ class ProfileUpdateIntegrationTest : BaseIntegrationTest() {
                     ConfirmProfessionalProfileRequest(
                         description = "Pintor residencial",
                         selectedServiceIds = listOf("paint-residential"),
-                        cityName = "Franca",
+                        cityId = "franca",
                         portfolioPhotoUrls = emptyList(),
                     ),
                 )
@@ -58,7 +58,7 @@ class ProfileUpdateIntegrationTest : BaseIntegrationTest() {
                         ConfirmProfessionalProfileRequest(
                             description = "Pintor residencial",
                             selectedServiceIds = listOf("paint-residential", "paint-commercial"),
-                            cityName = "Franca",
+                            cityId = "franca",
                             portfolioPhotoUrls = emptyList(),
                         ),
                     )

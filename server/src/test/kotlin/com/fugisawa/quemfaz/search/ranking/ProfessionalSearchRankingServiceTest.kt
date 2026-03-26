@@ -29,7 +29,7 @@ class ProfessionalSearchRankingServiceTest {
         knownName = null,
         description = "Description $id",
         normalizedDescription = "Description $id",
-        cityName = "Batatais",
+        cityId = "batatais",
         services = services,
         portfolioPhotos = emptyList(),
         completeness = completeness,
@@ -46,7 +46,7 @@ class ProfessionalSearchRankingServiceTest {
         val p1 = createProfile("p1", listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)))
         val p2 = createProfile("p2", listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.RELATED)))
 
-        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList())
+        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "batatais", emptyList())
 
         val ranked = rankingService.rank(listOf(p2, p1), query)
 
@@ -69,7 +69,7 @@ class ProfessionalSearchRankingServiceTest {
                 completeness = ProfileCompleteness.INCOMPLETE,
             )
 
-        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList())
+        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "batatais", emptyList())
 
         val ranked = rankingService.rank(listOf(p2, p1), query)
 
@@ -91,7 +91,7 @@ class ProfessionalSearchRankingServiceTest {
                 listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
                 contactClickCount = 0,
             )
-        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList())
+        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "batatais", emptyList())
         val ranked = rankingService.rank(listOf(profileWithout, profileWithClicks), query)
         assertTrue(ranked.first().id.value == "with-clicks")
     }
@@ -110,7 +110,7 @@ class ProfessionalSearchRankingServiceTest {
                 listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
                 viewCount = 0,
             )
-        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList())
+        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "batatais", emptyList())
         val ranked = rankingService.rank(listOf(profileWithout, profileWithViews), query)
         assertTrue(ranked.first().id.value == "with-views")
     }
@@ -129,7 +129,7 @@ class ProfessionalSearchRankingServiceTest {
                 listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
                 contactClickCount = 100,
             )
-        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList())
+        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "batatais", emptyList())
         val rankedOverFirst = rankingService.rank(listOf(profileOverCap, profileAtCap), query)
         val rankedAtFirst = rankingService.rank(listOf(profileAtCap, profileOverCap), query)
         // With stable sort and equal scores, input order is preserved both ways
@@ -151,7 +151,7 @@ class ProfessionalSearchRankingServiceTest {
                 listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
                 viewCount = 200,
             )
-        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "Batatais", emptyList())
+        val query = InterpretedSearchQuery("limpeza", "limpeza", listOf("clean-house"), "batatais", emptyList())
         val rankedOverFirst = rankingService.rank(listOf(profileOverCap, profileAtCap), query)
         val rankedAtFirst = rankingService.rank(listOf(profileAtCap, profileOverCap), query)
         assertTrue(rankedOverFirst[0].id.value == "over-cap")

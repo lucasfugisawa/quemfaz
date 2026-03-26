@@ -64,7 +64,7 @@ class LlmSearchQueryInterpreterTest {
         val result = interpreter.interpret("pintor residencial em Batatais Centro", "Batatais")
 
         assertTrue(result.serviceIds.contains("paint-residential"))
-        assertEquals("Batatais", result.cityName)
+        assertEquals("Batatais", result.cityId)
     }
 
     @Test
@@ -79,7 +79,7 @@ class LlmSearchQueryInterpreterTest {
 
         val result = interpreter.interpret("pintor", "Franca")
 
-        assertEquals("Franca", result.cityName)
+        assertEquals("Franca", result.cityId)
     }
 
     @Test
@@ -90,6 +90,6 @@ class LlmSearchQueryInterpreterTest {
         val result = interpreter.interpret("pintor em Batatais", "Batatais")
 
         assertTrue(result.llmUnavailable)
-        assertEquals("Batatais", result.cityName)
+        assertEquals("Batatais", result.cityId)
     }
 }

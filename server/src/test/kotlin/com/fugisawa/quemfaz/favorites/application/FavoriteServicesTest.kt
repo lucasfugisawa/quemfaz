@@ -52,15 +52,15 @@ class FavoriteServicesTest {
             return profile
         }
 
-        override fun listPublishedByCity(cityName: String) =
+        override fun listPublishedByCity(cityId: String) =
             profiles.values.filter {
-                it.cityName == cityName &&
+                it.cityId == cityId &&
                     it.status == ProfessionalProfileStatus.PUBLISHED
             }
 
         override fun search(
             serviceIds: List<String>,
-            cityName: String?,
+            cityId: String?,
         ): List<ProfessionalProfile> = emptyList()
 
         override fun updateStatus(
@@ -182,7 +182,7 @@ class FavoriteServicesTest {
         null,
         "Desc",
         "Desc",
-        "City",
+        "batatais",
         emptyList(),
         emptyList(),
         ProfileCompleteness.COMPLETE,

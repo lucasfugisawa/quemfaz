@@ -59,7 +59,7 @@ class MockSearchQueryInterpreterTest {
 
         assertEquals("preciso de uma faxina amanhã", result.normalizedQuery)
         assertTrue(result.serviceIds.contains("clean-house"))
-        assertEquals("Batatais", result.cityName)
+        assertEquals("Batatais", result.cityId)
     }
 
     @Test
@@ -67,7 +67,7 @@ class MockSearchQueryInterpreterTest {
         val result = interpreter.interpret("Eletricista em Franca", "Batatais")
 
         assertTrue(result.serviceIds.contains("maintenance-electrician"))
-        assertEquals("Batatais", result.cityName)
+        assertEquals("Batatais", result.cityId)
     }
 
     @Test

@@ -194,7 +194,7 @@ abstract class BaseIntegrationTest {
                 ConfirmProfessionalProfileRequest(
                     description = draft.normalizedDescription,
                     selectedServiceIds = draft.interpretedServices.map { it.serviceId },
-                    cityName = "São Paulo",
+                    cityId = "franca",
                     portfolioPhotoUrls = emptyList(),
                 ),
             )

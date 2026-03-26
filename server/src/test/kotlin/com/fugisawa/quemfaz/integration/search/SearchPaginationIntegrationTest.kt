@@ -42,7 +42,7 @@ class SearchPaginationIntegrationTest : BaseIntegrationTest() {
                         setBody(
                             SearchProfessionalsRequest(
                                 query = "pintor",
-                                cityName = "São Paulo",
+                                cityId = "franca",
                                 inputMode = InputMode.TEXT,
                                 page = 0,
                                 pageSize = 10,
@@ -67,7 +67,7 @@ class SearchPaginationIntegrationTest : BaseIntegrationTest() {
                         setBody(
                             SearchProfessionalsRequest(
                                 query = "pintor",
-                                cityName = "São Paulo",
+                                cityId = "franca",
                                 inputMode = InputMode.TEXT,
                                 page = 999,
                                 pageSize = 10,

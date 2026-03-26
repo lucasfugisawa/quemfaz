@@ -6,6 +6,7 @@ import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.auth.domain.UserStatus
 import com.fugisawa.quemfaz.catalog.application.CatalogService
+import com.fugisawa.quemfaz.city.application.CityService
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
@@ -68,15 +69,15 @@ class SearchProfessionalsServiceTest {
 
         override fun save(profile: ProfessionalProfile): ProfessionalProfile = profile
 
-        override fun listPublishedByCity(cityName: String): List<ProfessionalProfile> =
+        override fun listPublishedByCity(cityId: String): List<ProfessionalProfile> =
             profiles.filter {
-                it.cityName == cityName &&
+                it.cityId == cityId &&
                     it.status == ProfessionalProfileStatus.PUBLISHED
             }
 
         override fun search(
             serviceIds: List<String>,
-            cityName: String?,
+            cityId: String?,
         ): List<ProfessionalProfile> =
             profiles.filter { profile ->
                 profile.status == ProfessionalProfileStatus.PUBLISHED &&
@@ -159,7 +160,7 @@ class SearchProfessionalsServiceTest {
                 knownName = null,
                 description = "Desc",
                 normalizedDescription = "Desc",
-                cityName = "Batatais",
+                cityId = "batatais",
                 services = listOf(ProfessionalProfileService("clean-house", ServiceMatchLevel.PRIMARY)),
                 portfolioPhotos = emptyList(),
                 completeness = ProfileCompleteness.COMPLETE,
@@ -180,9 +181,10 @@ class SearchProfessionalsServiceTest {
                 userRepository = FakeUserRepository(),
                 catalogService = mock(),
                 phoneAuthRepository = FakePhoneAuthRepository(),
+                cityService = mock(),
             )
 
-        val request = SearchProfessionalsRequest("faxina", "Batatais", InputMode.TEXT)
+        val request = SearchProfessionalsRequest("faxina", "batatais", InputMode.TEXT)
         val response = service.execute(UserId("caller"), request)
 
         assertEquals(1, response.results.size)

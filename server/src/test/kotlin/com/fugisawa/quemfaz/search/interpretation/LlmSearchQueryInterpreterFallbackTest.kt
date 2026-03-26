@@ -74,7 +74,7 @@ class LlmSearchQueryInterpreterFallbackTest {
 
         assertTrue(result.serviceIds.isNotEmpty())
         assertTrue(result.serviceIds.contains("maintenance-electrician"))
-        assertEquals("Batatais", result.cityName)
+        assertEquals("Batatais", result.cityId)
     }
 
     @Test
@@ -82,13 +82,13 @@ class LlmSearchQueryInterpreterFallbackTest {
         val result = interpreter.interpret("xyz abc 123", "Batatais")
 
         assertTrue(result.serviceIds.isEmpty())
-        assertEquals("Batatais", result.cityName)
+        assertEquals("Batatais", result.cityId)
     }
 
     @Test
     fun `fallback preserves city context`() {
         val result = interpreter.interpret("pintor", "Franca")
 
-        assertEquals("Franca", result.cityName)
+        assertEquals("Franca", result.cityId)
     }
 }

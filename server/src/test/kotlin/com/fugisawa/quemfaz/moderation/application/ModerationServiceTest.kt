@@ -42,11 +42,11 @@ class ModerationServiceTest {
             return profile
         }
 
-        override fun listPublishedByCity(cityName: String) = profiles.values.filter { it.status == ProfessionalProfileStatus.PUBLISHED }
+        override fun listPublishedByCity(cityId: String) = profiles.values.filter { it.status == ProfessionalProfileStatus.PUBLISHED }
 
         override fun search(
             serviceIds: List<String>,
-            cityName: String?,
+            cityId: String?,
         ): List<ProfessionalProfile> = emptyList()
 
         override fun updateStatus(
@@ -175,7 +175,7 @@ class ModerationServiceTest {
         null,
         "Desc",
         "Desc",
-        "City",
+        "batatais",
         emptyList(),
         emptyList(),
         ProfileCompleteness.COMPLETE,

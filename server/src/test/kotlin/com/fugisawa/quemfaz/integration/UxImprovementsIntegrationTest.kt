@@ -139,7 +139,7 @@ class UxImprovementsIntegrationTest : BaseIntegrationTest() {
         integrationTestApplication {
             val client = createTestClient()
 
-            val response = client.get("/search/services/popular?cityName=Batatais")
+            val response = client.get("/search/services/popular?cityId=batatais")
             assertEquals(HttpStatusCode.OK, response.status)
 
             val body = response.body<PopularServicesResponse>()
@@ -151,7 +151,7 @@ class UxImprovementsIntegrationTest : BaseIntegrationTest() {
         integrationTestApplication {
             val client = createTestClient()
 
-            val response = client.get("/search/services/popular?cityName=CidadeInexistente")
+            val response = client.get("/search/services/popular?cityId=cidade-inexistente")
             assertEquals(HttpStatusCode.OK, response.status)
 
             val body = response.body<PopularServicesResponse>()
@@ -210,7 +210,7 @@ class UxImprovementsIntegrationTest : BaseIntegrationTest() {
                 client.post("/professional-profile/confirm") {
                     contentType(ContentType.Application.Json)
                     setBody(
-                        """{"description":"Pintor residencial","selectedServiceIds":[],"cityName":"São Paulo","portfolioPhotoUrls":[]}""",
+                        """{"description":"Pintor residencial","selectedServiceIds":[],"cityId":"franca","portfolioPhotoUrls":[]}""",
                     )
                 }
             assertEquals(HttpStatusCode.BadRequest, confirmResponse.status)

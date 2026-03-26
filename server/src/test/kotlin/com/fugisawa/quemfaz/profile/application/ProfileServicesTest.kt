@@ -6,6 +6,7 @@ import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.auth.domain.UserStatus
 import com.fugisawa.quemfaz.catalog.application.CatalogService
+import com.fugisawa.quemfaz.city.application.CityService
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
 import com.fugisawa.quemfaz.core.id.UserId
@@ -33,11 +34,11 @@ class ProfileServicesTest {
             return profile
         }
 
-        override fun listPublishedByCity(cityName: String) = profiles.values.filter { it.cityName == cityName }
+        override fun listPublishedByCity(cityId: String) = profiles.values.filter { it.cityId == cityId }
 
         override fun search(
             serviceIds: List<String>,
-            cityName: String?,
+            cityId: String?,
         ): List<ProfessionalProfile> = emptyList()
 
         override fun updateStatus(
@@ -161,12 +162,12 @@ class ProfileServicesTest {
         )
         phoneAuthRepo.create(UserPhoneAuthIdentity("id-123", userId, "+5516999999999", true, Instant.now(), Instant.now(), Instant.now()))
 
-        val service = ConfirmProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
+        val service = ConfirmProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
         val request =
             ConfirmProfessionalProfileRequest(
                 description = "Pintor experiente",
                 selectedServiceIds = listOf("paint-residential"),
-                cityName = "Batatais",
+                cityId = "batatais",
                 portfolioPhotoUrls = emptyList(),
             )
 
@@ -200,25 +201,25 @@ class ProfileServicesTest {
         phoneAuthRepo.create(UserPhoneAuthIdentity("id-123", userId, "+5516999999999", true, Instant.now(), Instant.now(), Instant.now()))
 
         // Create initial profile via confirm service
-        val confirmService = ConfirmProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
+        val confirmService = ConfirmProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
         confirmService.execute(
             userId,
             ConfirmProfessionalProfileRequest(
                 description = "Pintor experiente",
                 selectedServiceIds = listOf("paint-residential"),
-                cityName = "Batatais",
+                cityId = "batatais",
                 portfolioPhotoUrls = emptyList(),
             ),
         )
 
-        val updateService = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
+        val updateService = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
         val result =
             updateService.execute(
                 userId,
                 ConfirmProfessionalProfileRequest(
                     description = "Pintor e eletricista",
                     selectedServiceIds = listOf("paint-residential", "electrical-residential"),
-                    cityName = "Batatais",
+                    cityId = "batatais",
                     portfolioPhotoUrls = emptyList(),
                 ),
             )
@@ -241,14 +242,14 @@ class ProfileServicesTest {
         val userId = UserId("user-no-profile")
         userRepo.create(User(userId, "Jane", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now()))
 
-        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
+        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
         val result =
             service.execute(
                 userId,
                 ConfirmProfessionalProfileRequest(
                     description = "Desc",
                     selectedServiceIds = listOf("paint-residential"),
-                    cityName = "Batatais",
+                    cityId = "batatais",
                     portfolioPhotoUrls = emptyList(),
                 ),
             )
@@ -273,7 +274,7 @@ class ProfileServicesTest {
                 null,
                 "Desc",
                 "Desc",
-                "City",
+                "batatais",
                 emptyList(),
                 emptyList(),
                 ProfileCompleteness.INCOMPLETE,
@@ -284,14 +285,14 @@ class ProfileServicesTest {
             ),
         )
 
-        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
+        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
         val result =
             service.execute(
                 userId,
                 ConfirmProfessionalProfileRequest(
                     description = "New desc",
                     selectedServiceIds = listOf("paint-residential"),
-                    cityName = "Batatais",
+                    cityId = "batatais",
                     portfolioPhotoUrls = emptyList(),
                 ),
             )
@@ -309,7 +310,7 @@ class ProfileServicesTest {
 
         userRepo.create(User(userId, "John Doe", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now()))
 
-        val service = GetPublicProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo)
+        val service = GetPublicProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
 
         // No profile yet
         assertEquals(null, service.execute(profileId))
@@ -322,7 +323,7 @@ class ProfileServicesTest {
                 null,
                 "Desc",
                 "Desc",
-                "City",
+                "batatais",
                 emptyList(),
                 emptyList(),
                 ProfileCompleteness.INCOMPLETE,
