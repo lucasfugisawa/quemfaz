@@ -86,15 +86,19 @@ class SearchProfessionalsService(
         val candidates = profileRepository.search(interpreted.serviceIds, resolvedCityId)
 
         // 4. Rank profiles
-        val ranked = rankingService.rank(candidates, InterpretedSearchQuery(
-            originalQuery = interpreted.originalQuery,
-            normalizedQuery = interpreted.normalizedQuery,
-            serviceIds = interpreted.serviceIds,
-            cityId = resolvedCityId,
-            freeTextAliases = interpreted.freeTextAliases,
-            llmUnavailable = interpreted.llmUnavailable,
-            blockedDescriptions = interpreted.blockedDescriptions,
-        ))
+        val ranked =
+            rankingService.rank(
+                candidates,
+                InterpretedSearchQuery(
+                    originalQuery = interpreted.originalQuery,
+                    normalizedQuery = interpreted.normalizedQuery,
+                    serviceIds = interpreted.serviceIds,
+                    cityId = resolvedCityId,
+                    freeTextAliases = interpreted.freeTextAliases,
+                    llmUnavailable = interpreted.llmUnavailable,
+                    blockedDescriptions = interpreted.blockedDescriptions,
+                ),
+            )
 
         // 5. Paginate (in-memory slice — DB still returns all candidates)
         // TODO: move pagination to DB query when result sets grow large

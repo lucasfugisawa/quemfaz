@@ -17,9 +17,6 @@ import com.fugisawa.quemfaz.auth.infrastructure.ExposedUserPhoneAuthIdentityRepo
 import com.fugisawa.quemfaz.auth.infrastructure.ExposedUserRepository
 import com.fugisawa.quemfaz.auth.infrastructure.Sha256OtpHasher
 import com.fugisawa.quemfaz.auth.token.TokenService
-import com.fugisawa.quemfaz.city.application.CityService
-import com.fugisawa.quemfaz.city.domain.CityRepository
-import com.fugisawa.quemfaz.city.infrastructure.ExposedCityRepository
 import com.fugisawa.quemfaz.catalog.application.AdminCatalogService
 import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.catalog.application.ProvisionalServiceCreator
@@ -30,6 +27,9 @@ import com.fugisawa.quemfaz.catalog.domain.SystemConfigRepository
 import com.fugisawa.quemfaz.catalog.infrastructure.persistence.ExposedCatalogRepository
 import com.fugisawa.quemfaz.catalog.infrastructure.persistence.ExposedSignalRepository
 import com.fugisawa.quemfaz.catalog.infrastructure.persistence.ExposedSystemConfigRepository
+import com.fugisawa.quemfaz.city.application.CityService
+import com.fugisawa.quemfaz.city.domain.CityRepository
+import com.fugisawa.quemfaz.city.infrastructure.ExposedCityRepository
 import com.fugisawa.quemfaz.engagement.application.TrackContactClickService
 import com.fugisawa.quemfaz.engagement.application.TrackProfileViewService
 import com.fugisawa.quemfaz.engagement.domain.ContactClickEventRepository

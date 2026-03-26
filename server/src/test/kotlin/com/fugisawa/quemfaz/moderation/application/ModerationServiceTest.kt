@@ -110,7 +110,11 @@ class ModerationServiceTest {
             return true
         }
 
-        override fun acceptTerms(id: UserId, termsVersion: String, privacyVersion: String): User? = null
+        override fun acceptTerms(
+            id: UserId,
+            termsVersion: String,
+            privacyVersion: String,
+        ): User? = null
     }
 
     @Test

@@ -14,20 +14,21 @@ class CityIntegrationTest : BaseIntegrationTest() {
     override val tablesToClean: List<Table> = emptyList()
 
     @Test
-    fun `GET cities returns seeded active cities`() = integrationTestApplication {
-        val response = createTestClient().get("/cities")
-        assertEquals(HttpStatusCode.OK, response.status)
+    fun `GET cities returns seeded active cities`() =
+        integrationTestApplication {
+            val response = createTestClient().get("/cities")
+            assertEquals(HttpStatusCode.OK, response.status)
 
-        val body = response.body<CitiesResponse>()
-        assertEquals(3, body.cities.size)
+            val body = response.body<CitiesResponse>()
+            assertEquals(3, body.cities.size)
 
-        val cityIds = body.cities.map { it.id }.toSet()
-        assertTrue("batatais" in cityIds)
-        assertTrue("franca" in cityIds)
-        assertTrue("ribeirao-preto" in cityIds)
+            val cityIds = body.cities.map { it.id }.toSet()
+            assertTrue("batatais" in cityIds)
+            assertTrue("franca" in cityIds)
+            assertTrue("ribeirao-preto" in cityIds)
 
-        val ribeirao = body.cities.first { it.id == "ribeirao-preto" }
-        assertEquals("Ribeirão Preto", ribeirao.name)
-        assertEquals("SP", ribeirao.stateCode)
-    }
+            val ribeirao = body.cities.first { it.id == "ribeirao-preto" }
+            assertEquals("Ribeirão Preto", ribeirao.name)
+            assertEquals("SP", ribeirao.stateCode)
+        }
 }

@@ -10,12 +10,12 @@ import com.fugisawa.quemfaz.auth.application.StartOtpService
 import com.fugisawa.quemfaz.auth.application.VerifyOtpResult
 import com.fugisawa.quemfaz.auth.application.VerifyOtpService
 import com.fugisawa.quemfaz.auth.domain.UserRepository
+import com.fugisawa.quemfaz.contract.auth.AcceptTermsRequest
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
 import com.fugisawa.quemfaz.contract.auth.LogoutRequest
 import com.fugisawa.quemfaz.contract.auth.RefreshTokenRequest
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.StartOtpRequest
-import com.fugisawa.quemfaz.contract.auth.AcceptTermsRequest
 import com.fugisawa.quemfaz.contract.auth.UpdateDateOfBirthRequest
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.core.id.UserId
@@ -164,11 +164,12 @@ fun Route.authRoutes() {
                         ?: return@put call.respond(HttpStatusCode.Unauthorized)
 
                 val request = call.receive<AcceptTermsRequest>()
-                val updatedUser = userRepository.acceptTerms(
-                    UserId(userId),
-                    termsVersion = request.termsVersion,
-                    privacyVersion = request.privacyVersion,
-                )
+                val updatedUser =
+                    userRepository.acceptTerms(
+                        UserId(userId),
+                        termsVersion = request.termsVersion,
+                        privacyVersion = request.privacyVersion,
+                    )
                 if (updatedUser != null) {
                     call.respond(HttpStatusCode.OK, mapOf("success" to true))
                 } else {
