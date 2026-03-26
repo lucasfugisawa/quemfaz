@@ -32,8 +32,8 @@ fun Route.searchRoutes() {
         }
 
         get("/services/popular") {
-            val cityName = call.request.queryParameters["cityName"]
-            val response = popularSearchesService.getPopularServices(cityName)
+            val cityId = call.request.queryParameters["cityId"]
+            val response = popularSearchesService.getPopularServices(cityId)
             call.respond(response)
         }
     }

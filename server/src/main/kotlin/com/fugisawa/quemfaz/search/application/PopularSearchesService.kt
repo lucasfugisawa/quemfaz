@@ -1,5 +1,6 @@
 package com.fugisawa.quemfaz.search.application
 
+import com.fugisawa.quemfaz.city.application.CityService
 import com.fugisawa.quemfaz.contract.search.PopularServiceDto
 import com.fugisawa.quemfaz.contract.search.PopularServicesResponse
 import com.fugisawa.quemfaz.search.domain.SearchEventRepository
@@ -9,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class PopularSearchesService(
     private val searchEventRepository: SearchEventRepository,
+    private val cityService: CityService,
     private val minSearchesThreshold: Int = 10,
     private val windowDays: Int = 30,
     private val limit: Int = 8,
@@ -21,18 +23,19 @@ class PopularSearchesService(
 
     private val cache = ConcurrentHashMap<String, CacheEntry>()
 
-    fun getPopularServices(cityName: String?): PopularServicesResponse {
-        val cacheKey = cityName ?: "__global__"
+    fun getPopularServices(cityId: String?): PopularServicesResponse {
+        val cacheKey = cityId ?: "__global__"
         val cached = cache[cacheKey]
         if (cached != null && Duration.between(cached.cachedAt, Instant.now()).toMinutes() < cacheDurationMinutes) {
             return cached.response
         }
-        val response = computePopularServices(cityName)
+        val response = computePopularServices(cityId)
         cache[cacheKey] = CacheEntry(response, Instant.now())
         return response
     }
 
-    private fun computePopularServices(cityName: String?): PopularServicesResponse {
+    private fun computePopularServices(cityId: String?): PopularServicesResponse {
+        val cityName = cityService.resolveNameFromId(cityId)
         if (cityName != null) {
             val cityCount = searchEventRepository.countSearchesInWindow(cityName, windowDays)
             if (cityCount >= minSearchesThreshold) {

@@ -80,7 +80,7 @@ class LlmSearchQueryInterpreter(
             originalQuery = query,
             normalizedQuery = query.lowercase().trim(),
             serviceIds = serviceIds,
-            cityName = cityContext,
+            cityId = cityContext,
             freeTextAliases = displayNames,
             llmUnavailable = false,
             blockedDescriptions = blockedDescriptions,
@@ -105,7 +105,7 @@ class LlmSearchQueryInterpreter(
             originalQuery = query,
             normalizedQuery = query.lowercase().trim(),
             serviceIds = serviceIds,
-            cityName = cityContext,
+            cityId = cityContext,
             freeTextAliases = localMatches.take(1).map { it.displayName },
             llmUnavailable = true,
         )

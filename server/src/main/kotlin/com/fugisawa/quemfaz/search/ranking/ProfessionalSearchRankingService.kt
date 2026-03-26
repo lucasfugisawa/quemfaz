@@ -73,20 +73,14 @@ class ProfessionalSearchRankingService {
         score += (minOf(profile.viewCount, VIEW_CAP) * VIEW_POINTS_PER).toInt()
 
         // 7. City Match
-        if (query.cityName != null) {
-            if (profile.cityName != null) {
-                if (!profile.cityName.equals(query.cityName, ignoreCase = true)) {
+        if (query.cityId != null) {
+            if (profile.cityId != null) {
+                if (profile.cityId != query.cityId) {
                     score += CITY_MISMATCH_PENALTY
                 }
             } else {
-                // Profile has no city, but query has one.
                 score += CITY_MISMATCH_PENALTY / 2
             }
-        } else {
-            // No city context in query.
-            // If profile has a city, it's just a regular result.
-            // We could optionally give a small bonus to profiles without city (global/remote services)
-            // but for now, we do nothing (neutral score).
         }
 
         return score

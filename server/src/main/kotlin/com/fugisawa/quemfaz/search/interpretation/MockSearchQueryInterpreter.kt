@@ -24,7 +24,7 @@ class MockSearchQueryInterpreter(
             originalQuery = query,
             normalizedQuery = normalized,
             serviceIds = serviceIds.toList(),
-            cityName = cityContext,
+            cityId = cityContext,
             freeTextAliases = emptyList(),
             llmUnavailable = false,
         )

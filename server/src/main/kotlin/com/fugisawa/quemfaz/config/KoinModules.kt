@@ -194,8 +194,8 @@ val infrastructureModule =
         single { ProfessionalSearchRankingService() }
 
         // Search Services
-        single { SearchProfessionalsService(get(), get(), get(), get(), get(), get(), get(), get()) }
-        single { PopularSearchesService(get()) }
+        single { SearchProfessionalsService(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+        single { PopularSearchesService(get(), get()) }
 
         // Favorites
         single<FavoriteRepository> { ExposedFavoriteRepository() }

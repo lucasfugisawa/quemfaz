@@ -19,7 +19,7 @@ data class InterpretedSearchQuery(
     val originalQuery: String,
     val normalizedQuery: String,
     val serviceIds: List<String>,
-    val cityName: String?,
+    val cityId: String?,
     val freeTextAliases: List<String>,
     val llmUnavailable: Boolean = false,
     val blockedDescriptions: List<String> = emptyList(),
