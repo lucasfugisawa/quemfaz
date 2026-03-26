@@ -9,25 +9,26 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class CityServiceTest {
-
-    private val batatais = City(
-        id = CityId("batatais"),
-        name = "Batatais",
-        stateCode = "SP",
-        country = "BR",
-        latitude = -20.8914,
-        longitude = -47.5864,
-        isActive = true,
-    )
-    private val franca = City(
-        id = CityId("franca"),
-        name = "Franca",
-        stateCode = "SP",
-        country = "BR",
-        latitude = -20.5389,
-        longitude = -47.4008,
-        isActive = true,
-    )
+    private val batatais =
+        City(
+            id = CityId("batatais"),
+            name = "Batatais",
+            stateCode = "SP",
+            country = "BR",
+            latitude = -20.8914,
+            longitude = -47.5864,
+            isActive = true,
+        )
+    private val franca =
+        City(
+            id = CityId("franca"),
+            name = "Franca",
+            stateCode = "SP",
+            country = "BR",
+            latitude = -20.5389,
+            longitude = -47.4008,
+            isActive = true,
+        )
 
     private fun createService(cities: List<City> = listOf(batatais, franca)): Pair<CityService, CountingCityRepository> {
         val repo = CountingCityRepository(cities)
@@ -120,7 +121,9 @@ class CityServiceTest {
             private set
 
         override fun findById(id: String): City? = cities.find { it.id.value == id }
+
         override fun findByName(name: String): City? = cities.find { it.name.equals(name, ignoreCase = true) }
+
         override fun listActive(): List<City> {
             listActiveCallCount++
             return cities

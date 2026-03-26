@@ -244,6 +244,8 @@ class UpdateProfessionalProfileService(
         val saved = profileRepository.save(updated)
 
         val phone = phoneAuthRepository.findByUserId(userId)?.phoneNumber ?: ""
-        return UpdateProfileResult.Success(profileResponseMapper.toResponse(saved, user.fullName, user.photoUrl, phone, includeServiceStatus = true))
+        return UpdateProfileResult.Success(
+            profileResponseMapper.toResponse(saved, user.fullName, user.photoUrl, phone, includeServiceStatus = true),
+        )
     }
 }

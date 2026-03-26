@@ -34,11 +34,9 @@ class CityService(
         }
     }
 
-    fun listActive(): CitiesResponse =
-        CitiesResponse(cities = ensureCache().map { it.toResponse() })
+    fun listActive(): CitiesResponse = CitiesResponse(cities = ensureCache().map { it.toResponse() })
 
-    fun findById(id: String): City? =
-        ensureCache().find { it.id.value == id }
+    fun findById(id: String): City? = ensureCache().find { it.id.value == id }
 
     fun resolveNameFromId(cityId: String?): String? {
         if (cityId == null) return null
@@ -50,6 +48,5 @@ class CityService(
         return ensureCache().find { it.name.equals(cityName, ignoreCase = true) }?.id?.value
     }
 
-    private fun City.toResponse(): CityResponse =
-        CityResponse(id = id.value, name = name, stateCode = stateCode)
+    private fun City.toResponse(): CityResponse = CityResponse(id = id.value, name = name, stateCode = stateCode)
 }

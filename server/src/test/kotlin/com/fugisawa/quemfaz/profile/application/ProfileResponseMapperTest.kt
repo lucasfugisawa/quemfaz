@@ -21,41 +21,61 @@ import java.time.Instant
 import kotlin.test.assertEquals
 
 class ProfileResponseMapperTest {
+    private val batatais =
+        City(
+            id = CityId("batatais"),
+            name = "Batatais",
+            stateCode = "SP",
+            country = "BR",
+            latitude = -20.89,
+            longitude = -47.58,
+            isActive = true,
+        )
 
-    private val batatais = City(
-        id = CityId("batatais"), name = "Batatais", stateCode = "SP",
-        country = "BR", latitude = -20.89, longitude = -47.58, isActive = true,
-    )
+    private val fakeCityRepo =
+        object : CityRepository {
+            override fun findById(id: String) = if (id == "batatais") batatais else null
 
-    private val fakeCityRepo = object : CityRepository {
-        override fun findById(id: String) = if (id == "batatais") batatais else null
-        override fun findByName(name: String) = if (name.equals("Batatais", ignoreCase = true)) batatais else null
-        override fun listActive() = listOf(batatais)
-    }
+            override fun findByName(name: String) = if (name.equals("Batatais", ignoreCase = true)) batatais else null
+
+            override fun listActive() = listOf(batatais)
+        }
 
     private val cityService = CityService(fakeCityRepo)
 
-    private val pendingEntry = CatalogEntry(
-        id = "svc-pending", displayName = "Pending Service", description = "",
-        aliases = emptyList(), categoryId = "cat", status = CatalogServiceStatus.PENDING_REVIEW,
-    )
-    private val activeEntry = CatalogEntry(
-        id = "svc-active", displayName = "Active Service", description = "",
-        aliases = emptyList(), categoryId = "cat", status = CatalogServiceStatus.ACTIVE,
-    )
+    private val pendingEntry =
+        CatalogEntry(
+            id = "svc-pending",
+            displayName = "Pending Service",
+            description = "",
+            aliases = emptyList(),
+            categoryId = "cat",
+            status = CatalogServiceStatus.PENDING_REVIEW,
+        )
+    private val activeEntry =
+        CatalogEntry(
+            id = "svc-active",
+            displayName = "Active Service",
+            description = "",
+            aliases = emptyList(),
+            categoryId = "cat",
+            status = CatalogServiceStatus.ACTIVE,
+        )
 
-    private val catalogService: CatalogService = mock<CatalogService>().also {
-        whenever(it.findById("svc-pending")).thenReturn(pendingEntry)
-        whenever(it.findById("svc-active")).thenReturn(activeEntry)
-    }
+    private val catalogService: CatalogService =
+        mock<CatalogService>().also {
+            whenever(it.findById("svc-pending")).thenReturn(pendingEntry)
+            whenever(it.findById("svc-active")).thenReturn(activeEntry)
+        }
 
     private val mapper = ProfileResponseMapper(catalogService, cityService)
 
     private fun buildProfile(
-        services: List<ProfessionalProfileService> = listOf(
-            ProfessionalProfileService("svc-pending", ServiceMatchLevel.PRIMARY),
-            ProfessionalProfileService("svc-active", ServiceMatchLevel.SECONDARY),
-        ),
+        services: List<ProfessionalProfileService> =
+            listOf(
+                ProfessionalProfileService("svc-pending", ServiceMatchLevel.PRIMARY),
+                ProfessionalProfileService("svc-active", ServiceMatchLevel.SECONDARY),
+            ),
     ) = ProfessionalProfile(
         id = ProfessionalProfileId("prof-1"),
         userId = UserId("user-1"),
