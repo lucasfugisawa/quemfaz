@@ -69,7 +69,7 @@ import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
-import com.fugisawa.quemfaz.domain.city.SupportedCities
+import com.fugisawa.quemfaz.contract.city.CityResponse
 import com.fugisawa.quemfaz.platform.openUrl
 import com.fugisawa.quemfaz.session.SessionManager
 import com.fugisawa.quemfaz.ui.components.ChatBubble
@@ -123,7 +123,9 @@ private fun epochMillisToDateParts(millis: Long): Triple<Int, Int, Int> {
 @Composable
 fun OnboardingScreens(
     uiState: OnboardingUiState,
-    selectedCity: String?,
+    selectedCityId: String?,
+    selectedCityDisplayName: String?,
+    cities: List<CityResponse>,
     catalog: CatalogResponse?,
     onSubmitDateOfBirth: (dateOfBirth: String) -> Unit,
     onCreateDraft: (String, InputMode) -> Unit,
@@ -612,7 +614,7 @@ fun OnboardingScreens(
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
                                     OutlinedTextField(
-                                        value = selectedCity ?: "",
+                                        value = selectedCityDisplayName ?: "",
                                         onValueChange = {},
                                         readOnly = true,
                                         label = { Text(Strings.Onboarding.CITY_LABEL) },
@@ -625,11 +627,11 @@ fun OnboardingScreens(
                                         expanded = cityDropdownExpanded,
                                         onDismissRequest = { cityDropdownExpanded = false },
                                     ) {
-                                        SupportedCities.all.forEach { city ->
+                                        cities.forEach { city ->
                                             DropdownMenuItem(
-                                                text = { Text(city) },
+                                                text = { Text(city.name) },
                                                 onClick = {
-                                                    onSelectCity(city)
+                                                    onSelectCity(city.id)
                                                     cityDropdownExpanded = false
                                                 },
                                             )
@@ -756,7 +758,7 @@ fun OnboardingScreens(
                                                 style = MaterialTheme.typography.bodyMedium,
                                             )
                                             Text(
-                                                selectedCity ?: "",
+                                                selectedCityDisplayName ?: "",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
@@ -973,7 +975,9 @@ private val previewCallbacks: @Composable (OnboardingUiState) -> @Composable () 
     @Composable {
         OnboardingScreens(
             uiState = uiState,
-            selectedCity = "Franca",
+            selectedCityId = "franca",
+            selectedCityDisplayName = "Franca",
+            cities = PreviewSamples.sampleCities,
             catalog = null,
             onSubmitDateOfBirth = {},
             onCreateDraft = { _, _ -> },
@@ -993,19 +997,19 @@ private val previewCallbacks: @Composable (OnboardingUiState) -> @Composable () 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingBirthDatePreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.BirthDateRequired, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.BirthDateRequired, selectedCityId = null, selectedCityDisplayName = null, cities = PreviewSamples.sampleCities, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingNaturalPresentationPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.NaturalPresentation, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.NaturalPresentation, selectedCityId = null, selectedCityDisplayName = null, cities = PreviewSamples.sampleCities, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
 @Composable
 private fun OnboardingLoadingPreview() {
-    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCity = null, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
+    AppTheme { OnboardingScreens(uiState = OnboardingUiState.Loading, selectedCityId = null, selectedCityDisplayName = null, cities = PreviewSamples.sampleCities, catalog = null, onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }) }
 }
 
 @LightDarkScreenPreview
@@ -1018,7 +1022,9 @@ private fun OnboardingSmartConfirmationPreview() {
                 listOf("paint-residential"),
                 "Pintor residencial com 10 anos de experiência.",
             ),
-            selectedCity = "Franca",
+            selectedCityId = "franca",
+            selectedCityDisplayName = "Franca",
+            cities = PreviewSamples.sampleCities,
             catalog = null,
             onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
@@ -1031,7 +1037,9 @@ private fun OnboardingPublishedPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Published(PreviewSamples.sampleProfile),
-            selectedCity = null,
+            selectedCityId = null,
+            selectedCityDisplayName = null,
+            cities = PreviewSamples.sampleCities,
             catalog = null,
             onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )
@@ -1044,7 +1052,9 @@ private fun OnboardingErrorPreview() {
     AppTheme {
         OnboardingScreens(
             uiState = OnboardingUiState.Error("AI service is temporarily unavailable. Please try again in a few minutes."),
-            selectedCity = null,
+            selectedCityId = null,
+            selectedCityDisplayName = null,
+            cities = PreviewSamples.sampleCities,
             catalog = null,
             onSubmitDateOfBirth = {}, onCreateDraft = { _, _ -> }, onSelectCity = {}, onConfirmFromSmartConfirmation = { _, _, _ -> }, onProceedWithManualServices = { _, _ -> }, onPickPhoto = {}, onPublishProfile = { _, _, _, _ -> }, onSubmitClarifications = { _, _ -> }, onSkipClarification = {}, onBack = {}, onFinish = { _ -> }
         )

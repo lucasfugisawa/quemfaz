@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.fugisawa.quemfaz.contract.city.CityResponse
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.strings.Strings
@@ -17,9 +18,9 @@ import com.fugisawa.quemfaz.ui.theme.Spacing
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CitySelectionScreen(
-    cities: List<String>,
-    currentCity: String? = null,
-    onCitySelected: (String) -> Unit
+    cities: List<CityResponse>,
+    currentCityId: String? = null,
+    onCitySelected: (String) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -37,16 +38,16 @@ fun CitySelectionScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onCitySelected(city) }
+                        .clickable { onCitySelected(city.id) }
                         .padding(horizontal = Spacing.screenEdge, vertical = Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(
-                        selected = city == currentCity,
-                        onClick = { onCitySelected(city) }
+                        selected = city.id == currentCityId,
+                        onClick = { onCitySelected(city.id) }
                     )
                     Spacer(modifier = Modifier.width(Spacing.sm))
-                    Text(city, style = MaterialTheme.typography.bodyLarge)
+                    Text(city.name, style = MaterialTheme.typography.bodyLarge)
                 }
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = Spacing.screenEdge),
@@ -62,7 +63,7 @@ fun CitySelectionScreen(
 @LightDarkScreenPreview
 @Composable
 private fun CitySelectionPreview() {
-    AppTheme { CitySelectionScreen(cities = PreviewSamples.sampleCities, currentCity = "Franca", onCitySelected = {}) }
+    AppTheme { CitySelectionScreen(cities = PreviewSamples.sampleCities, currentCityId = "franca", onCitySelected = {}) }
 }
 
 @LightDarkScreenPreview

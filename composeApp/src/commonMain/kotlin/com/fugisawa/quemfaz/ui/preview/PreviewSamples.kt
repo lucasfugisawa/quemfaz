@@ -1,6 +1,7 @@
 package com.fugisawa.quemfaz.ui.preview
 
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
+import com.fugisawa.quemfaz.contract.city.CityResponse
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftResponse
 import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
@@ -28,6 +29,7 @@ object PreviewSamples {
         knownName = null,
         photoUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=256&h=256&auto=format&fit=crop",
         description = "Experienced plumber with 10+ years in residential and commercial projects. Available on weekends.",
+        cityId = "sao-paulo",
         cityName = "São Paulo",
         services = sampleServices,
         profileComplete = true,
@@ -50,6 +52,7 @@ object PreviewSamples {
         knownName = null,
         photoUrl = null,
         description = "",
+        cityId = "batatais",
         cityName = "Batatais",
         services = emptyList(),
         profileComplete = false,
@@ -65,6 +68,7 @@ object PreviewSamples {
         knownName = null,
         photoUrl = null,
         description = "Professional house cleaner. Reliable and punctual.",
+        cityId = "ribeirao-preto",
         cityName = "Ribeirão Preto",
         services = listOf(InterpretedServiceDto("cleaner", "House Cleaning", "HIGH")),
         profileComplete = true,
@@ -104,6 +108,7 @@ object PreviewSamples {
         phoneNumber = "+55 11 99999-1234",
         fullName = "Lucas Fugisawa",
         photoUrl = "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=256&h=256&auto=format&fit=crop",
+        cityId = "sao-paulo",
         cityName = "São Paulo",
         status = "ACTIVE",
         hasProfessionalProfile = false,
@@ -114,6 +119,7 @@ object PreviewSamples {
         phoneNumber = "+55 16 99999-0000",
         fullName = "",
         photoUrl = null,
+        cityId = null,
         cityName = null,
         status = "ACTIVE",
         hasProfessionalProfile = false,
@@ -124,13 +130,20 @@ object PreviewSamples {
         phoneNumber = "+55 16 99999-0000",
         fullName = "Carlos Silva",
         photoUrl = null,
+        cityId = "sao-paulo",
         cityName = "São Paulo",
         status = "ACTIVE",
         hasProfessionalProfile = true,
     )
 
     val sampleCities = listOf(
-        "São Paulo", "Ribeirão Preto", "Batatais", "Campinas",
-        "Franca", "Barretos", "Araraquara", "São Carlos",
+        CityResponse("sao-paulo", "São Paulo", "SP"),
+        CityResponse("ribeirao-preto", "Ribeirão Preto", "SP"),
+        CityResponse("batatais", "Batatais", "SP"),
+        CityResponse("campinas", "Campinas", "SP"),
+        CityResponse("franca", "Franca", "SP"),
+        CityResponse("barretos", "Barretos", "SP"),
+        CityResponse("araraquara", "Araraquara", "SP"),
+        CityResponse("sao-carlos", "São Carlos", "SP"),
     )
 }

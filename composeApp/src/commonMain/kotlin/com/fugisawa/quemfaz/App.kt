@@ -49,7 +49,7 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
             AppTheme {
             val sessionManager = koinInject<SessionManager>()
             val authState by sessionManager.authState.collectAsState()
-            val currentCity by sessionManager.currentCity.collectAsState()
+            val currentCityId by sessionManager.currentCityId.collectAsState()
 
             // Inject ApiClient with baseUrl
             val koin = org.koin.compose.getKoin()
@@ -126,7 +126,7 @@ fun App(baseUrl: String = BASE_URL_DEFAULT) {
 
                         MainFlow(
                             currentScreen = currentScreen,
-                            currentCity = currentCity,
+                            currentCityId = currentCityId,
                             navigateTo = navigateTo,
                             navigateBack = navigateBack,
                             navigateToTab = navigateToTab,
@@ -218,7 +218,7 @@ fun AuthFlow(navigateTo: (Screen) -> Unit) {
 @Composable
 fun MainFlow(
     currentScreen: Screen,
-    currentCity: String?,
+    currentCityId: String?,
     navigateTo: (Screen) -> Unit,
     navigateBack: () -> Unit,
     navigateToTab: (Screen) -> Unit,
@@ -248,8 +248,10 @@ fun MainFlow(
     val popularServices by homeViewModel.popularServices.collectAsState()
     val searchHistory by homeViewModel.searchHistory.collectAsState()
 
-    LaunchedEffect(currentCity) {
-        homeViewModel.loadPopularServices(currentCity)
+    val cities by homeViewModel.cities.collectAsState()
+
+    LaunchedEffect(currentCityId) {
+        homeViewModel.loadPopularServices(currentCityId)
     }
 
     var currentQuery by remember { mutableStateOf("") }
@@ -258,8 +260,8 @@ fun MainFlow(
     var showCitySheet by remember { mutableStateOf(false) }
     val citySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    LaunchedEffect(currentCity) {
-        if (currentCity == null) showCitySheet = true
+    LaunchedEffect(currentCityId) {
+        if (currentCityId == null) showCitySheet = true
     }
 
     val isTopLevelScreen = currentScreen == Screen.Home ||
@@ -335,7 +337,7 @@ fun MainFlow(
                     is Screen.Home -> {
                         HomeScreen(
                             currentUser = currentUser,
-                            currentCity = currentCity,
+                            currentCity = homeViewModel.getCityDisplayName(currentCityId),
                             showEarnMoneyCard = showEarnMoneyCard,
                             popularServices = popularServices,
                             searchHistory = searchHistory,
@@ -359,8 +361,8 @@ fun MainFlow(
                     }
                     is Screen.CitySelection -> {
                         CitySelectionScreen(
-                            cities = homeViewModel.supportedCities,
-                            currentCity = currentCity,
+                            cities = cities,
+                            currentCityId = currentCityId,
                             onCitySelected = {
                                 homeViewModel.selectCity(it)
                                 // Always reset to Home after city selection — clears gate stack.
@@ -455,7 +457,8 @@ fun MainFlow(
                     is Screen.OnboardingStart -> {
                         val viewModel: OnboardingViewModel = koinInject()
                         val uiState by viewModel.uiState.collectAsState()
-                        val selectedCity by viewModel.selectedCity.collectAsState()
+                        val selectedCityId by viewModel.selectedCityId.collectAsState()
+                        val onboardingCities by viewModel.cities.collectAsState()
                         val onboardingCatalog by viewModel.catalog.collectAsState()
 
                         val isOnboardingInProgress =
@@ -468,8 +471,8 @@ fun MainFlow(
                             viewModel.goBack()
                         }
 
-                        LaunchedEffect(currentCity) {
-                            viewModel.initializeCity(currentCity)
+                        LaunchedEffect(currentCityId) {
+                            viewModel.initializeCity(currentCityId)
                         }
 
                         val imagePicker = rememberImagePickerLauncher { data, mimeType ->
@@ -479,7 +482,9 @@ fun MainFlow(
 
                         OnboardingScreens(
                             uiState = uiState,
-                            selectedCity = selectedCity,
+                            selectedCityId = selectedCityId,
+                            selectedCityDisplayName = viewModel.getCityDisplayName(selectedCityId),
+                            cities = onboardingCities,
                             catalog = onboardingCatalog,
                             onSubmitDateOfBirth = { viewModel.submitDateOfBirth(it) },
                             onCreateDraft = { text, mode -> viewModel.createDraft(text, mode) },
@@ -526,10 +531,11 @@ fun MainFlow(
                             uiState = uiState,
                             editedServiceIds = editedServiceIds,
                             catalog = editCatalog,
+                            cities = cities,
                             onAddService = viewModel::addService,
                             onRemoveService = viewModel::removeService,
-                            onSave = { desc, city ->
-                                viewModel.saveProfile(desc, city)
+                            onSave = { desc, cityId ->
+                                viewModel.saveProfile(desc, cityId)
                             },
                             onNavigateBack = navigateBack,
                             onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }
@@ -555,26 +561,26 @@ fun MainFlow(
             ) {
                 Text(Strings.CitySelection.TITLE, style = MaterialTheme.typography.titleLarge)
                 Spacer(modifier = Modifier.height(Spacing.md))
-                homeViewModel.supportedCities.forEach { city ->
+                cities.forEach { city ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                homeViewModel.selectCity(city)
+                                homeViewModel.selectCity(city.id)
                                 showCitySheet = false
                             }
                             .padding(vertical = Spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(
-                            selected = city == currentCity,
+                            selected = city.id == currentCityId,
                             onClick = {
-                                homeViewModel.selectCity(city)
+                                homeViewModel.selectCity(city.id)
                                 showCitySheet = false
                             }
                         )
                         Spacer(modifier = Modifier.width(Spacing.sm))
-                        Text(city, style = MaterialTheme.typography.bodyLarge)
+                        Text(city.name, style = MaterialTheme.typography.bodyLarge)
                     }
                     HorizontalDivider(
                         thickness = Spacing.divider,

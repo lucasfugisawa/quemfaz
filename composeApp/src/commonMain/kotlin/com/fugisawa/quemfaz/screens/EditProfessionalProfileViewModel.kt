@@ -69,7 +69,7 @@ class EditProfessionalProfileViewModel(
 
     fun saveProfile(
         description: String,
-        cityName: String,
+        cityId: String,
     ) {
         val current = when (val s = _uiState.value) {
             is EditProfileUiState.Ready -> s.profile
@@ -83,7 +83,7 @@ class EditProfessionalProfileViewModel(
                     ConfirmProfessionalProfileRequest(
                         description = description,
                         selectedServiceIds = _editedServiceIds.value,
-                        cityName = cityName.ifBlank { null },
+                        cityId = cityId.ifBlank { null },
                         portfolioPhotoUrls = current.portfolioPhotoUrls
                     )
                 )

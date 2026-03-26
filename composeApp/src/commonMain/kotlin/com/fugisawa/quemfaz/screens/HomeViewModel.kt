@@ -2,6 +2,7 @@ package com.fugisawa.quemfaz.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fugisawa.quemfaz.contract.city.CityResponse
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
@@ -82,7 +83,10 @@ class HomeViewModel(
     private val _accumulatedResults = MutableStateFlow<List<ProfessionalProfileResponse>>(emptyList())
     private var isLoadingMore = false
 
-    val currentCity = sessionManager.currentCity
+    val currentCityId = sessionManager.currentCityId
+
+    private val _cities = MutableStateFlow<List<CityResponse>>(emptyList())
+    val cities: StateFlow<List<CityResponse>> = _cities.asStateFlow()
 
     val showEarnMoneyCard = combine(
         sessionManager.currentUser,
@@ -99,20 +103,27 @@ class HomeViewModel(
         _inputMode = mode
     }
 
-    fun loadPopularServices(cityName: String?) {
+    fun loadPopularServices(cityId: String?) {
         viewModelScope.launch {
             try {
-                _popularServices.value = apiClients.getPopularServices(cityName)
+                _popularServices.value = apiClients.getPopularServices(cityId)
             } catch (_: Exception) { }
         }
     }
 
-    val supportedCities = listOf("Batatais", "Franca", "Ribeirão Preto")
+    fun loadCities() {
+        viewModelScope.launch {
+            try {
+                _cities.value = apiClients.getCities().cities
+            } catch (_: Exception) { }
+        }
+    }
 
     private val _catalog = MutableStateFlow<CatalogResponse?>(null)
     val catalog: StateFlow<CatalogResponse?> = _catalog.asStateFlow()
 
     init {
+        loadCities()
         viewModelScope.launch {
             try {
                 _catalog.value = catalogApiClient.getCatalog()
@@ -128,15 +139,18 @@ class HomeViewModel(
         }
     }
 
-    fun selectCity(city: String) {
-        sessionManager.setCity(city)
+    fun selectCity(cityId: String) {
+        sessionManager.setCity(cityId)
     }
+
+    fun getCityDisplayName(cityId: String?): String? =
+        _cities.value.find { it.id == cityId }?.name
 
     fun search(query: String) {
         if (query.isBlank()) return
 
         // Check cache
-        val cacheKey = "${query.lowercase()}:${currentCity.value?.lowercase()}"
+        val cacheKey = "${query.lowercase()}:${currentCityId.value?.lowercase()}"
         val cached = searchCache[cacheKey]
         if (cached != null && cached.timestamp.elapsedNow() < CACHE_TTL) {
             // Restore from cache
@@ -181,7 +195,7 @@ class HomeViewModel(
                 val response = apiClients.search(
                     SearchProfessionalsRequest(
                         query = lastQuery,
-                        cityName = currentCity.value,
+                        cityId = currentCityId.value,
                         inputMode = _inputMode,
                         page = page,
                         pageSize = 20,
@@ -198,7 +212,7 @@ class HomeViewModel(
                 )
 
                 // Store/update cache
-                val cacheKey = "${lastQuery.lowercase()}:${currentCity.value?.lowercase()}"
+                val cacheKey = "${lastQuery.lowercase()}:${currentCityId.value?.lowercase()}"
                 if (searchCache.size >= CACHE_MAX_ENTRIES && !searchCache.containsKey(cacheKey)) {
                     searchCache.keys.firstOrNull()?.let { searchCache.remove(it) }
                 }

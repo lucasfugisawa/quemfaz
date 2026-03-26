@@ -15,6 +15,7 @@ import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.profile.SetKnownNameRequest
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
+import com.fugisawa.quemfaz.contract.city.CityResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
@@ -70,8 +71,11 @@ class OnboardingViewModel(
     )
     val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
 
-    private val _selectedCity = MutableStateFlow<String?>(null)
-    val selectedCity: StateFlow<String?> = _selectedCity.asStateFlow()
+    private val _selectedCityId = MutableStateFlow<String?>(null)
+    val selectedCityId: StateFlow<String?> = _selectedCityId.asStateFlow()
+
+    private val _cities = MutableStateFlow<List<CityResponse>>(emptyList())
+    val cities: StateFlow<List<CityResponse>> = _cities.asStateFlow()
 
     private val _catalog = MutableStateFlow<CatalogResponse?>(null)
     val catalog: StateFlow<CatalogResponse?> = _catalog.asStateFlow()
@@ -84,17 +88,25 @@ class OnboardingViewModel(
                 _catalog.value = catalogApiClient.getCatalog()
             } catch (_: Exception) { }
         }
-    }
-
-    fun initializeCity(mainScreenCity: String?) {
-        if (_selectedCity.value == null) {
-            _selectedCity.value = mainScreenCity
+        viewModelScope.launch {
+            try {
+                _cities.value = apiClients.getCities().cities
+            } catch (_: Exception) { }
         }
     }
 
-    fun selectCity(city: String) {
-        _selectedCity.value = city
+    fun initializeCity(cityId: String?) {
+        if (_selectedCityId.value == null) {
+            _selectedCityId.value = cityId
+        }
     }
+
+    fun selectCity(cityId: String) {
+        _selectedCityId.value = cityId
+    }
+
+    fun getCityDisplayName(cityId: String?): String? =
+        _cities.value.find { it.id == cityId }?.name
 
     fun submitDateOfBirth(dateOfBirth: String) {
         viewModelScope.launch {
@@ -269,7 +281,7 @@ class OnboardingViewModel(
                     ConfirmProfessionalProfileRequest(
                         description = confirmedDescription,
                         selectedServiceIds = confirmedServiceIds,
-                        cityName = _selectedCity.value,
+                        cityId = _selectedCityId.value,
                         portfolioPhotoUrls = emptyList(),
                     )
                 )

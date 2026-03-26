@@ -9,6 +9,7 @@ import com.fugisawa.quemfaz.contract.auth.StartOtpResponse
 import com.fugisawa.quemfaz.contract.auth.UserProfileResponse
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpRequest
 import com.fugisawa.quemfaz.contract.auth.VerifyOtpResponse
+import com.fugisawa.quemfaz.contract.city.CitiesResponse
 import com.fugisawa.quemfaz.contract.common.SimpleSuccessResponse
 import com.fugisawa.quemfaz.contract.engagement.TrackContactClickRequest
 import com.fugisawa.quemfaz.contract.engagement.TrackProfileViewRequest
@@ -38,6 +39,10 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 
 class FeatureApiClients(private val apiClient: ApiClient) {
+
+    // Cities
+    suspend fun getCities(): CitiesResponse =
+        apiClient.client.get("/cities").body()
 
     // Auth
     suspend fun startOtp(request: StartOtpRequest): StartOtpResponse =
@@ -110,9 +115,9 @@ class FeatureApiClients(private val apiClient: ApiClient) {
             setBody(request)
         }.body()
 
-    suspend fun getPopularServices(cityName: String?): PopularServicesResponse =
+    suspend fun getPopularServices(cityId: String?): PopularServicesResponse =
         apiClient.client.get("/search/services/popular") {
-            cityName?.let { url.parameters.append("cityName", it) }
+            cityId?.let { url.parameters.append("cityId", it) }
         }.body()
 
     // Professional Profile

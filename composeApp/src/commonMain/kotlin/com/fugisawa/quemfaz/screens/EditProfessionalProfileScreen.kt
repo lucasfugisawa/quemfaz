@@ -50,8 +50,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
+import com.fugisawa.quemfaz.contract.city.CityResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
-import com.fugisawa.quemfaz.domain.city.SupportedCities
 import com.fugisawa.quemfaz.ui.components.ErrorMessage
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
@@ -67,9 +67,10 @@ fun EditProfessionalProfileScreen(
     uiState: EditProfileUiState,
     editedServiceIds: List<String>,
     catalog: CatalogResponse?,
+    cities: List<CityResponse>,
     onAddService: (String) -> Unit,
     onRemoveService: (String) -> Unit,
-    onSave: (description: String, city: String) -> Unit,
+    onSave: (description: String, cityId: String) -> Unit,
     onNavigateBack: () -> Unit,
     onGoToOnboarding: () -> Unit,
 ) {
@@ -127,13 +128,13 @@ fun EditProfessionalProfileScreen(
                     }
                 }
                 is EditProfileUiState.Ready -> EditProfileForm(
-                    uiState.profile, isSaving = false, isSaved = false, editedServiceIds, catalog, onAddService, onRemoveService, onSave,
+                    uiState.profile, isSaving = false, isSaved = false, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave,
                 )
                 is EditProfileUiState.Saving -> EditProfileForm(
-                    uiState.profile, isSaving = true, isSaved = false, editedServiceIds, catalog, onAddService, onRemoveService, onSave,
+                    uiState.profile, isSaving = true, isSaved = false, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave,
                 )
                 is EditProfileUiState.Saved -> EditProfileForm(
-                    uiState.profile, isSaving = false, isSaved = true, editedServiceIds, catalog, onAddService, onRemoveService, onSave,
+                    uiState.profile, isSaving = false, isSaved = true, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave,
                 )
             }
         }
@@ -148,12 +149,14 @@ private fun EditProfileForm(
     isSaved: Boolean,
     editedServiceIds: List<String>,
     catalog: CatalogResponse?,
+    cities: List<CityResponse>,
     onAddService: (String) -> Unit,
     onRemoveService: (String) -> Unit,
-    onSave: (description: String, city: String) -> Unit,
+    onSave: (description: String, cityId: String) -> Unit,
 ) {
     var description by remember(profile.id) { mutableStateOf(profile.description) }
-    var city by remember(profile.id) { mutableStateOf(profile.cityName) }
+    var cityId by remember(profile.id) { mutableStateOf(profile.cityId) }
+    var cityDisplayName by remember(profile.id) { mutableStateOf(profile.cityName) }
     var cityDropdownExpanded by remember { mutableStateOf(false) }
 
     Column(
@@ -306,7 +309,7 @@ private fun EditProfileForm(
             modifier = Modifier.fillMaxWidth(),
         ) {
             OutlinedTextField(
-                value = city,
+                value = cityDisplayName,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text(Strings.EditProfile.CITY) },
@@ -319,11 +322,12 @@ private fun EditProfileForm(
                 expanded = cityDropdownExpanded,
                 onDismissRequest = { cityDropdownExpanded = false },
             ) {
-                SupportedCities.all.forEach { cityOption ->
+                cities.forEach { cityOption ->
                     DropdownMenuItem(
-                        text = { Text(cityOption) },
+                        text = { Text(cityOption.name) },
                         onClick = {
-                            city = cityOption
+                            cityId = cityOption.id
+                            cityDisplayName = cityOption.name
                             cityDropdownExpanded = false
                         },
                     )
@@ -343,7 +347,7 @@ private fun EditProfileForm(
         }
 
         Button(
-            onClick = { onSave(description, city) },
+            onClick = { onSave(description, cityId) },
             enabled = !isSaving,
             modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
             shape = MaterialTheme.shapes.medium,
@@ -365,7 +369,7 @@ private fun EditProfileLoadingPreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Loading,
-            editedServiceIds = emptyList(), catalog = null, onAddService = {}, onRemoveService = {},
+            editedServiceIds = emptyList(), catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
             onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
@@ -377,7 +381,7 @@ private fun EditProfileNoProfilePreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.NoProfile,
-            editedServiceIds = emptyList(), catalog = null, onAddService = {}, onRemoveService = {},
+            editedServiceIds = emptyList(), catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
             onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
@@ -390,7 +394,7 @@ private fun EditProfileReadyPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
-            catalog = null, onAddService = {}, onRemoveService = {},
+            catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
             onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
@@ -403,7 +407,7 @@ private fun EditProfileSavingPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Saving(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
-            catalog = null, onAddService = {}, onRemoveService = {},
+            catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
             onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
@@ -416,7 +420,7 @@ private fun EditProfileSavedPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Saved(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
-            catalog = null, onAddService = {}, onRemoveService = {},
+            catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
             onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
@@ -428,7 +432,7 @@ private fun EditProfileErrorPreview() {
     AppTheme {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Error("Failed to load profile. Please try again later."),
-            editedServiceIds = emptyList(), catalog = null, onAddService = {}, onRemoveService = {},
+            editedServiceIds = emptyList(), catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
             onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }

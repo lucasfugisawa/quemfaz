@@ -30,8 +30,8 @@ class SessionManager(
     private val _currentUser = MutableStateFlow<UserProfileResponse?>(null)
     val currentUser: StateFlow<UserProfileResponse?> = _currentUser.asStateFlow()
 
-    private val _currentCity = MutableStateFlow<String?>(settings.getStringOrNull("current_city"))
-    val currentCity: StateFlow<String?> = _currentCity.asStateFlow()
+    private val _currentCityId = MutableStateFlow<String?>(settings.getStringOrNull("current_city_id"))
+    val currentCityId: StateFlow<String?> = _currentCityId.asStateFlow()
 
     private val _offerServicesCardDismissed = MutableStateFlow(false)
     val offerServicesCardDismissed: StateFlow<Boolean> = _offerServicesCardDismissed.asStateFlow()
@@ -88,9 +88,9 @@ class SessionManager(
         _authState.value = AuthState.Unauthenticated
     }
 
-    fun setCity(cityName: String) {
-        settings["current_city"] = cityName
-        _currentCity.value = cityName
+    fun setCity(cityId: String) {
+        settings["current_city_id"] = cityId
+        _currentCityId.value = cityId
     }
 
     fun dismissOfferServicesCard() {
