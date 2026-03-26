@@ -1,23 +1,60 @@
 package com.fugisawa.quemfaz.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.domain.city.SupportedCities
 import com.fugisawa.quemfaz.ui.components.ErrorMessage
 import com.fugisawa.quemfaz.ui.components.ProfileAvatar
 import com.fugisawa.quemfaz.ui.components.ServiceCategoryPicker
-import com.fugisawa.quemfaz.ui.components.ServiceListItem
 import com.fugisawa.quemfaz.ui.preview.LightDarkScreenPreview
 import com.fugisawa.quemfaz.ui.preview.PreviewSamples
 import com.fugisawa.quemfaz.ui.strings.Strings
@@ -44,9 +81,9 @@ fun EditProfessionalProfileScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = Strings.Common.BACK)
                     }
-                }
+                },
             )
-        }
+        },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when (uiState) {
@@ -58,18 +95,18 @@ fun EditProfessionalProfileScreen(
                 is EditProfileUiState.NoProfile -> {
                     Box(
                         modifier = Modifier.fillMaxSize().padding(Spacing.screenEdge),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 Strings.EditProfile.NO_PROFILE,
-                                style = MaterialTheme.typography.bodyLarge
+                                style = MaterialTheme.typography.bodyLarge,
                             )
                             Spacer(modifier = Modifier.height(Spacing.lg))
                             Button(
                                 onClick = onGoToOnboarding,
                                 modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
-                                shape = MaterialTheme.shapes.medium
+                                shape = MaterialTheme.shapes.medium,
                             ) {
                                 Text(Strings.EditProfile.SETUP_PROFILE)
                             }
@@ -81,7 +118,7 @@ fun EditProfessionalProfileScreen(
                 is EditProfileUiState.Error -> {
                     Box(
                         modifier = Modifier.fillMaxSize().padding(Spacing.screenEdge),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         ErrorMessage(
                             message = uiState.message,
@@ -90,19 +127,20 @@ fun EditProfessionalProfileScreen(
                     }
                 }
                 is EditProfileUiState.Ready -> EditProfileForm(
-                    uiState.profile, isSaving = false, isSaved = false, editedServiceIds, catalog, onAddService, onRemoveService, onSave
+                    uiState.profile, isSaving = false, isSaved = false, editedServiceIds, catalog, onAddService, onRemoveService, onSave,
                 )
                 is EditProfileUiState.Saving -> EditProfileForm(
-                    uiState.profile, isSaving = true, isSaved = false, editedServiceIds, catalog, onAddService, onRemoveService, onSave
+                    uiState.profile, isSaving = true, isSaved = false, editedServiceIds, catalog, onAddService, onRemoveService, onSave,
                 )
                 is EditProfileUiState.Saved -> EditProfileForm(
-                    uiState.profile, isSaving = false, isSaved = true, editedServiceIds, catalog, onAddService, onRemoveService, onSave
+                    uiState.profile, isSaving = false, isSaved = true, editedServiceIds, catalog, onAddService, onRemoveService, onSave,
                 )
             }
         }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun EditProfileForm(
     profile: ProfessionalProfileResponse,
@@ -116,12 +154,13 @@ private fun EditProfileForm(
 ) {
     var description by remember(profile.id) { mutableStateOf(profile.description) }
     var city by remember(profile.id) { mutableStateOf(profile.cityName) }
+    var cityDropdownExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = Spacing.screenEdge, vertical = Spacing.md)
+            .padding(horizontal = Spacing.screenEdge, vertical = Spacing.md),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             ProfileAvatar(
@@ -145,30 +184,40 @@ private fun EditProfileForm(
 
         Spacer(modifier = Modifier.height(Spacing.lg))
 
-        // Services section
+        // Services section — compact chips with remove affordance
         Text(Strings.EditProfile.SERVICES, style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(Spacing.sm))
 
-        editedServiceIds.forEach { serviceId ->
-            val displayName = catalog?.services?.find { it.id == serviceId }?.displayName
-                ?: profile.services.find { it.serviceId == serviceId }?.displayName
-                ?: serviceId
-            ServiceListItem(
-                serviceName = displayName,
-                trailingContent = {
-                    IconButton(onClick = { onRemoveService(serviceId) }) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = Strings.EditProfile.REMOVE,
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
-            )
-        }
-
-        if (editedServiceIds.isEmpty()) {
+        if (editedServiceIds.isNotEmpty()) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                verticalArrangement = Arrangement.spacedBy(Spacing.none),
+            ) {
+                editedServiceIds.forEach { serviceId ->
+                    val displayName = catalog?.services?.find { it.id == serviceId }?.displayName
+                        ?: profile.services.find { it.serviceId == serviceId }?.displayName
+                        ?: serviceId
+                    InputChip(
+                        selected = true,
+                        onClick = { onRemoveService(serviceId) },
+                        label = { Text(displayName) },
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = Strings.EditProfile.REMOVE,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        },
+                        colors = InputChipDefaults.inputChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedTrailingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                    )
+                }
+            }
+        } else {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
@@ -205,7 +254,6 @@ private fun EditProfileForm(
                     onDismissRequest = { showServicePicker = false },
                     title = { Text(Strings.EditProfile.ADD_SERVICES_DIALOG) },
                     text = {
-                        // Constrain height to avoid layout issues — ServiceCategoryPicker uses LazyColumn internally
                         Box(modifier = Modifier.heightIn(max = 400.dp)) {
                             ServiceCategoryPicker(
                                 categories = catalog.categories,
@@ -239,24 +287,49 @@ private fun EditProfileForm(
 
         Spacer(modifier = Modifier.height(Spacing.md))
 
+        // Description — taller field for better discoverability
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
             label = { Text(Strings.EditProfile.DESCRIPTION) },
-            modifier = Modifier.fillMaxWidth().height(120.dp),
-            shape = MaterialTheme.shapes.medium
+            modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp),
+            maxLines = 8,
+            shape = MaterialTheme.shapes.medium,
         )
 
         Spacer(modifier = Modifier.height(Spacing.sm + Spacing.xs))
 
-        OutlinedTextField(
-            value = city,
-            onValueChange = { city = it },
-            label = { Text(Strings.EditProfile.CITY) },
+        // City — restricted to supported cities via dropdown
+        ExposedDropdownMenuBox(
+            expanded = cityDropdownExpanded,
+            onExpandedChange = { cityDropdownExpanded = it },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            shape = MaterialTheme.shapes.medium
-        )
+        ) {
+            OutlinedTextField(
+                value = city,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(Strings.EditProfile.CITY) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityDropdownExpanded) },
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium,
+            )
+            ExposedDropdownMenu(
+                expanded = cityDropdownExpanded,
+                onDismissRequest = { cityDropdownExpanded = false },
+            ) {
+                SupportedCities.all.forEach { cityOption ->
+                    DropdownMenuItem(
+                        text = { Text(cityOption) },
+                        onClick = {
+                            city = cityOption
+                            cityDropdownExpanded = false
+                        },
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(Spacing.lg))
 
@@ -264,7 +337,7 @@ private fun EditProfileForm(
             Text(
                 Strings.EditProfile.SAVE_SUCCESS,
                 color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
             Spacer(modifier = Modifier.height(Spacing.sm))
         }
@@ -293,7 +366,7 @@ private fun EditProfileLoadingPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Loading,
             editedServiceIds = emptyList(), catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -305,7 +378,7 @@ private fun EditProfileNoProfilePreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.NoProfile,
             editedServiceIds = emptyList(), catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -318,7 +391,7 @@ private fun EditProfileReadyPreview() {
             uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -331,7 +404,7 @@ private fun EditProfileSavingPreview() {
             uiState = EditProfileUiState.Saving(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -344,7 +417,7 @@ private fun EditProfileSavedPreview() {
             uiState = EditProfileUiState.Saved(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -356,7 +429,7 @@ private fun EditProfileErrorPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Error("Failed to load profile. Please try again later."),
             editedServiceIds = emptyList(), catalog = null, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {}
+            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }

@@ -28,11 +28,13 @@ fun ServiceChipList(
     maxItems: Int = Int.MAX_VALUE
 ) {
     if (services.isEmpty()) return
+    val visibleServices = services.take(maxItems)
+    val overflow = services.size - visibleServices.size
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
-        services.take(maxItems).forEach { service ->
+        visibleServices.forEach { service ->
             val isPrimary = service.matchLevel == MATCH_LEVEL_PRIMARY
             SuggestionChip(
                 onClick = {},
@@ -44,6 +46,16 @@ fun ServiceChipList(
                     )
                 else
                     SuggestionChipDefaults.suggestionChipColors(),
+            )
+        }
+        if (overflow > 0) {
+            SuggestionChip(
+                onClick = {},
+                label = { Text("+$overflow") },
+                colors = SuggestionChipDefaults.suggestionChipColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
             )
         }
     }

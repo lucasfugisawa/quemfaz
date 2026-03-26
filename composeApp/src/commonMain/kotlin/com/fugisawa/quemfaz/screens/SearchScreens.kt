@@ -266,7 +266,7 @@ fun ProfessionalCard(
 
             if (profile.services.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(Spacing.sm))
-                ServiceChipList(services = profile.services, maxItems = 3)
+                ServiceChipList(services = profile.services, maxItems = 5)
             }
             if (profile.activeRecently || profile.daysSinceActive != null) {
                 Spacer(modifier = Modifier.height(Spacing.xs))
