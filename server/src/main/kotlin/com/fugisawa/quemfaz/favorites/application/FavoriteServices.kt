@@ -2,23 +2,17 @@ package com.fugisawa.quemfaz.favorites.application
 
 import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
-import com.fugisawa.quemfaz.catalog.application.CatalogService
-import com.fugisawa.quemfaz.city.application.CityService
 import com.fugisawa.quemfaz.contract.favorites.FavoritesListResponse
-import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
-import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.core.id.FavoriteId
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
 import com.fugisawa.quemfaz.core.id.UserId
 import com.fugisawa.quemfaz.favorites.domain.Favorite
 import com.fugisawa.quemfaz.favorites.domain.FavoriteRepository
-import com.fugisawa.quemfaz.profile.domain.ProfessionalProfile
+import com.fugisawa.quemfaz.profile.application.ProfileResponseMapper
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileStatus
-import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
 import org.slf4j.LoggerFactory
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class AddFavoriteService(
@@ -75,9 +69,8 @@ class ListFavoritesService(
     private val favoriteRepository: FavoriteRepository,
     private val profileRepository: ProfessionalProfileRepository,
     private val userRepository: UserRepository,
-    private val catalogService: CatalogService,
     private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
-    private val cityService: CityService,
+    private val profileResponseMapper: ProfileResponseMapper,
 ) {
     fun execute(userId: UserId): FavoritesListResponse {
         val favorites = favoriteRepository.listByUserId(userId)
@@ -87,38 +80,11 @@ class ListFavoritesService(
                 if (profile != null && profile.status == ProfessionalProfileStatus.PUBLISHED) {
                     val user = userRepository.findById(profile.userId)
                     val phone = phoneAuthRepository.findByUserId(profile.userId)?.phoneNumber ?: ""
-                    mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, phone)
+                    profileResponseMapper.toResponse(profile, user?.fullName ?: "", user?.photoUrl, phone)
                 } else {
                     null
                 }
             }
         return FavoritesListResponse(profiles)
     }
-
-    private fun mapToResponse(
-        profile: ProfessionalProfile,
-        fullName: String,
-        userPhotoUrl: String?,
-        phone: String,
-    ): ProfessionalProfileResponse =
-        ProfessionalProfileResponse(
-            id = profile.id.value,
-            fullName = fullName,
-            knownName = profile.knownName,
-            photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
-            description = profile.normalizedDescription ?: "",
-            cityId = profile.cityId ?: "",
-            cityName = cityService.resolveNameFromId(profile.cityId) ?: "",
-            services =
-                profile.services.map { svc ->
-                    val canonical = catalogService.findById(svc.serviceId)
-                    InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
-                },
-            profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
-            activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
-            phone = phone,
-            portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
-            contactCount = profile.contactClickCount,
-            daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),
-        )
 }

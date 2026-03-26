@@ -63,6 +63,7 @@ import com.fugisawa.quemfaz.profile.application.CreateProfessionalProfileDraftSe
 import com.fugisawa.quemfaz.profile.application.DisableProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.GetMyProfessionalProfileService
 import com.fugisawa.quemfaz.profile.application.GetPublicProfessionalProfileService
+import com.fugisawa.quemfaz.profile.application.ProfileResponseMapper
 import com.fugisawa.quemfaz.profile.application.SetKnownNameService
 import com.fugisawa.quemfaz.profile.application.UpdateProfessionalProfileService
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
@@ -157,6 +158,7 @@ val infrastructureModule =
         // City
         single<CityRepository> { ExposedCityRepository() }
         single { CityService(get()) }
+        single { ProfileResponseMapper(get(), get()) }
 
         // LLM Agent Service
         single { LlmAgentService(timeoutMs = get<AppConfig>().llm.timeoutMs) }
@@ -177,8 +179,8 @@ val infrastructureModule =
         single { CreateProfessionalProfileDraftService(get()) }
         single { ClarifyProfessionalProfileDraftService(get()) }
         single { ConfirmProfessionalProfileService(get(), get(), get(), get(), get()) }
-        single { GetMyProfessionalProfileService(get(), get(), get(), get(), get()) }
-        single { GetPublicProfessionalProfileService(get(), get(), get(), get(), get()) }
+        single { GetMyProfessionalProfileService(get(), get(), get(), get()) }
+        single { GetPublicProfessionalProfileService(get(), get(), get(), get()) }
         single { UpdateProfessionalProfileService(get(), get(), get(), get(), get()) }
         single { DisableProfessionalProfileService(get()) }
         single { SetKnownNameService(get()) }
@@ -194,14 +196,14 @@ val infrastructureModule =
         single { ProfessionalSearchRankingService() }
 
         // Search Services
-        single { SearchProfessionalsService(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+        single { SearchProfessionalsService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
         single { PopularSearchesService(get(), get()) }
 
         // Favorites
         single<FavoriteRepository> { ExposedFavoriteRepository() }
         single { AddFavoriteService(get(), get()) }
         single { RemoveFavoriteService(get()) }
-        single { ListFavoritesService(get(), get(), get(), get(), get(), get()) }
+        single { ListFavoritesService(get(), get(), get(), get(), get()) }
 
         // Engagement
         single<ContactClickEventRepository> { ExposedContactClickEventRepository() }

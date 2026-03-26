@@ -5,13 +5,11 @@ import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.city.application.CityService
 import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
-import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsResponse
 import com.fugisawa.quemfaz.core.id.UserId
-import com.fugisawa.quemfaz.profile.domain.ProfessionalProfile
+import com.fugisawa.quemfaz.profile.application.ProfileResponseMapper
 import com.fugisawa.quemfaz.profile.domain.ProfessionalProfileRepository
-import com.fugisawa.quemfaz.profile.domain.ProfileCompleteness
 import com.fugisawa.quemfaz.search.domain.InterpretedSearchQuery
 import com.fugisawa.quemfaz.search.domain.SearchEvent
 import com.fugisawa.quemfaz.search.domain.SearchEventRepository
@@ -21,7 +19,6 @@ import com.fugisawa.quemfaz.search.interpretation.SearchQueryInterpreter
 import com.fugisawa.quemfaz.search.ranking.ProfessionalSearchRankingService
 import org.slf4j.LoggerFactory
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class SearchProfessionalsService(
@@ -34,6 +31,7 @@ class SearchProfessionalsService(
     private val catalogService: CatalogService,
     private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
     private val cityService: CityService,
+    private val profileResponseMapper: ProfileResponseMapper,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -119,7 +117,7 @@ class SearchProfessionalsService(
                 pagedResults.map { profile ->
                     val user = userRepository.findById(profile.userId)
                     val phone = phoneAuthRepository.findByUserId(profile.userId)?.phoneNumber ?: ""
-                    mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, phone)
+                    profileResponseMapper.toResponse(profile, user?.fullName ?: "", user?.photoUrl, phone)
                 },
             page = page,
             pageSize = pageSize,
@@ -128,31 +126,4 @@ class SearchProfessionalsService(
             blockedDescriptions = interpreted.blockedDescriptions,
         )
     }
-
-    private fun mapToResponse(
-        profile: ProfessionalProfile,
-        fullName: String,
-        userPhotoUrl: String?,
-        phone: String,
-    ): ProfessionalProfileResponse =
-        ProfessionalProfileResponse(
-            id = profile.id.value,
-            fullName = fullName,
-            knownName = profile.knownName,
-            photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
-            description = profile.normalizedDescription ?: "",
-            cityId = profile.cityId ?: "",
-            cityName = cityService.resolveNameFromId(profile.cityId) ?: "",
-            services =
-                profile.services.map { svc ->
-                    val canonical = catalogService.findById(svc.serviceId)
-                    InterpretedServiceDto(svc.serviceId, canonical?.displayName ?: svc.serviceId, svc.matchLevel.name)
-                },
-            profileComplete = profile.completeness == ProfileCompleteness.COMPLETE,
-            activeRecently = profile.lastActiveAt.isAfter(Instant.now().minusSeconds(86400 * 7)),
-            phone = phone,
-            portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
-            contactCount = profile.contactClickCount,
-            daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),
-        )
 }

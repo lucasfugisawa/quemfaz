@@ -166,7 +166,7 @@ class ProfileServicesTest {
         )
         phoneAuthRepo.create(UserPhoneAuthIdentity("id-123", userId, "+5516999999999", true, Instant.now(), Instant.now(), Instant.now()))
 
-        val service = ConfirmProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
+        val service = ConfirmProfessionalProfileService(profileRepo, userRepo, phoneAuthRepo, mock(), mock())
         val request =
             ConfirmProfessionalProfileRequest(
                 description = "Pintor experiente",
@@ -205,7 +205,7 @@ class ProfileServicesTest {
         phoneAuthRepo.create(UserPhoneAuthIdentity("id-123", userId, "+5516999999999", true, Instant.now(), Instant.now(), Instant.now()))
 
         // Create initial profile via confirm service
-        val confirmService = ConfirmProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
+        val confirmService = ConfirmProfessionalProfileService(profileRepo, userRepo, phoneAuthRepo, mock(), mock())
         confirmService.execute(
             userId,
             ConfirmProfessionalProfileRequest(
@@ -216,7 +216,7 @@ class ProfileServicesTest {
             ),
         )
 
-        val updateService = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
+        val updateService = UpdateProfessionalProfileService(profileRepo, userRepo, phoneAuthRepo, mock(), mock())
         val result =
             updateService.execute(
                 userId,
@@ -246,7 +246,7 @@ class ProfileServicesTest {
         val userId = UserId("user-no-profile")
         userRepo.create(User(userId, "Jane", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now()))
 
-        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
+        val service = UpdateProfessionalProfileService(profileRepo, userRepo, phoneAuthRepo, mock(), mock())
         val result =
             service.execute(
                 userId,
@@ -289,7 +289,7 @@ class ProfileServicesTest {
             ),
         )
 
-        val service = UpdateProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
+        val service = UpdateProfessionalProfileService(profileRepo, userRepo, phoneAuthRepo, mock(), mock())
         val result =
             service.execute(
                 userId,
@@ -314,7 +314,7 @@ class ProfileServicesTest {
 
         userRepo.create(User(userId, "John Doe", null, UserStatus.ACTIVE, createdAt = Instant.now(), updatedAt = Instant.now()))
 
-        val service = GetPublicProfessionalProfileService(profileRepo, userRepo, mock(), phoneAuthRepo, mock())
+        val service = GetPublicProfessionalProfileService(profileRepo, userRepo, phoneAuthRepo, mock())
 
         // No profile yet
         assertEquals(null, service.execute(profileId))

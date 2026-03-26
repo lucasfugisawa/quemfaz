@@ -7,6 +7,7 @@ import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.auth.domain.UserStatus
 import com.fugisawa.quemfaz.catalog.application.CatalogService
 import com.fugisawa.quemfaz.city.application.CityService
+import com.fugisawa.quemfaz.profile.application.ProfileResponseMapper
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
 import com.fugisawa.quemfaz.core.id.ProfessionalProfileId
@@ -186,6 +187,7 @@ class SearchProfessionalsServiceTest {
                 catalogService = mock(),
                 phoneAuthRepository = FakePhoneAuthRepository(),
                 cityService = mock(),
+                profileResponseMapper = mock(),
             )
 
         val request = SearchProfessionalsRequest("faxina", "batatais", InputMode.TEXT)
