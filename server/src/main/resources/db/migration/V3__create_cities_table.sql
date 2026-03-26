@@ -34,4 +34,6 @@ UPDATE professional_profiles SET city_id = 'batatais'       WHERE lower(trim(cit
 UPDATE professional_profiles SET city_id = 'franca'         WHERE lower(trim(city_name)) = lower('Franca');
 UPDATE professional_profiles SET city_id = 'ribeirao-preto' WHERE lower(trim(city_name)) = lower('Ribeirão Preto');
 
+CREATE UNIQUE INDEX idx_cities_name ON cities(name);
+
 CREATE INDEX idx_professional_profiles_city_id ON professional_profiles(city_id);

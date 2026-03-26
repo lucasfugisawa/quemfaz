@@ -69,6 +69,10 @@ class ConfirmProfessionalProfileService(
         requireNotNull(user.dateOfBirth) { "DATE_OF_BIRTH_REQUIRED" }
         require(Period.between(user.dateOfBirth, LocalDate.now()).years >= 18) { "UNDERAGE" }
 
+        if (!request.cityId.isNullOrBlank()) {
+            require(cityService.findById(request.cityId!!) != null) { "INVALID_CITY_ID" }
+        }
+
         val existingProfile = profileRepository.findByUserId(userId)
 
         val profileId = existingProfile?.id ?: ProfessionalProfileId(UUID.randomUUID().toString())
@@ -193,6 +197,10 @@ class UpdateProfessionalProfileService(
     ): UpdateProfileResult {
         val existing = profileRepository.findByUserId(userId) ?: return UpdateProfileResult.NotFound
         if (existing.status == ProfessionalProfileStatus.BLOCKED) return UpdateProfileResult.Blocked
+
+        if (!request.cityId.isNullOrBlank()) {
+            require(cityService.findById(request.cityId!!) != null) { "INVALID_CITY_ID" }
+        }
 
         val user = userRepository.findById(userId) ?: return UpdateProfileResult.NotFound
 

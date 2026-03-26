@@ -3,7 +3,9 @@ package com.fugisawa.quemfaz.city.infrastructure
 import com.fugisawa.quemfaz.city.domain.CityRepository
 import com.fugisawa.quemfaz.core.id.CityId
 import com.fugisawa.quemfaz.domain.city.City
+import org.jetbrains.exposed.sql.LowerCase
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
@@ -37,7 +39,7 @@ class ExposedCityRepository : CityRepository {
         transaction {
             CitiesTable
                 .selectAll()
-                .where { CitiesTable.name eq name }
+                .where { LowerCase(CitiesTable.name) eq name.lowercase() }
                 .map { mapCity(it) }
                 .singleOrNull()
         }
@@ -47,6 +49,7 @@ class ExposedCityRepository : CityRepository {
             CitiesTable
                 .selectAll()
                 .where { CitiesTable.isActive eq true }
+                .orderBy(CitiesTable.name, SortOrder.ASC)
                 .map { mapCity(it) }
         }
 

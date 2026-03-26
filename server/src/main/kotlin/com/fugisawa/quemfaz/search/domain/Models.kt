@@ -15,6 +15,13 @@ data class SearchQuery(
     val createdAt: Instant,
 )
 
+/**
+ * Holds the result of interpreting a search query.
+ *
+ * [cityId] is a general city identifier: interpreters set it to a city **name**
+ * (the LLM output), while [SearchProfessionalsService] may construct a copy with
+ * a resolved city **ID** for ranking. The service layer bridges the two.
+ */
 data class InterpretedSearchQuery(
     val originalQuery: String,
     val normalizedQuery: String,
