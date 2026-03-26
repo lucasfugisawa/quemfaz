@@ -59,6 +59,7 @@ data class UserProfileResponse(
     val phoneNumber: String,
     val fullName: String,
     val photoUrl: String?,
+    val cityId: String?,
     val cityName: String?,
     val status: String,
     val hasProfessionalProfile: Boolean = false,

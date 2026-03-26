@@ -6,19 +6,23 @@ import kotlinx.serialization.Serializable
 /**
  * Represents a city where services are offered.
  *
- * @property id Unique identifier for the city
- * @property name City name (e.g., "São Paulo")
- * @property state State code (e.g., "SP")
- * @property country Country code - defaults to "BR" (Brazil only for MVP)
- * @property isActive Whether this city is currently accepting new profiles/services
+ * @property id Unique identifier (slug, e.g. "ribeirao-preto")
+ * @property name Display name (e.g., "Ribeirão Preto")
+ * @property stateCode State code (e.g., "SP")
+ * @property country Country code — defaults to "BR" (Brazil only for MVP)
+ * @property latitude City center latitude, for future location-to-city mapping
+ * @property longitude City center longitude, for future location-to-city mapping
+ * @property isActive Whether this city is currently supported by the app
  */
 @Serializable
 data class City(
     val id: CityId,
     val name: String,
-    val state: String,
-    val country: String = "BR", // MVP: Brazil only, will be parameterized for multi-country expansion
-    val isActive: Boolean
+    val stateCode: String,
+    val country: String = "BR",
+    val latitude: Double,
+    val longitude: Double,
+    val isActive: Boolean,
 )
 
 /**
@@ -30,7 +34,7 @@ data class City(
 @Serializable
 enum class CitySelectionMode {
     AUTO_DETECTED,
-    MANUALLY_SELECTED
+    MANUALLY_SELECTED,
 }
 
 /**
@@ -42,5 +46,5 @@ enum class CitySelectionMode {
 @Serializable
 data class UserCityContext(
     val city: City,
-    val selectionMode: CitySelectionMode
+    val selectionMode: CitySelectionMode,
 )

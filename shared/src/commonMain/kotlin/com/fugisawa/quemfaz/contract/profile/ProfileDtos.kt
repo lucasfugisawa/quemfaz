@@ -53,7 +53,7 @@ data class ClarifyDraftRequest(
 data class ConfirmProfessionalProfileRequest(
     val description: String,
     val selectedServiceIds: List<String>,
-    val cityName: String?,
+    val cityId: String?,
     val portfolioPhotoUrls: List<String>
 )
 
@@ -64,6 +64,7 @@ data class ProfessionalProfileResponse(
     val knownName: String?,
     val photoUrl: String?,
     val description: String,
+    val cityId: String,
     val cityName: String,
     val services: List<InterpretedServiceDto>,
     val profileComplete: Boolean,

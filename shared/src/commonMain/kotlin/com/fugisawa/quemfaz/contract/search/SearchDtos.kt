@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SearchProfessionalsRequest(
     val query: String,
-    val cityName: String?,
+    val cityId: String?,
     val inputMode: InputMode,
     val page: Int = 0,
     val pageSize: Int = 20,
