@@ -248,7 +248,7 @@ fun MainFlow(
     val popularServices by homeViewModel.popularServices.collectAsState()
     val searchHistory by homeViewModel.searchHistory.collectAsState()
 
-    val cities by homeViewModel.cities.collectAsState()
+    val cities by homeViewModel.cityRepository.cities.collectAsState()
 
     LaunchedEffect(currentCityId) {
         homeViewModel.loadPopularServices(currentCityId)
@@ -337,7 +337,7 @@ fun MainFlow(
                     is Screen.Home -> {
                         HomeScreen(
                             currentUser = currentUser,
-                            currentCity = homeViewModel.getCityDisplayName(currentCityId),
+                            currentCity = homeViewModel.cityRepository.getCityDisplayName(currentCityId),
                             showEarnMoneyCard = showEarnMoneyCard,
                             popularServices = popularServices,
                             searchHistory = searchHistory,
@@ -458,7 +458,7 @@ fun MainFlow(
                         val viewModel: OnboardingViewModel = koinInject()
                         val uiState by viewModel.uiState.collectAsState()
                         val selectedCityId by viewModel.selectedCityId.collectAsState()
-                        val onboardingCities by viewModel.cities.collectAsState()
+                        val onboardingCities by viewModel.cityRepository.cities.collectAsState()
                         val onboardingCatalog by viewModel.catalog.collectAsState()
 
                         val isOnboardingInProgress =
@@ -483,7 +483,7 @@ fun MainFlow(
                         OnboardingScreens(
                             uiState = uiState,
                             selectedCityId = selectedCityId,
-                            selectedCityDisplayName = viewModel.getCityDisplayName(selectedCityId),
+                            selectedCityDisplayName = viewModel.cityRepository.getCityDisplayName(selectedCityId),
                             cities = onboardingCities,
                             catalog = onboardingCatalog,
                             onSubmitDateOfBirth = { viewModel.submitDateOfBirth(it) },
@@ -524,6 +524,7 @@ fun MainFlow(
                         val uiState by viewModel.uiState.collectAsState()
                         val editedServiceIds by viewModel.editedServiceIds.collectAsState()
                         val editCatalog by viewModel.catalog.collectAsState()
+                        val editCities by viewModel.cityRepository.cities.collectAsState()
                         LaunchedEffect(Unit) {
                             viewModel.loadProfile()
                         }
@@ -531,7 +532,7 @@ fun MainFlow(
                             uiState = uiState,
                             editedServiceIds = editedServiceIds,
                             catalog = editCatalog,
-                            cities = cities,
+                            cities = editCities,
                             onAddService = viewModel::addService,
                             onRemoveService = viewModel::removeService,
                             onSave = { desc, cityId ->

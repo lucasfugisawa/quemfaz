@@ -2,7 +2,7 @@ package com.fugisawa.quemfaz.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fugisawa.quemfaz.contract.city.CityResponse
+import com.fugisawa.quemfaz.data.CityRepository
 import com.fugisawa.quemfaz.contract.profile.InputMode
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.search.SearchProfessionalsRequest
@@ -40,6 +40,7 @@ class HomeViewModel(
     private val apiClients: FeatureApiClients,
     private val sessionManager: SessionManager,
     private val catalogApiClient: CatalogApiClient,
+    val cityRepository: CityRepository,
 ) : ViewModel() {
 
     private data class CachedSearch(
@@ -85,9 +86,6 @@ class HomeViewModel(
 
     val currentCityId = sessionManager.currentCityId
 
-    private val _cities = MutableStateFlow<List<CityResponse>>(emptyList())
-    val cities: StateFlow<List<CityResponse>> = _cities.asStateFlow()
-
     val showEarnMoneyCard = combine(
         sessionManager.currentUser,
         sessionManager.offerServicesCardDismissed,
@@ -111,19 +109,10 @@ class HomeViewModel(
         }
     }
 
-    fun loadCities() {
-        viewModelScope.launch {
-            try {
-                _cities.value = apiClients.getCities().cities
-            } catch (_: Exception) { }
-        }
-    }
-
     private val _catalog = MutableStateFlow<CatalogResponse?>(null)
     val catalog: StateFlow<CatalogResponse?> = _catalog.asStateFlow()
 
     init {
-        loadCities()
         viewModelScope.launch {
             try {
                 _catalog.value = catalogApiClient.getCatalog()
@@ -142,9 +131,6 @@ class HomeViewModel(
     fun selectCity(cityId: String) {
         sessionManager.setCity(cityId)
     }
-
-    fun getCityDisplayName(cityId: String?): String? =
-        _cities.value.find { it.id == cityId }?.name
 
     fun search(query: String) {
         if (query.isBlank()) return

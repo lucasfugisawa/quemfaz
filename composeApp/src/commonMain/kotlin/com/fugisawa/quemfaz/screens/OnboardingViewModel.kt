@@ -2,6 +2,7 @@ package com.fugisawa.quemfaz.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fugisawa.quemfaz.data.CityRepository
 import com.fugisawa.quemfaz.contract.auth.SetProfilePhotoRequest
 import com.fugisawa.quemfaz.contract.auth.UpdateDateOfBirthRequest
 import com.fugisawa.quemfaz.contract.auth.CompleteUserProfileRequest
@@ -15,7 +16,6 @@ import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
 import com.fugisawa.quemfaz.contract.profile.SetKnownNameRequest
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
-import com.fugisawa.quemfaz.contract.city.CityResponse
 import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.session.SessionManager
@@ -61,6 +61,7 @@ class OnboardingViewModel(
     private val apiClients: FeatureApiClients,
     private val sessionManager: SessionManager,
     private val catalogApiClient: CatalogApiClient,
+    val cityRepository: CityRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<OnboardingUiState>(
@@ -74,9 +75,6 @@ class OnboardingViewModel(
     private val _selectedCityId = MutableStateFlow<String?>(null)
     val selectedCityId: StateFlow<String?> = _selectedCityId.asStateFlow()
 
-    private val _cities = MutableStateFlow<List<CityResponse>>(emptyList())
-    val cities: StateFlow<List<CityResponse>> = _cities.asStateFlow()
-
     private val _catalog = MutableStateFlow<CatalogResponse?>(null)
     val catalog: StateFlow<CatalogResponse?> = _catalog.asStateFlow()
 
@@ -86,11 +84,6 @@ class OnboardingViewModel(
         viewModelScope.launch {
             try {
                 _catalog.value = catalogApiClient.getCatalog()
-            } catch (_: Exception) { }
-        }
-        viewModelScope.launch {
-            try {
-                _cities.value = apiClients.getCities().cities
             } catch (_: Exception) { }
         }
     }
@@ -104,9 +97,6 @@ class OnboardingViewModel(
     fun selectCity(cityId: String) {
         _selectedCityId.value = cityId
     }
-
-    fun getCityDisplayName(cityId: String?): String? =
-        _cities.value.find { it.id == cityId }?.name
 
     fun submitDateOfBirth(dateOfBirth: String) {
         viewModelScope.launch {

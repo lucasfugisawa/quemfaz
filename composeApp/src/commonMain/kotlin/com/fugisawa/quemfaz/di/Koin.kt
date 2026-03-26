@@ -1,5 +1,6 @@
 package com.fugisawa.quemfaz.di
 
+import com.fugisawa.quemfaz.data.CityRepository
 import com.fugisawa.quemfaz.network.ApiClient
 import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.network.FeatureApiClients
@@ -29,11 +30,12 @@ val appModule = module {
     }
     single { FeatureApiClients(get()) }
     single { CatalogApiClient(get<ApiClient>().client) }
+    single { CityRepository(get()) }
 
     factory { AuthViewModel(get(), get()) }
-    factory { HomeViewModel(get(), get(), get()) }
+    factory { HomeViewModel(get(), get(), get(), get()) }
     factory { ProfileViewModel(get()) }
-    factory { OnboardingViewModel(get(), get(), get()) }
+    factory { OnboardingViewModel(get(), get(), get(), get()) }
     factory { FavoritesViewModel(get()) }
-    factory { EditProfessionalProfileViewModel(get(), get()) }
+    factory { EditProfessionalProfileViewModel(get(), get(), get()) }
 }

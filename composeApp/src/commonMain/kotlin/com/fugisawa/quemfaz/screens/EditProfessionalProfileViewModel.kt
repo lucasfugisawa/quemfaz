@@ -2,6 +2,7 @@ package com.fugisawa.quemfaz.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fugisawa.quemfaz.data.CityRepository
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
@@ -25,6 +26,7 @@ sealed class EditProfileUiState {
 class EditProfessionalProfileViewModel(
     private val apiClients: FeatureApiClients,
     private val catalogApiClient: CatalogApiClient,
+    val cityRepository: CityRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<EditProfileUiState>(EditProfileUiState.Loading)
