@@ -201,7 +201,7 @@ val infrastructureModule =
         single<FavoriteRepository> { ExposedFavoriteRepository() }
         single { AddFavoriteService(get(), get()) }
         single { RemoveFavoriteService(get()) }
-        single { ListFavoritesService(get(), get(), get(), get(), get()) }
+        single { ListFavoritesService(get(), get(), get(), get(), get(), get()) }
 
         // Engagement
         single<ContactClickEventRepository> { ExposedContactClickEventRepository() }
