@@ -37,6 +37,9 @@ class SessionManager(
     val offerServicesCardDismissed: StateFlow<Boolean> = _offerServicesCardDismissed.asStateFlow()
 
     init {
+        // One-time cleanup: remove stale key from pre-city-entity versions.
+        settings.remove("current_city")
+
         val token = sessionStorage.getToken()
         if (token != null) {
             _authState.value = AuthState.Authenticated
