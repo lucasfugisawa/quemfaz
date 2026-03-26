@@ -26,6 +26,7 @@ class GetAuthenticatedUserService(
             phoneNumber = phoneIdentity?.phoneNumber ?: "",
             fullName = user.fullName,
             photoUrl = user.photoUrl,
+            cityId = null,
             cityName = null,
             status = user.status.name,
             hasProfessionalProfile = profile != null,

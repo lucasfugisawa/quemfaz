@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.favorites.application
 import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.catalog.application.CatalogService
+import com.fugisawa.quemfaz.city.application.CityService
 import com.fugisawa.quemfaz.contract.favorites.FavoritesListResponse
 import com.fugisawa.quemfaz.contract.profile.InterpretedServiceDto
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
@@ -76,6 +77,7 @@ class ListFavoritesService(
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
     private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
+    private val cityService: CityService,
 ) {
     fun execute(userId: UserId): FavoritesListResponse {
         val favorites = favoriteRepository.listByUserId(userId)
@@ -105,7 +107,8 @@ class ListFavoritesService(
             knownName = profile.knownName,
             photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
             description = profile.normalizedDescription ?: "",
-            cityName = profile.cityName ?: "",
+            cityId = profile.cityId ?: "",
+            cityName = cityService.resolveNameFromId(profile.cityId) ?: "",
             services =
                 profile.services.map { svc ->
                     val canonical = catalogService.findById(svc.serviceId)

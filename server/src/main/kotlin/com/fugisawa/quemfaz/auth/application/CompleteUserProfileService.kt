@@ -38,6 +38,7 @@ class CompleteUserProfileService(
                     phoneNumber = identity?.phoneNumber ?: "unknown",
                     fullName = trimmedName,
                     photoUrl = null,
+                    cityId = null,
                     cityName = null,
                     status = user.status.name,
                     hasProfessionalProfile = profileExists,

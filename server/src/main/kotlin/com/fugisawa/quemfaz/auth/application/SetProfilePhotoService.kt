@@ -38,6 +38,7 @@ class SetProfilePhotoService(
                 phoneNumber = identity?.phoneNumber ?: "",
                 fullName = user.fullName,
                 photoUrl = request.photoUrl,
+                cityId = null,
                 cityName = null,
                 status = user.status.name,
                 hasProfessionalProfile = profileExists,
