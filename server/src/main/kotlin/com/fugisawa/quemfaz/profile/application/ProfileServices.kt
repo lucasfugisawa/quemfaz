@@ -3,6 +3,7 @@ package com.fugisawa.quemfaz.profile.application
 import com.fugisawa.quemfaz.auth.domain.UserPhoneAuthIdentityRepository
 import com.fugisawa.quemfaz.auth.domain.UserRepository
 import com.fugisawa.quemfaz.catalog.application.CatalogService
+import com.fugisawa.quemfaz.city.application.CityService
 import com.fugisawa.quemfaz.contract.profile.ClarifyDraftRequest
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.contract.profile.CreateProfessionalProfileDraftRequest
@@ -55,6 +56,7 @@ class ConfirmProfessionalProfileService(
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
     private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
+    private val cityService: CityService,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -85,7 +87,7 @@ class ConfirmProfessionalProfileService(
             if (
                 request.description.isNotBlank() &&
                 request.selectedServiceIds.isNotEmpty() &&
-                !request.cityName.isNullOrBlank()
+                !request.cityId.isNullOrBlank()
             ) {
                 ProfileCompleteness.COMPLETE
             } else {
@@ -99,7 +101,7 @@ class ConfirmProfessionalProfileService(
                 knownName = null,
                 description = request.description,
                 normalizedDescription = request.description,
-                cityName = request.cityName,
+                cityId = request.cityId,
                 services = services,
                 portfolioPhotos = portfolioPhotos,
                 completeness = completeness,
@@ -112,7 +114,7 @@ class ConfirmProfessionalProfileService(
         val savedProfile = profileRepository.save(profile)
 
         val phone = phoneAuthRepository.findByUserId(userId)?.phoneNumber ?: ""
-        return mapToResponse(savedProfile, user.fullName, user.photoUrl, phone, catalogService)
+        return mapToResponse(savedProfile, user.fullName, user.photoUrl, phone, catalogService, cityService)
     }
 }
 
@@ -121,12 +123,13 @@ class GetMyProfessionalProfileService(
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
     private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
+    private val cityService: CityService,
 ) {
     fun execute(userId: UserId): ProfessionalProfileResponse? {
         val profile = profileRepository.findByUserId(userId) ?: return null
         val user = userRepository.findById(userId)
         val phone = phoneAuthRepository.findByUserId(userId)?.phoneNumber ?: ""
-        return mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, phone, catalogService)
+        return mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, phone, catalogService, cityService)
     }
 }
 
@@ -135,6 +138,7 @@ class GetPublicProfessionalProfileService(
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
     private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
+    private val cityService: CityService,
 ) {
     fun execute(profileId: ProfessionalProfileId): ProfessionalProfileResponse? {
         val profile = profileRepository.findById(profileId) ?: return null
@@ -142,7 +146,7 @@ class GetPublicProfessionalProfileService(
 
         val user = userRepository.findById(profile.userId)
         val phone = phoneAuthRepository.findByUserId(profile.userId)?.phoneNumber ?: ""
-        return mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, phone, catalogService)
+        return mapToResponse(profile, user?.fullName ?: "", user?.photoUrl, phone, catalogService, cityService)
     }
 }
 
@@ -181,6 +185,7 @@ class UpdateProfessionalProfileService(
     private val userRepository: UserRepository,
     private val catalogService: CatalogService,
     private val phoneAuthRepository: UserPhoneAuthIdentityRepository,
+    private val cityService: CityService,
 ) {
     fun execute(
         userId: UserId,
@@ -205,7 +210,7 @@ class UpdateProfessionalProfileService(
             if (
                 request.description.isNotBlank() &&
                 request.selectedServiceIds.isNotEmpty() &&
-                !request.cityName.isNullOrBlank()
+                !request.cityId.isNullOrBlank()
             ) {
                 ProfileCompleteness.COMPLETE
             } else {
@@ -224,7 +229,7 @@ class UpdateProfessionalProfileService(
             existing.copy(
                 description = request.description,
                 normalizedDescription = request.description,
-                cityName = request.cityName,
+                cityId = request.cityId,
                 services = services,
                 portfolioPhotos = portfolioPhotos,
                 completeness = completeness,
@@ -236,7 +241,7 @@ class UpdateProfessionalProfileService(
         val saved = profileRepository.save(updated)
 
         val phone = phoneAuthRepository.findByUserId(userId)?.phoneNumber ?: ""
-        return UpdateProfileResult.Success(mapToResponse(saved, user.fullName, user.photoUrl, phone, catalogService))
+        return UpdateProfileResult.Success(mapToResponse(saved, user.fullName, user.photoUrl, phone, catalogService, cityService))
     }
 }
 
@@ -246,6 +251,7 @@ private fun mapToResponse(
     userPhotoUrl: String?,
     phone: String,
     catalogService: CatalogService,
+    cityService: CityService,
 ): ProfessionalProfileResponse =
     ProfessionalProfileResponse(
         id = profile.id.value,
@@ -253,7 +259,8 @@ private fun mapToResponse(
         knownName = profile.knownName,
         photoUrl = userPhotoUrl ?: profile.portfolioPhotos.firstOrNull()?.photoUrl,
         description = profile.description ?: "",
-        cityName = profile.cityName ?: "",
+        cityId = profile.cityId ?: "",
+        cityName = cityService.resolveNameFromId(profile.cityId) ?: "",
         services =
             profile.services.map { svc ->
                 val canonical = catalogService.findById(svc.serviceId)

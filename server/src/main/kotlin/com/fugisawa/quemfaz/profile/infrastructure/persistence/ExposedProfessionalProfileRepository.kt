@@ -29,7 +29,7 @@ object ProfessionalProfilesTable : Table("professional_profiles") {
     val knownName = varchar("known_name", 255).nullable()
     val description = text("description").nullable()
     val normalizedDescription = text("normalized_description").nullable()
-    val cityName = varchar("city_name", 255).nullable()
+    val cityId = varchar("city_id", 128).nullable()
     val completeness =
         customEnumeration(
             "completeness",
@@ -119,7 +119,7 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
                     it[knownName] = profile.knownName
                     it[description] = profile.description
                     it[normalizedDescription] = profile.normalizedDescription
-                    it[cityName] = profile.cityName
+                    it[cityId] = profile.cityId
                     it[completeness] = profile.completeness
                     it[status] = profile.status
                     it[lastActiveAt] = profile.lastActiveAt
@@ -132,7 +132,7 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
                     it[knownName] = profile.knownName
                     it[description] = profile.description
                     it[normalizedDescription] = profile.normalizedDescription
-                    it[cityName] = profile.cityName
+                    it[cityId] = profile.cityId
                     it[completeness] = profile.completeness
                     it[status] = profile.status
                     it[lastActiveAt] = profile.lastActiveAt
@@ -164,19 +164,19 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
             profile
         }
 
-    override fun listPublishedByCity(cityName: String): List<ProfessionalProfile> =
+    override fun listPublishedByCity(cityId: String): List<ProfessionalProfile> =
         transaction {
             ProfessionalProfilesTable
                 .selectAll()
                 .where {
-                    (ProfessionalProfilesTable.cityName eq cityName) and
+                    (ProfessionalProfilesTable.cityId eq cityId) and
                         (ProfessionalProfilesTable.status eq ProfessionalProfileStatus.PUBLISHED)
                 }.map { mapProfile(it) }
         }
 
     override fun search(
         serviceIds: List<String>,
-        cityName: String?,
+        cityId: String?,
     ): List<ProfessionalProfile> =
         transaction {
             val profilesWithServices =
@@ -196,10 +196,10 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
                             (ProfessionalProfilesTable.status eq ProfessionalProfileStatus.PUBLISHED)
                     }
 
-            if (cityName != null) {
+            if (cityId != null) {
                 // We don't filter strictly by city to allow "nearby" or "no city" profiles to appear in ranking.
                 // But we could optimize by loading only profiles from the same city + those with null city.
-                // query.andWhere { (ProfessionalProfilesTable.cityName eq cityName) or (ProfessionalProfilesTable.cityName.isNull()) }
+                // query.andWhere { (ProfessionalProfilesTable.cityId eq cityId) or (ProfessionalProfilesTable.cityId.isNull()) }
             }
 
             query.map { mapProfile(it) }
@@ -289,7 +289,7 @@ class ExposedProfessionalProfileRepository : ProfessionalProfileRepository {
             knownName = row[ProfessionalProfilesTable.knownName],
             description = row[ProfessionalProfilesTable.description],
             normalizedDescription = row[ProfessionalProfilesTable.normalizedDescription],
-            cityName = row[ProfessionalProfilesTable.cityName],
+            cityId = row[ProfessionalProfilesTable.cityId],
             services = services,
             portfolioPhotos = portfolioPhotos,
             completeness = row[ProfessionalProfilesTable.completeness],

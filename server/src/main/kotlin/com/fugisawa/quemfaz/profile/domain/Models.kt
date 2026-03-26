@@ -11,7 +11,7 @@ data class ProfessionalProfile(
     val knownName: String?,
     val description: String?,
     val normalizedDescription: String?,
-    val cityName: String?,
+    val cityId: String?,
     val services: List<ProfessionalProfileService>,
     val portfolioPhotos: List<PortfolioPhoto>,
     val completeness: ProfileCompleteness,
@@ -54,11 +54,11 @@ interface ProfessionalProfileRepository {
 
     fun save(profile: ProfessionalProfile): ProfessionalProfile
 
-    fun listPublishedByCity(cityName: String): List<ProfessionalProfile>
+    fun listPublishedByCity(cityId: String): List<ProfessionalProfile>
 
     fun search(
         serviceIds: List<String>,
-        cityName: String?,
+        cityId: String?,
     ): List<ProfessionalProfile>
 
     fun updateStatus(

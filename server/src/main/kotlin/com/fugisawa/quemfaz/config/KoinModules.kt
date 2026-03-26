@@ -176,10 +176,10 @@ val infrastructureModule =
         // Professional Profile Services
         single { CreateProfessionalProfileDraftService(get()) }
         single { ClarifyProfessionalProfileDraftService(get()) }
-        single { ConfirmProfessionalProfileService(get(), get(), get(), get()) }
-        single { GetMyProfessionalProfileService(get(), get(), get(), get()) }
-        single { GetPublicProfessionalProfileService(get(), get(), get(), get()) }
-        single { UpdateProfessionalProfileService(get(), get(), get(), get()) }
+        single { ConfirmProfessionalProfileService(get(), get(), get(), get(), get()) }
+        single { GetMyProfessionalProfileService(get(), get(), get(), get(), get()) }
+        single { GetPublicProfessionalProfileService(get(), get(), get(), get(), get()) }
+        single { UpdateProfessionalProfileService(get(), get(), get(), get(), get()) }
         single { DisableProfessionalProfileService(get()) }
         single { SetKnownNameService(get()) }
 
