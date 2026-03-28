@@ -569,6 +569,7 @@ fun MainFlow(
                                 viewModel.saveProfile(desc, cityId, knownName)
                             },
                             onDisableProfile = { viewModel.disableProfile() },
+                            onContactSupport = { openUrl("mailto:${AppLinks.SUPPORT_EMAIL}") },
                             onNavigateBack = navigateBack,
                             onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }
                         )

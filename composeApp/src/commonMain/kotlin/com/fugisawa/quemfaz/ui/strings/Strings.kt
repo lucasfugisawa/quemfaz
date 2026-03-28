@@ -192,6 +192,9 @@ object Strings {
         const val INACTIVE_BANNER_TITLE = "Perfil desativado"
         const val INACTIVE_BANNER_MESSAGE = "Seu perfil profissional está desativado e não aparece nas buscas. Salve suas alterações para reativá-lo."
         const val REACTIVATE_PROFILE = "Reativar perfil"
+        const val BLOCKED_TITLE = "Perfil bloqueado"
+        const val BLOCKED_MESSAGE = "Seu perfil profissional foi bloqueado e não pode ser editado. Se você acredita que isso foi um engano, entre em contato com nosso suporte."
+        const val CONTACT_SUPPORT = "Falar com o suporte"
     }
 
     object MyProfile {

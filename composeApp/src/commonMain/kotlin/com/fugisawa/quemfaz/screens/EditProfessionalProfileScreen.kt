@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.contract.city.CityResponse
@@ -73,6 +75,7 @@ fun EditProfessionalProfileScreen(
     onRemoveService: (String) -> Unit,
     onSave: (description: String, cityId: String, knownName: String?) -> Unit,
     onDisableProfile: () -> Unit,
+    onContactSupport: () -> Unit,
     onNavigateBack: () -> Unit,
     onGoToOnboarding: () -> Unit,
 ) {
@@ -129,9 +132,15 @@ fun EditProfessionalProfileScreen(
                         )
                     }
                 }
-                is EditProfileUiState.Ready -> EditProfileForm(
-                    uiState.profile, isSaving = false, isSaved = false, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave, onDisableProfile,
-                )
+                is EditProfileUiState.Ready -> {
+                    if (uiState.profile.status == "blocked") {
+                        BlockedProfileContent(onContactSupport = onContactSupport)
+                    } else {
+                        EditProfileForm(
+                            uiState.profile, isSaving = false, isSaved = false, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave, onDisableProfile,
+                        )
+                    }
+                }
                 is EditProfileUiState.Saving -> EditProfileForm(
                     uiState.profile, isSaving = true, isSaved = false, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave, onDisableProfile,
                 )
@@ -443,6 +452,43 @@ private fun EditProfileForm(
     }
 }
 
+@Composable
+private fun BlockedProfileContent(onContactSupport: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(Spacing.screenEdge),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Block,
+            contentDescription = null,
+            modifier = Modifier.size(Spacing.emptyStateIconSize),
+            tint = MaterialTheme.colorScheme.error,
+        )
+        Spacer(modifier = Modifier.height(Spacing.md))
+        Text(
+            Strings.EditProfile.BLOCKED_TITLE,
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(Spacing.sm))
+        Text(
+            Strings.EditProfile.BLOCKED_MESSAGE,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(Spacing.sectionGap))
+        Button(
+            onClick = onContactSupport,
+            modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
+            shape = MaterialTheme.shapes.medium,
+        ) {
+            Text(Strings.EditProfile.CONTACT_SUPPORT, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
 // ── Previews ──
 
 @LightDarkScreenPreview
@@ -452,7 +498,7 @@ private fun EditProfileLoadingPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Loading,
             editedServiceIds = emptyList(), catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onContactSupport = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -464,7 +510,7 @@ private fun EditProfileNoProfilePreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.NoProfile,
             editedServiceIds = emptyList(), catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onContactSupport = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -477,7 +523,7 @@ private fun EditProfileReadyPreview() {
             uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onContactSupport = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -490,7 +536,7 @@ private fun EditProfileSavingPreview() {
             uiState = EditProfileUiState.Saving(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onContactSupport = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -503,7 +549,20 @@ private fun EditProfileSavedPreview() {
             uiState = EditProfileUiState.Saved(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onContactSupport = {}, onNavigateBack = {}, onGoToOnboarding = {},
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun EditProfileBlockedPreview() {
+    AppTheme {
+        EditProfessionalProfileScreen(
+            uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile.copy(status = "blocked")),
+            editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
+            catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onContactSupport = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -516,7 +575,7 @@ private fun EditProfileInactivePreview() {
             uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile.copy(status = "inactive")),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onContactSupport = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -528,7 +587,7 @@ private fun EditProfileErrorPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Error("Failed to load profile. Please try again later."),
             editedServiceIds = emptyList(), catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onContactSupport = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
