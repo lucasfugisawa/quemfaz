@@ -47,20 +47,22 @@ fun ServiceCategoryPicker(
             placeholder = { Text("Buscar serviço...") },
             leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
             singleLine = true,
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
         )
 
-        LazyColumn(modifier = Modifier.weight(1f)) {
+        LazyColumn(modifier = Modifier.padding(top = Spacing.sm).weight(1f)) {
             filteredServicesByCategory.forEach { (category, categoryServices) ->
                 item {
                     Text(
                         text = category.displayName,
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(
                             start = Spacing.md,
-                            top = Spacing.md,
+                            top = Spacing.lg,
                             bottom = Spacing.xs,
                         ),
                     )
@@ -79,7 +81,7 @@ fun ServiceCategoryPicker(
                                 }
                                 onSelectionChanged(newSelection)
                             }
-                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                            .padding(horizontal = Spacing.md, vertical = Spacing.md),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (multiSelect) {
@@ -96,7 +98,7 @@ fun ServiceCategoryPicker(
                         Spacer(Modifier.width(Spacing.sm))
                         Text(
                             text = service.displayName,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                         )
                     }
                 }

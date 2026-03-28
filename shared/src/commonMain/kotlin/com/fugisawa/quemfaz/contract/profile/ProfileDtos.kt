@@ -73,6 +73,7 @@ data class ProfessionalProfileResponse(
     val portfolioPhotoUrls: List<String> = emptyList(),
     val contactCount: Int = 0,
     val daysSinceActive: Int? = null,
+    val status: String = "published",
 )
 
 @Serializable

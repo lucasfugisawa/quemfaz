@@ -57,6 +57,7 @@ fun MyProfileScreen(
     onNavigateToFavorites: () -> Unit,
     onChangeCity: () -> Unit,
     onManageProfessionalProfile: () -> Unit,
+    onOpenLegalDocument: (title: String, url: String) -> Unit,
     onRetry: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -214,17 +215,17 @@ fun MyProfileScreen(
         HorizontalDivider(thickness = Spacing.divider)
         MyProfileMenuItem(
             label = Strings.MyProfile.TERMS_OF_USE,
-            onClick = { openUrl(AppLinks.TERMS_OF_USE_URL) },
+            onClick = { onOpenLegalDocument(Strings.MyProfile.TERMS_OF_USE, AppLinks.TERMS_OF_USE_URL) },
         )
         HorizontalDivider(thickness = Spacing.divider)
         MyProfileMenuItem(
             label = Strings.MyProfile.PRIVACY_POLICY,
-            onClick = { openUrl(AppLinks.PRIVACY_POLICY_URL) },
+            onClick = { onOpenLegalDocument(Strings.MyProfile.PRIVACY_POLICY, AppLinks.PRIVACY_POLICY_URL) },
         )
         HorizontalDivider(thickness = Spacing.divider)
         MyProfileMenuItem(
             label = Strings.MyProfile.COMMUNITY_GUIDELINES,
-            onClick = { openUrl(AppLinks.COMMUNITY_GUIDELINES_URL) },
+            onClick = { onOpenLegalDocument(Strings.MyProfile.COMMUNITY_GUIDELINES, AppLinks.COMMUNITY_GUIDELINES_URL) },
         )
         HorizontalDivider(thickness = Spacing.divider)
 
@@ -305,7 +306,7 @@ private fun MyProfileLoadingPreview() {
         MyProfileScreen(
             currentUser = null, uiState = AuthUiState.Idle, hydrationFailed = false,
             onSaveName = { _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
-            onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
+            onManageProfessionalProfile = {}, onOpenLegalDocument = { _, _ -> }, onRetry = {}, onLogout = {}
         )
     }
 }
@@ -317,7 +318,7 @@ private fun MyProfileHydrationFailedPreview() {
         MyProfileScreen(
             currentUser = null, uiState = AuthUiState.Idle, hydrationFailed = true,
             onSaveName = { _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
-            onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
+            onManageProfessionalProfile = {}, onOpenLegalDocument = { _, _ -> }, onRetry = {}, onLogout = {}
         )
     }
 }
@@ -329,7 +330,7 @@ private fun MyProfileContentPreview() {
         MyProfileScreen(
             currentUser = PreviewSamples.sampleUser, uiState = AuthUiState.Idle, hydrationFailed = false,
             onSaveName = { _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
-            onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
+            onManageProfessionalProfile = {}, onOpenLegalDocument = { _, _ -> }, onRetry = {}, onLogout = {}
         )
     }
 }
@@ -341,7 +342,7 @@ private fun MyProfileSavingPreview() {
         MyProfileScreen(
             currentUser = PreviewSamples.sampleUser, uiState = AuthUiState.Loading, hydrationFailed = false,
             onSaveName = { _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
-            onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
+            onManageProfessionalProfile = {}, onOpenLegalDocument = { _, _ -> }, onRetry = {}, onLogout = {}
         )
     }
 }
@@ -353,7 +354,7 @@ private fun MyProfileErrorPreview() {
         MyProfileScreen(
             currentUser = PreviewSamples.sampleUser, uiState = AuthUiState.Error("Failed to save profile."), hydrationFailed = false,
             onSaveName = { _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
-            onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
+            onManageProfessionalProfile = {}, onOpenLegalDocument = { _, _ -> }, onRetry = {}, onLogout = {}
         )
     }
 }
@@ -365,7 +366,7 @@ private fun MyProfileMinimalUserPreview() {
         MyProfileScreen(
             currentUser = PreviewSamples.sampleUserMinimal, uiState = AuthUiState.Idle, hydrationFailed = false,
             onSaveName = { _ -> }, onSavePhoto = { _, _ -> }, onNavigateToFavorites = {}, onChangeCity = {},
-            onManageProfessionalProfile = {}, onRetry = {}, onLogout = {}
+            onManageProfessionalProfile = {}, onOpenLegalDocument = { _, _ -> }, onRetry = {}, onLogout = {}
         )
     }
 }

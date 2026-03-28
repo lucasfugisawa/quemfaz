@@ -257,6 +257,8 @@ fun MainFlow(
 
     var currentQuery by remember { mutableStateOf("") }
     var currentProfileId by remember { mutableStateOf("") }
+    var currentLegalTitle by remember { mutableStateOf("") }
+    var currentLegalUrl by remember { mutableStateOf("") }
 
     var showCitySheet by remember { mutableStateOf(false) }
     val citySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -426,7 +428,15 @@ fun MainFlow(
                                     }
                                 }
                             },
-                            onFavoriteToggle = { profileViewModel.toggleFavorite(currentProfileId) },
+                            onFavoriteToggle = {
+                                profileViewModel.toggleFavorite(currentProfileId)
+                                // Sync favorite state back to HomeViewModel
+                                val content = profileUiState as? ProfileUiState.Content
+                                if (content != null) {
+                                    // After toggle, the new state is the opposite of current
+                                    homeViewModel.setFavorite(currentProfileId, !content.isFavorite)
+                                }
+                            },
                             onReportSubmit = { reason ->
                                 profileViewModel.reportProfile(currentProfileId, reason, null)
                             },
@@ -461,6 +471,11 @@ fun MainFlow(
                             onNavigateToFavorites = { navigateToTab(Screen.Favorites) },
                             onChangeCity = { navigateTo(Screen.CitySelection) },
                             onManageProfessionalProfile = { navigateTo(Screen.EditProfessionalProfile) },
+                            onOpenLegalDocument = { title, url ->
+                                currentLegalTitle = title
+                                currentLegalUrl = url
+                                navigateTo(Screen.LegalDocument)
+                            },
                             onRetry = { authViewModel.fetchCurrentUser() },
                             onLogout = { authViewModel.logout() }
                         )
@@ -536,8 +551,12 @@ fun MainFlow(
                         val editedServiceIds by viewModel.editedServiceIds.collectAsState()
                         val editCatalog by viewModel.catalog.collectAsState()
                         val editCities by viewModel.cityRepository.cities.collectAsState()
+                        val editProfileDisabled by viewModel.profileDisabled.collectAsState()
                         LaunchedEffect(Unit) {
                             viewModel.loadProfile()
+                        }
+                        LaunchedEffect(editProfileDisabled) {
+                            if (editProfileDisabled) navigateBack()
                         }
                         EditProfessionalProfileScreen(
                             uiState = uiState,
@@ -546,11 +565,19 @@ fun MainFlow(
                             cities = editCities,
                             onAddService = viewModel::addService,
                             onRemoveService = viewModel::removeService,
-                            onSave = { desc, cityId ->
-                                viewModel.saveProfile(desc, cityId)
+                            onSave = { desc, cityId, knownName ->
+                                viewModel.saveProfile(desc, cityId, knownName)
                             },
+                            onDisableProfile = { viewModel.disableProfile() },
                             onNavigateBack = navigateBack,
                             onGoToOnboarding = { navigateTo(Screen.OnboardingStart) }
+                        )
+                    }
+                    is Screen.LegalDocument -> {
+                        LegalDocumentScreen(
+                            title = currentLegalTitle,
+                            url = currentLegalUrl,
+                            onNavigateBack = navigateBack,
                         )
                     }
                     else -> {

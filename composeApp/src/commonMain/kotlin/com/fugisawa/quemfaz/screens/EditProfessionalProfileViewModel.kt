@@ -6,6 +6,7 @@ import com.fugisawa.quemfaz.data.CityRepository
 import com.fugisawa.quemfaz.contract.catalog.CatalogResponse
 import com.fugisawa.quemfaz.contract.profile.ConfirmProfessionalProfileRequest
 import com.fugisawa.quemfaz.contract.profile.ProfessionalProfileResponse
+import com.fugisawa.quemfaz.contract.profile.SetKnownNameRequest
 import com.fugisawa.quemfaz.network.CatalogApiClient
 import com.fugisawa.quemfaz.network.FeatureApiClients
 import com.fugisawa.quemfaz.ui.strings.Strings
@@ -69,9 +70,13 @@ class EditProfessionalProfileViewModel(
         _editedServiceIds.value = _editedServiceIds.value - serviceId
     }
 
+    private val _profileDisabled = MutableStateFlow(false)
+    val profileDisabled: StateFlow<Boolean> = _profileDisabled.asStateFlow()
+
     fun saveProfile(
         description: String,
         cityId: String,
+        knownName: String?,
     ) {
         val current = when (val s = _uiState.value) {
             is EditProfileUiState.Ready -> s.profile
@@ -89,11 +94,27 @@ class EditProfessionalProfileViewModel(
                         portfolioPhotoUrls = current.portfolioPhotoUrls
                     )
                 )
+                // knownName is updated via a separate endpoint
+                val trimmedKnown = knownName?.trim()?.ifBlank { null }
+                if (trimmedKnown != current.knownName) {
+                    apiClients.setKnownName(SetKnownNameRequest(knownName = trimmedKnown))
+                }
                 _editedServiceIds.value = updated.services.map { it.serviceId }
-                _uiState.value = EditProfileUiState.Saved(updated)
+                _uiState.value = EditProfileUiState.Saved(
+                    updated.copy(knownName = trimmedKnown)
+                )
             } catch (e: Exception) {
                 _uiState.value = EditProfileUiState.Error(e.message ?: Strings.Errors.FAILED_SAVE_PROFILE)
             }
+        }
+    }
+
+    fun disableProfile() {
+        viewModelScope.launch {
+            try {
+                apiClients.disableMyProfessionalProfile()
+                _profileDisabled.value = true
+            } catch (_: Exception) { }
         }
     }
 }

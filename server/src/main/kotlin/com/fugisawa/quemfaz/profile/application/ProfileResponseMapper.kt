@@ -54,5 +54,6 @@ class ProfileResponseMapper(
             portfolioPhotoUrls = profile.portfolioPhotos.map { it.photoUrl },
             contactCount = profile.contactClickCount,
             daysSinceActive = ChronoUnit.DAYS.between(profile.lastActiveAt, Instant.now()).toInt(),
+            status = profile.status.name.lowercase(),
         )
 }

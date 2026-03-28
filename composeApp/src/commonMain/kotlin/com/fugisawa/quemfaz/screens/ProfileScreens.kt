@@ -22,9 +22,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -294,9 +298,13 @@ fun ProfileHeader(
         }
         if (showFavorite) {
             IconButton(onClick = onFavoriteToggle) {
-                Box(modifier = Modifier.graphicsLayer { scaleX = favScale; scaleY = favScale }) {
-                    Text(if (isFavorite) "❤️" else "🤍")
-                }
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (isFavorite) Strings.Search.REMOVE_FAVORITE else Strings.Search.ADD_FAVORITE,
+                    tint = if (isFavorite) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.graphicsLayer { scaleX = favScale; scaleY = favScale },
+                )
             }
         }
     }

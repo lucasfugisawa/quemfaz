@@ -233,8 +233,15 @@ fun ProfessionalCard(
                         profile.knownName ?: profile.fullName,
                         style = MaterialTheme.typography.titleMedium,
                     )
+                    val subtitle = buildString {
+                        if (profile.knownName != null && profile.fullName.isNotBlank()) {
+                            append(profile.fullName)
+                            append(" \u2022 ")
+                        }
+                        append(profile.cityName)
+                    }
                     Text(
-                        profile.cityName,
+                        subtitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

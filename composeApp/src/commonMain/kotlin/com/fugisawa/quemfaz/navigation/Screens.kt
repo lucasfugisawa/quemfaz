@@ -25,4 +25,5 @@ sealed class Screen(val route: String) {
     
     object CategoryBrowsing : Screen("categories")
     object Blocked : Screen("blocked")
+    object LegalDocument : Screen("legal-document")
 }

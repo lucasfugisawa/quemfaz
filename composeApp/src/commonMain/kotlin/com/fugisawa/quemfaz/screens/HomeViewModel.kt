@@ -230,6 +230,15 @@ class HomeViewModel(
         search(queryText)
     }
 
+    /** Called by other ViewModels to keep favorite state in sync without making an API call. */
+    fun setFavorite(profileId: String, isFavorited: Boolean) {
+        _favoritedProfileIds.value = if (isFavorited) {
+            _favoritedProfileIds.value + profileId
+        } else {
+            _favoritedProfileIds.value - profileId
+        }
+    }
+
     fun toggleFavoriteFromSearch(profileId: String) {
         searchCache.clear()
         val current = _favoritedProfileIds.value

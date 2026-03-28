@@ -186,6 +186,12 @@ object Strings {
         const val CITY = "Cidade"
         const val PHONE = "Telefone"
         const val SAVE_SUCCESS = "Perfil salvo com sucesso."
+        const val KNOWN_NAME = "Nome profissional"
+        const val KNOWN_NAME_HINT = "Ex.: Joãozinho da Tinta"
+        const val DEACTIVATE_PROFILE = "Desativar perfil profissional"
+        const val INACTIVE_BANNER_TITLE = "Perfil desativado"
+        const val INACTIVE_BANNER_MESSAGE = "Seu perfil profissional está desativado e não aparece nas buscas. Salve suas alterações para reativá-lo."
+        const val REACTIVATE_PROFILE = "Reativar perfil"
     }
 
     object MyProfile {

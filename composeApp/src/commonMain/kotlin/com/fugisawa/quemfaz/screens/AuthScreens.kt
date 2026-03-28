@@ -396,6 +396,7 @@ fun ProfilePhotoScreen(
 @Composable
 fun TermsAcceptanceScreen(
     onAccept: () -> Unit,
+    onOpenLegalDocument: (title: String, url: String) -> Unit = { _, url -> openUrl(url) },
 ) {
     var accepted by remember { mutableStateOf(false) }
 
@@ -422,10 +423,10 @@ fun TermsAcceptanceScreen(
         Spacer(modifier = Modifier.height(Spacing.sectionGap))
 
         // Links to open full documents
-        TextButton(onClick = { openUrl(AppLinks.TERMS_OF_USE_URL) }) {
+        TextButton(onClick = { onOpenLegalDocument(Strings.MyProfile.TERMS_OF_USE, AppLinks.TERMS_OF_USE_URL) }) {
             Text(Strings.MyProfile.TERMS_OF_USE, style = MaterialTheme.typography.bodyLarge)
         }
-        TextButton(onClick = { openUrl(AppLinks.PRIVACY_POLICY_URL) }) {
+        TextButton(onClick = { onOpenLegalDocument(Strings.MyProfile.PRIVACY_POLICY, AppLinks.PRIVACY_POLICY_URL) }) {
             Text(Strings.MyProfile.PRIVACY_POLICY, style = MaterialTheme.typography.bodyLarge)
         }
 
@@ -470,6 +471,7 @@ fun TermsAcceptanceScreen(
 fun TermsUpdateDialog(
     onAccept: () -> Unit,
     onLogout: () -> Unit,
+    onOpenLegalDocument: (title: String, url: String) -> Unit = { _, url -> openUrl(url) },
 ) {
     var showRejectConfirmation by remember { mutableStateOf(false) }
 
@@ -500,10 +502,10 @@ fun TermsUpdateDialog(
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     Text(Strings.Legal.TERMS_UPDATED_MESSAGE)
                     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                        TextButton(onClick = { openUrl(AppLinks.TERMS_OF_USE_URL) }) {
+                        TextButton(onClick = { onOpenLegalDocument(Strings.MyProfile.TERMS_OF_USE, AppLinks.TERMS_OF_USE_URL) }) {
                             Text(Strings.Legal.TERMS_LINK)
                         }
-                        TextButton(onClick = { openUrl(AppLinks.PRIVACY_POLICY_URL) }) {
+                        TextButton(onClick = { onOpenLegalDocument(Strings.MyProfile.PRIVACY_POLICY, AppLinks.PRIVACY_POLICY_URL) }) {
                             Text(Strings.Legal.PRIVACY_LINK)
                         }
                     }

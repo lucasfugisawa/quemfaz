@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -70,7 +71,8 @@ fun EditProfessionalProfileScreen(
     cities: List<CityResponse>,
     onAddService: (String) -> Unit,
     onRemoveService: (String) -> Unit,
-    onSave: (description: String, cityId: String) -> Unit,
+    onSave: (description: String, cityId: String, knownName: String?) -> Unit,
+    onDisableProfile: () -> Unit,
     onNavigateBack: () -> Unit,
     onGoToOnboarding: () -> Unit,
 ) {
@@ -128,13 +130,13 @@ fun EditProfessionalProfileScreen(
                     }
                 }
                 is EditProfileUiState.Ready -> EditProfileForm(
-                    uiState.profile, isSaving = false, isSaved = false, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave,
+                    uiState.profile, isSaving = false, isSaved = false, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave, onDisableProfile,
                 )
                 is EditProfileUiState.Saving -> EditProfileForm(
-                    uiState.profile, isSaving = true, isSaved = false, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave,
+                    uiState.profile, isSaving = true, isSaved = false, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave, onDisableProfile,
                 )
                 is EditProfileUiState.Saved -> EditProfileForm(
-                    uiState.profile, isSaving = false, isSaved = true, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave,
+                    uiState.profile, isSaving = false, isSaved = true, editedServiceIds, catalog, cities, onAddService, onRemoveService, onSave, onDisableProfile,
                 )
             }
         }
@@ -152,12 +154,16 @@ private fun EditProfileForm(
     cities: List<CityResponse>,
     onAddService: (String) -> Unit,
     onRemoveService: (String) -> Unit,
-    onSave: (description: String, cityId: String) -> Unit,
+    onSave: (description: String, cityId: String, knownName: String?) -> Unit,
+    onDisableProfile: () -> Unit,
 ) {
+    val isInactive = profile.status == "inactive"
+    var knownName by remember(profile.id) { mutableStateOf(profile.knownName ?: "") }
     var description by remember(profile.id) { mutableStateOf(profile.description) }
     var cityId by remember(profile.id) { mutableStateOf(profile.cityId) }
     var cityDisplayName by remember(profile.id) { mutableStateOf(profile.cityName) }
     var cityDropdownExpanded by remember { mutableStateOf(false) }
+    var showDisableDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -165,6 +171,32 @@ private fun EditProfileForm(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenEdge, vertical = Spacing.md),
     ) {
+        // Inactive profile banner
+        if (isInactive) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                ),
+            ) {
+                Column(modifier = Modifier.padding(Spacing.md)) {
+                    Text(
+                        Strings.EditProfile.INACTIVE_BANNER_TITLE,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.xs))
+                    Text(
+                        Strings.EditProfile.INACTIVE_BANNER_MESSAGE,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(Spacing.md))
+        }
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             ProfileAvatar(
                 name = profile.fullName.ifBlank { null },
@@ -186,6 +218,19 @@ private fun EditProfileForm(
         }
 
         Spacer(modifier = Modifier.height(Spacing.lg))
+
+        // Known/professional name
+        OutlinedTextField(
+            value = knownName,
+            onValueChange = { knownName = it },
+            label = { Text(Strings.EditProfile.KNOWN_NAME) },
+            placeholder = { Text(Strings.EditProfile.KNOWN_NAME_HINT) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            shape = MaterialTheme.shapes.medium,
+        )
+
+        Spacer(modifier = Modifier.height(Spacing.md))
 
         // Services section — compact chips with remove affordance
         Text(Strings.EditProfile.SERVICES, style = MaterialTheme.typography.titleMedium)
@@ -347,7 +392,7 @@ private fun EditProfileForm(
         }
 
         Button(
-            onClick = { onSave(description, cityId) },
+            onClick = { onSave(description, cityId, knownName.ifBlank { null }) },
             enabled = !isSaving,
             modifier = Modifier.fillMaxWidth().height(Spacing.smallButtonHeight),
             shape = MaterialTheme.shapes.medium,
@@ -355,7 +400,44 @@ private fun EditProfileForm(
             if (isSaving) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
             } else {
-                Text(Strings.Common.SAVE, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    if (isInactive) Strings.EditProfile.REACTIVATE_PROFILE else Strings.Common.SAVE,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+        }
+
+        if (!isInactive) {
+            Spacer(modifier = Modifier.height(Spacing.sectionGap))
+
+            // Deactivation — only show when profile is active
+            TextButton(
+                onClick = { showDisableDialog = true },
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            ) {
+                Text(Strings.EditProfile.DEACTIVATE_PROFILE, color = MaterialTheme.colorScheme.error)
+            }
+
+            if (showDisableDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDisableDialog = false },
+                    title = { Text(Strings.Profile.DISABLE_DIALOG_TITLE) },
+                    text = { Text(Strings.Profile.DISABLE_DIALOG_MESSAGE) },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showDisableDialog = false
+                                onDisableProfile()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        ) {
+                            Text(Strings.Profile.DISABLE_BUTTON)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDisableDialog = false }) { Text(Strings.Common.CANCEL) }
+                    },
+                )
             }
         }
     }
@@ -370,7 +452,7 @@ private fun EditProfileLoadingPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Loading,
             editedServiceIds = emptyList(), catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -382,7 +464,7 @@ private fun EditProfileNoProfilePreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.NoProfile,
             editedServiceIds = emptyList(), catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -395,7 +477,7 @@ private fun EditProfileReadyPreview() {
             uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -408,7 +490,7 @@ private fun EditProfileSavingPreview() {
             uiState = EditProfileUiState.Saving(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -421,7 +503,20 @@ private fun EditProfileSavedPreview() {
             uiState = EditProfileUiState.Saved(PreviewSamples.sampleProfile),
             editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
             catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
+        )
+    }
+}
+
+@LightDarkScreenPreview
+@Composable
+private fun EditProfileInactivePreview() {
+    AppTheme {
+        EditProfessionalProfileScreen(
+            uiState = EditProfileUiState.Ready(PreviewSamples.sampleProfile.copy(status = "inactive")),
+            editedServiceIds = PreviewSamples.sampleProfile.services.map { it.serviceId },
+            catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
@@ -433,7 +528,7 @@ private fun EditProfileErrorPreview() {
         EditProfessionalProfileScreen(
             uiState = EditProfileUiState.Error("Failed to load profile. Please try again later."),
             editedServiceIds = emptyList(), catalog = null, cities = PreviewSamples.sampleCities, onAddService = {}, onRemoveService = {},
-            onSave = { _, _ -> }, onNavigateBack = {}, onGoToOnboarding = {},
+            onSave = { _, _, _ -> }, onDisableProfile = {}, onNavigateBack = {}, onGoToOnboarding = {},
         )
     }
 }
