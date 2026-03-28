@@ -1,6 +1,7 @@
 package com.fugisawa.quemfaz.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -205,12 +206,13 @@ fun OnboardingScreens(
                         initialState is OnboardingUiState.Loading ||
                         initialState is OnboardingUiState.Error ||
                         initialState is OnboardingUiState.Published
+                    val animDuration = 250
                     if (isLoadingOrTerminal) {
-                        fadeIn() togetherWith fadeOut()
+                        fadeIn(tween(animDuration)) togetherWith fadeOut(tween(animDuration))
                     } else {
                         val forward = targetState.stepIndex() >= initialState.stepIndex()
-                        slideInHorizontally { if (forward) it else -it } togetherWith
-                            slideOutHorizontally { if (forward) -it else it }
+                        (slideInHorizontally(tween(animDuration)) { if (forward) it / 4 else -it / 4 } + fadeIn(tween(animDuration))) togetherWith
+                            (slideOutHorizontally(tween(animDuration)) { if (forward) -it / 4 else it / 4 } + fadeOut(tween(animDuration)))
                     }
                 },
                 label = "onboardingContent",

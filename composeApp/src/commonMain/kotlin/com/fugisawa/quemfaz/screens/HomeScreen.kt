@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -165,7 +166,7 @@ fun HomeScreen(
                     )
                 },
                 leadingIcon = {
-                    Box(modifier = Modifier.padding(start = Spacing.xs)) {
+                    Box(modifier = Modifier.padding(start = Spacing.sm)) {
                         VoiceInputButton(
                             compact = true,
                             onTranscription = { transcription ->
@@ -178,16 +179,25 @@ fun HomeScreen(
                         )
                     }
                 },
+                trailingIcon = if (query.isNotBlank()) {
+                    {
+                        IconButton(
+                            onClick = { onSearch(query) },
+                        ) {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = Strings.Home.SEARCH_ACTION,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                } else null,
                 shape = RoundedCornerShape(16.dp),
                 singleLine = false,
                 maxLines = 3,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(
-                    onSearch = {
-                        if (query.isNotBlank() && currentCity != null) {
-                            onSearch(query)
-                        }
-                    }
+                    onSearch = { if (query.isNotBlank()) onSearch(query) }
                 ),
             )
 

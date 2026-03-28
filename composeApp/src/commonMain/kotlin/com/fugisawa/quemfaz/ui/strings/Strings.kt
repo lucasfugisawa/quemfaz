@@ -30,6 +30,7 @@ object Strings {
         const val WHAT_LOOKING_FOR = "O que você está\nprocurando?"
         const val SEARCH_HINT = "Conte o que você precisa..."
         const val SPEAK_OR_TYPE = "Fale ou digite naturalmente"
+        const val SEARCH_ACTION = "Buscar"
         const val EXAMPLE_HEADER = "Você pode digitar ou falar assim:"
         const val RECENT_SEARCHES = "Suas últimas buscas:"
         const val VIEW_ALL_CATEGORIES = "Ver todas as categorias"

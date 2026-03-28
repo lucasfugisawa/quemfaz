@@ -1,6 +1,7 @@
 package com.fugisawa.quemfaz
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -323,11 +324,21 @@ fun MainFlow(
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             AnimatedContent(
                 targetState = currentScreen,
+                contentAlignment = Alignment.TopStart,
                 transitionSpec = {
+                    val animDuration = 250
                     when (navigationDirection) {
-                        NavigationDirection.TAB -> fadeIn() togetherWith fadeOut()
-                        NavigationDirection.PUSH -> slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
-                        NavigationDirection.POP -> slideInHorizontally { -it } togetherWith slideOutHorizontally { it }
+                        NavigationDirection.TAB -> {
+                            fadeIn(tween(animDuration)) togetherWith fadeOut(tween(animDuration))
+                        }
+                        NavigationDirection.PUSH -> {
+                            (slideInHorizontally(tween(animDuration)) { it / 4 } + fadeIn(tween(animDuration))) togetherWith
+                                (slideOutHorizontally(tween(animDuration)) { -it / 4 } + fadeOut(tween(animDuration)))
+                        }
+                        NavigationDirection.POP -> {
+                            (slideInHorizontally(tween(animDuration)) { -it / 4 } + fadeIn(tween(animDuration))) togetherWith
+                                (slideOutHorizontally(tween(animDuration)) { it / 4 } + fadeOut(tween(animDuration)))
+                        }
                     }
                 },
                 label = "screenTransition",
@@ -337,7 +348,7 @@ fun MainFlow(
                     is Screen.Home -> {
                         HomeScreen(
                             currentUser = currentUser,
-                            currentCity = homeViewModel.cityRepository.getCityDisplayName(currentCityId),
+                            currentCity = currentCityId?.let { id -> cities.find { it.id == id }?.name },
                             showEarnMoneyCard = showEarnMoneyCard,
                             popularServices = popularServices,
                             searchHistory = searchHistory,
@@ -410,8 +421,8 @@ fun MainFlow(
                                         if (!digits.isNullOrBlank()) openUrl("https://wa.me/$digits")
                                     }
                                     ContactChannelDto.PHONE_CALL -> {
-                                        val phone = profile?.phone?.ifBlank { null }
-                                        if (phone != null) openUrl("tel:$phone")
+                                        val digits = profile?.phone?.filter { it.isDigit() }
+                                        if (!digits.isNullOrBlank()) openUrl("tel:+$digits")
                                     }
                                 }
                             },
